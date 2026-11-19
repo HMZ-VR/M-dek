@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hoca Yönetimi – MÜDEK</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+  <link rel="stylesheet" href="assets/ktun-design.css">
+</head>
+<body>
+
+<div id="topbarMount"></div>
+<div id="heroMount"></div>
+
+<main class="page-body-wide">
+  <div style="display:grid; grid-template-columns:380px 1fr; gap:20px;">
+    <!-- EKLEME -->
+    <section class="card" style="height:fit-content">
+      <div class="card-title"><span class="mi" style="color:var(--gold-dk)">person_add</span> Yeni Hoca Ekle</div>
+      <div>
+        <label for="instTitle">Unvan</label>
+        <select id="instTitle">
+          <option>Prof. Dr.</option>
+          <option>Doç. Dr.</option>
+          <option>Dr. Öğr. Üyesi</option>
+          <option>Öğr. Gör.</option>
+          <option>Arş. Gör.</option>
+        </select>
+      </div>
+      <div class="mt-2">
+        <label for="instName">Ad Soyad</label>
+        <input id="instName" placeholder="Örn: Ahmet Yılmaz">
+        <div class="form-help">Otomatik olarak güçlü bir şifre oluşturulacak.</div>
+      </div>
+      <div class="mt-2">
+        <label for="instEmail">E-posta (opsiyonel)</label>
+        <input id="instEmail" type="email" placeholder="ornek@ktun.edu.tr">
+        <div class="form-help">Email varsa @ öncesi kullanıcı adı olur, yoksa isimden oluşturulur.</div>
+      </div>
+      <div class="mt-3 flex gap-2">
+        <button class="btn" id="btnCreate"><span class="mi">save</span> Ekle</button>
+        <button class="btn btn-outline" id="btnClear"><span class="mi">refresh</span> Temizle</button>
+      </div>
+      <div id="formStatus" class="mt-2" style="font-size:13px"></div>
+    </section>
+
+    <!-- LİSTE -->
+    <section class="card" style="padding:0; overflow:hidden">
+      <div class="flex justify-between items-center" style="padding:18px 22px; border-bottom:1px solid var(--border)">
+        <div class="card-title" style="margin:0">Mevcut Hocalar</div>
+        <span class="badge badge-gold" id="countBadge">0 kayıt</span>
+      </div>
+      <div class="table-wrap" style="border:none; border-radius:0">
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th style="width:170px">Unvan & İsim</th>
+              <th>İletişim</th>
+              <th style="width:160px">Hesap</th>
+              <th style="width:100px;text-align:right">İşlem</th>
+            </tr>
+          </thead>
+          <tbody id="instRows"></tbody>
+        </table>
+      </div>
+      <div id="listStatus" class="text-muted" style="padding:10px 22px; font-size:12.5px"></div>
+    </section>
+  </div>
+</main>
+
+<!-- Credentials Modal -->
+<div class="modal-backdrop hidden" id="userModal">
+  <div class="modal">
+    <div class="modal-hd">
+      <h3><span class="mi" style="color:var(--green); vertical-align:middle">check_circle</span> Hoca ve Kullanıcı Oluşturuldu</h3>
+      <button class="modal-close" id="modalCloseX"><span class="mi">close</span></button>
+    </div>
+    <div class="modal-bd" id="modalContent"></div>
+    <div class="modal-ft">
+      <button class="btn btn-outline" id="btnCopy"><span class="mi">content_copy</span> Bilgileri Kopyala</button>
+      <button class="btn" id="btnOk">Tamam</button>
+    </div>
+  </div>
+</div>
+
+<script src="assets/ktun-shell.js"></script>
+<script src="help-widget.js" defer></script>
+<script>
+  const auth = KTUN.requireAuth({ roles:['admin','bolum_baskani'] });
+  if (!auth) throw new Error('redirecting');
+  KTUN.renderTopbar({ back:{ href:'dashboard.html', label:'Panele Dön' } });
+  KTUN.renderHero({
+    eyebrow:'Akademik Yönetim',
+    title:'Hoca <em>Yönetimi</em>',
+    sub:'Öğretim üyesi ekleyin; ekleme sonrası otomatik kullanıcı hesabı ve geçici şifre oluşturulur.',
+  });
+  KTUN.renderFooter();
+
+  const formStatus = document.getElementById('formStatus');
+  const listStatus = document.getElementById('listStatus');
+  const rows       = document.getElementById('instRows');
+  const countBadge = document.getElementById('countBadge');
+  const modal      = document.getElementById('userModal');
+  let lastCredentials = null;
+
+  function setFormStatus(msg, ok=false) {
+    formStatus.textContent = msg || '';
+    formStatus.style.color = ok ? 'var(--green)' : 'var(--red)';
+  }
+  function clearForm() {
+    document.getElementById('instTitle').value = 'Prof. Dr.';
+    document.getElementById('instName').value  = '';
+    document.getElementById('instEmail').value = '';
+    setFormStatus('');
+  }
+
+  async function loadInstructors() {
+    listStatus.textContent = 'Yükleniyor…';
+    try {
+      const res = await KTUN.apiFetch('/api/instructors');
+      const data = await res.json();
+      renderList(Array.isArray(data) ? data : []);
+      listStatus.textContent = '';
+    } catch (e) {
+      renderList([]);
+      listStatus.textContent = 'Kayıtlar getirilemedi: ' + (e.message || e);
+    }
+  }
+
+  function renderList(items) {
+    countBadge.textContent = items.length + ' kayıt';
+    if (!items.length) {
+      rows.innerHTML = `<tr><td colspan="4"><div class="empty-state">
+        <span class="mi">person</span><h3>Henüz hoca yok</h3>
+        <p>Sol formdan yeni öğretim üyesi ekleyebilirsiniz.</p></div></td></tr>`;
+      return;
+    }
+    rows.innerHTML = items.map(i => `
+      <tr>
+        <td>
+          <div style="font-size:11px;color:var(--gold-dk);font-weight:600">${KTUN.htmlEscape(i.title || '')}</div>
+          <div style="font-weight:600">${KTUN.htmlEscape(i.name || '')}</div>
+        </td>
+        <td>${i.email
+          ? `<a href="mailto:${KTUN.htmlEscape(i.email)}">${KTUN.htmlEscape(i.email)}</a>`
+          : '<span class="text-muted">—</span>'}</td>
+        <td><span class="badge badge-green"><span class="mi" style="font-size:13px">verified_user</span> Aktif</span></td>
+        <td class="actions">
+          <button class="btn btn-sm btn-outline" data-id="${i.id}" data-name="${KTUN.htmlEscape(i.name||'')}">
+            <span class="mi">delete</span> Sil
+          </button>
+        </td>
+      </tr>`).join('');
+    rows.querySelectorAll('button[data-id]').forEach(b =>
+      b.addEventListener('click', () => removeInstructor(+b.dataset.id, b.dataset.name)));
+  }
+
+  async function createInstructor() {
+    const title = document.getElementById('instTitle').value.trim();
+    const name  = document.getElementById('instName').value.trim();
+    const email = document.getElementById('instEmail').value.trim();
+    if (!name) return setFormStatus('İsim boş olamaz.');
+    setFormStatus('Kaydediliyor…', true);
+    try {
+      const res = await KTUN.apiFetch('/api/instructors', {
+        method:'POST', body: JSON.stringify({ title, name, email: email || null }),
+      });
+      if (!res.ok) {
+        const t = await res.text(); throw new Error(t);
+      }
+      const data = await res.json();
+      showUserModal(data);
+      setFormStatus('');
+      clearForm();
+      await loadInstructors();
+    } catch (e) {
+      setFormStatus('Kaydedilemedi: ' + (e.message || e));
+    }
+  }
+
+  function showUserModal(data) {
+    const password = data.temporary_password || data.default_password || 'N/A';
+    lastCredentials = { username: data.username, password };
+    document.getElementById('modalContent').innerHTML = data.username ? `
+      <div class="alert alert-success"><span class="mi">check_circle</span>
+        <div>Hoca başarıyla eklendi ve kullanıcı hesabı oluşturuldu.</div></div>
+      <div class="card" style="background:var(--cream); padding:16px; box-shadow:none">
+        <p class="mb-1"><strong>Kullanıcı Adı:</strong></p>
+        <code style="background:var(--white);padding:6px 10px;border-radius:6px;border:1px solid var(--border);display:inline-block;font-family:monospace">${KTUN.htmlEscape(data.username)}</code>
+        <p class="mt-2 mb-1"><strong>Geçici Şifre:</strong></p>
+        <code style="background:var(--white);padding:6px 10px;border-radius:6px;border:1px solid var(--border);display:inline-block;font-family:monospace">${KTUN.htmlEscape(password)}</code>
+        <p class="mt-2 mb-0"><strong>Rol:</strong> <span class="badge">Öğretim Üyesi</span></p>
+      </div>
+      <div class="alert alert-warning mt-3"><span class="mi">warning</span>
+        <div><strong>Önemli:</strong> Bu bilgileri hocaya iletin. Pencere kapandıktan sonra şifre bir daha gösterilmeyecektir.</div></div>
+    ` : '<p>Hoca eklendi ancak kullanıcı bilgisi oluşturulamadı.</p>';
+    modal.classList.remove('hidden');
+  }
+
+  function closeModal() { modal.classList.add('hidden'); lastCredentials = null; }
+
+  async function removeInstructor(id, name) {
+    if (!confirm(`"${name}" kaydını silmek istiyor musunuz?\n\nUyarı: Kullanıcı hesabı otomatik silinmez.`)) return;
+    listStatus.textContent = 'Siliniyor…';
+    try {
+      const res = await KTUN.apiFetch(`/api/instructors/${id}`, { method:'DELETE' });
+      if (!res.ok) { const t = await res.text(); throw new Error(t); }
+      await loadInstructors();
+      KTUN.toast('Kayıt silindi.', 'success');
+    } catch (e) {
+      listStatus.textContent = 'Silinemedi: ' + (e.message || e);
+    }
+  }
+
+  document.getElementById('btnCreate').addEventListener('click', createInstructor);
+  document.getElementById('btnClear').addEventListener('click', clearForm);
+  document.getElementById('btnOk').addEventListener('click', closeModal);
+  document.getElementById('modalCloseX').addEventListener('click', closeModal);
+  modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+  document.getElementById('btnCopy').addEventListener('click', () => {
+    if (!lastCredentials) return;
+    const text = `Kullanıcı Adı: ${lastCredentials.username}\nŞifre: ${lastCredentials.password}`;
+    navigator.clipboard.writeText(text).then(() => KTUN.toast('Kopyalandı.', 'success'))
+      .catch(err => KTUN.toast('Kopyalama başarısız: ' + err, 'danger'));
+  });
+
+  loadInstructors();
+</script>
+</body>
+</html>

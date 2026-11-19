@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ders Yönetimi – MÜDEK</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+  <link rel="stylesheet" href="assets/ktun-design.css">
+</head>
+<body>
+
+<div id="topbarMount"></div>
+<div id="heroMount"></div>
+
+<main class="page-body">
+  <div class="card">
+    <div class="card-title"><span class="mi" style="color:var(--gold-dk)">add_circle</span> Yeni Ders Ekle</div>
+    <form id="courseForm">
+      <div class="form-row">
+        <div>
+          <label for="code">Ders Kodu</label>
+          <input type="text" id="code" placeholder="BIL101" required>
+        </div>
+        <div>
+          <label for="name">Ders Adı</label>
+          <input type="text" id="name" placeholder="Programlamaya Giriş" required>
+        </div>
+      </div>
+      <div class="flex gap-2 items-center">
+        <button type="submit" class="btn"><span class="mi">save</span> Ekle</button>
+        <span id="status" class="text-green" style="font-size:13px"></span>
+      </div>
+    </form>
+  </div>
+
+  <div class="section-hd mt-4">
+    <h2>Mevcut Dersler</h2>
+    <div class="section-hd-line"></div>
+    <span id="courseCount" class="text-muted" style="font-size:12px"></span>
+  </div>
+
+  <div class="table-wrap">
+    <table class="tbl">
+      <thead>
+        <tr><th style="width:140px">Kod</th><th>Ad</th><th style="width:120px;text-align:right">İşlem</th></tr>
+      </thead>
+      <tbody id="courseRows"></tbody>
+    </table>
+  </div>
+</main>
+
+<script src="assets/ktun-shell.js"></script>
+<script src="help-widget.js" defer></script>
+<script>
+  const auth = KTUN.requireAuth({ roles:['admin','bolum_baskani'] });
+  if (!auth) throw new Error('redirecting');
+  KTUN.renderTopbar({ back:{ href:'dashboard.html', label:'Panele Dön' } });
+  KTUN.renderHero({
+    eyebrow:'Akademik Yönetim',
+    title:'Ders <em>Yönetimi</em>',
+    sub:'Yeni ders ekleyin, mevcut dersleri görüntüleyip kaldırın.',
+  });
+  KTUN.renderFooter();
+
+  const form     = document.getElementById('courseForm');
+  const rows     = document.getElementById('courseRows');
+  const statusEl = document.getElementById('status');
+  const countEl  = document.getElementById('courseCount');
+
+  async function loadCourses() {
+    try {
+      const res = await KTUN.apiFetch('/api/courses');
+      const data = await res.json();
+      renderCourses(Array.isArray(data) ? data : []);
+    } catch (e) { console.error(e); }
+  }
+
+  function renderCourses(courses) {
+    countEl.textContent = courses.length + ' ders';
+    if (!courses.length) {
+      rows.innerHTML = `<tr><td colspan="3"><div class="empty-state">
+        <span class="mi">menu_book</span><h3>Henüz ders yok</h3>
+        <p>Yukarıdan yeni bir ders ekleyebilirsiniz.</p></div></td></tr>`;
+      return;
+    }
+    rows.innerHTML = courses.map(c => `
+      <tr>
+        <td><strong class="text-navy">${KTUN.htmlEscape(c.code)}</strong></td>
+        <td>${KTUN.htmlEscape(c.name)}</td>
+        <td class="actions">
+          <button class="btn btn-sm btn-outline" data-act="del" data-id="${c.id}" data-code="${KTUN.htmlEscape(c.code)}">
+            <span class="mi">delete</span> Sil
+          </button>
+        </td>
+      </tr>`).join('');
+    rows.querySelectorAll('button[data-act="del"]').forEach(b => b.addEventListener('click', () => deleteCourse(+b.dataset.id, b.dataset.code)));
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    statusEl.textContent = '';
+    const code = document.getElementById('code').value.trim();
+    const name = document.getElementById('name').value.trim();
+    try {
+      const res = await KTUN.apiFetch('/api/courses', {
+        method:'POST', body:JSON.stringify({ code, name }),
+      });
+      const result = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(result.detail || 'Bir hata oluştu');
+      statusEl.textContent = '✓ Ders eklendi';
+      statusEl.style.color = 'var(--green)';
+      form.reset();
+      await loadCourses();
+    } catch (err) {
+      statusEl.textContent = '✕ ' + err.message;
+      statusEl.style.color = 'var(--red)';
+    }
+  });
+
+  async function deleteCourse(id, code) {
+    if (!confirm(`"${code}" dersini silmek istediğinize emin misiniz?`)) return;
+    try {
+      const res = await KTUN.apiFetch(`/api/courses/${id}`, { method:'DELETE' });
+      if (!res.ok) {
+        const t = await res.json().catch(() => ({}));
+        throw new Error(t.detail || 'Silme başarısız');
+      }
+      KTUN.toast('Ders silindi.', 'success');
+      await loadCourses();
+    } catch (err) {
+      KTUN.toast(err.message, 'danger');
+    }
+  }
+
+  loadCourses();
+</script>
+</body>
+</html>

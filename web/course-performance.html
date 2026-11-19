@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ders Performans Raporu – MÜDEK</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+  <link rel="stylesheet" href="assets/ktun-design.css">
+  <style>
+    .filters-bar {
+      display:flex; gap:12px; align-items:center; flex-wrap:wrap;
+      margin-bottom:18px;
+    }
+    .search-box {
+      flex:1; min-width:240px;
+      padding:10px 14px; font-size:13px; font-family:inherit;
+      background:var(--white); border:1px solid var(--border);
+      border-radius:var(--r-sm); color:var(--text);
+      outline:none; transition:border-color .15s, box-shadow .15s;
+    }
+    .search-box:focus {
+      border-color:var(--navy);
+      box-shadow:0 0 0 3px rgba(11,31,69,.10);
+    }
+    .score-bar {
+      height:6px; background:var(--cream);
+      border:1px solid var(--border);
+      border-radius:3px; width:110px; overflow:hidden;
+    }
+    .score-fill { height:100%; transition:width .4s ease; }
+    .ins-avatar {
+      width:28px; height:28px; border-radius:50%;
+      background:rgba(11,31,69,.08); color:var(--navy);
+      border:1px solid var(--border);
+      display:inline-flex; align-items:center; justify-content:center;
+      font-weight:700; font-size:12px; flex-shrink:0;
+    }
+  </style>
+</head>
+<body>
+
+<div id="topbarMount"></div>
+
+<main class="page-body">
+
+  <div class="section-hd">
+    <h2>Dönemlik Ders Karneleri</h2>
+    <div class="section-hd-line"></div>
+  </div>
+  <div class="text-muted mb-3" style="font-size:13.5px;margin-top:-12px;">
+    Tüm ders açılışlarının başarı ve katılım özeti.
+  </div>
+
+  <div class="filters-bar">
+    <input type="text" id="searchInput" class="search-box" placeholder="🔍 Ders adı, kodu veya hoca adı ara…">
+    <button class="btn btn-gold" id="btnExcel">
+      <span class="mi">file_download</span> Excel İndir
+    </button>
+  </div>
+
+  <div class="card" style="padding:0;overflow:hidden;">
+    <div class="table-wrap">
+      <table class="tbl">
+        <thead>
+          <tr>
+            <th>Ders Bilgisi</th>
+            <th>Öğretim Üyesi</th>
+            <th style="text-align:center;">Öğrenci / Katılım</th>
+            <th>Başarı (Ort.)</th>
+            <th>Durum</th>
+          </tr>
+        </thead>
+        <tbody id="reportTable">
+          <tr><td colspan="5" style="text-align:center;padding:30px;color:var(--muted);">Yükleniyor…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</main>
+
+<script src="assets/ktun-shell.js"></script>
+<script src="help-widget.js" defer></script>
+<script>
+  const auth = KTUN.requireAuth();
+  if (!auth) throw new Error('redirecting');
+  KTUN.renderTopbar({ back:{ href:'dashboard.html', label:'Panel' } });
+
+  const esc = KTUN.htmlEscape;
+
+  async function loadReports() {
+    const tbody = document.getElementById('reportTable');
+    try {
+      const res = await KTUN.apiFetch('/api/reports/course-performance');
+      if (!res.ok) throw new Error(await res.text());
+      const data = await res.json();
+
+      if (!data.length) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--muted);">Henüz kayıtlı ders bulunmuyor.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = data.map(item => {
+        let badge = `<span class="badge">Veri Yok</span>`;
+        let barColor = 'var(--border)';
+        if (item.status === 'success') {
+          badge = `<span class="badge badge-green">Başarılı</span>`;
+          barColor = 'var(--green)';
+        } else if (item.status === 'danger') {
+          badge = `<span class="badge badge-red">Riskli</span>`;
+          barColor = 'var(--red)';
+        }
+        const fillPercent = Math.max(0, Math.min(100, (Number(item.avg_score || 0) / 5) * 100));
+        const insName = item.instructor_name ? esc(item.instructor_name) : '<span style="color:var(--red);font-size:12px;">Atanmamış</span>';
+        const insInitial = item.instructor_name ? esc(item.instructor_name.charAt(0).toUpperCase()) : '?';
+        const partColor = (item.participation_rate < 50) ? 'var(--red)' : 'var(--green)';
+
+        return `
+          <tr class="data-row">
+            <td>
+              <div style="font-weight:600;color:var(--navy);">${esc(item.code)} – ${esc(item.course_name)}</div>
+              <div style="font-size:12px;color:var(--muted);margin-top:2px;">${esc(item.term || '—')} | Şube: ${esc(item.section || '—')}</div>
+            </td>
+            <td>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <div class="ins-avatar">${insInitial}</div>
+                <span>${insName}</span>
+              </div>
+            </td>
+            <td style="text-align:center;">
+              <div style="font-weight:700;">${esc(item.responded_students)} / ${esc(item.total_students)}</div>
+              <div style="font-size:11px;color:${partColor};margin-top:2px;">%${esc(item.participation_rate)} Katılım</div>
+            </td>
+            <td>
+              <div style="display:flex;align-items:center;gap:10px;">
+                <span style="font-weight:700;font-size:15px;">${esc(item.avg_score)}</span>
+                <div class="score-bar"><div class="score-fill" style="width:${fillPercent}%;background:${barColor};"></div></div>
+              </div>
+            </td>
+            <td>${badge}</td>
+          </tr>`;
+      }).join('');
+    } catch (e) {
+      console.error(e);
+      tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--red);padding:20px;">Rapor yüklenirken hata oluştu.</td></tr>`;
+    }
+  }
+
+  function filterTable() {
+    const q = document.getElementById('searchInput').value.toLowerCase();
+    document.querySelectorAll('.data-row').forEach(row => {
+      row.style.display = row.innerText.toLowerCase().includes(q) ? '' : 'none';
+    });
+  }
+  document.getElementById('searchInput').addEventListener('input', filterTable);
+
+  document.getElementById('btnExcel').addEventListener('click', async () => {
+    const btn = document.getElementById('btnExcel');
+    const original = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="mi">hourglass_empty</span> Hazırlanıyor…';
+    try {
+      const res = await KTUN.apiFetch('/api/reports/course-performance/excel');
+      if (!res.ok) throw new Error(await res.text());
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'ders-performans-raporu.xlsx';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      KTUN.toast('Excel indirildi.', 'success');
+    } catch (e) {
+      KTUN.toast('Excel oluşturulamadı: ' + e.message, 'danger');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = original;
+    }
+  });
+
+  loadReports();
+</script>
+
+</body>
+</html>

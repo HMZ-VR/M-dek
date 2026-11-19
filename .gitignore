@@ -1,0 +1,17 @@
+.claude/worktrees/
+.env
+.env.local
+.env.*.local
+*.pyc
+__pycache__/
+.DS_Store
+api/uploads/
+backups/
+*.log
+.vscode/
+.claude/
+uploads/
+*.bundle
+*.sql.gz
+mudek_db_dump*.sql
+Roboto-Regular.ttf

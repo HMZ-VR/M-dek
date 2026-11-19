@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Akreditasyon – MÜDEK</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+  <link rel="stylesheet" href="assets/ktun-design.css">
+  <style>
+    .page-inner { max-width:860px; margin:0 auto; padding:32px 24px 60px; display:flex; flex-direction:column; gap:24px; }
+    .step-list { display:flex; flex-direction:column; gap:12px; }
+    .step-item { display:flex; gap:14px; padding:14px 16px; background:var(--white); border:1px solid var(--border); border-radius:var(--r-sm); }
+    .step-num { width:32px; height:32px; border-radius:50%; background:var(--navy); color:#fff; font-weight:700; font-size:13px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .step-title { font-weight:700; font-size:13.5px; color:var(--navy); margin-bottom:4px; }
+    .step-desc  { font-size:13px; color:var(--muted); line-height:1.6; }
+    .prose { font-size:14.5px; line-height:1.75; color:var(--text); margin:0; }
+  </style>
+</head>
+<body>
+<div id="topbarMount"></div>
+<div id="heroMount"></div>
+<div class="page-inner">
+  <div class="card">
+    <div class="card-title"><span class="mi" style="color:var(--gold-dk)">verified</span> Akreditasyon Nedir?</div>
+    <p class="prose">MÜDEK akreditasyonu, mühendislik programlarının ulusal ve uluslararası standartlara uygunluğunu bağımsız olarak değerlendiren ve belgeleyen bir süreçtir. Konya Teknik Üniversitesi olarak bu süreci şeffaf ve sistematik biçimde yürütmekteyiz.</p>
+  </div>
+  <div class="card">
+    <div class="card-title"><span class="mi" style="color:var(--gold-dk)">timeline</span> Süreç Adımları</div>
+    <div class="step-list">
+      <div class="step-item"><div class="step-num">1</div><div><div class="step-title">Başvuru</div><div class="step-desc">Üniversite, MÜDEK'e resmi başvurusunu yapar.</div></div></div>
+      <div class="step-item"><div class="step-num">2</div><div><div class="step-title">Özdeğerlendirme Raporu</div><div class="step-desc">İlgili bölüm, programın tüm yönlerini kapsayan ayrıntılı bir öz değerlendirme raporu hazırlar.</div></div></div>
+      <div class="step-item"><div class="step-num">3</div><div><div class="step-title">Yerinde Ziyaret</div><div class="step-desc">MÜDEK değerlendirme ekibi üniversiteyi ziyaret ederek paydaşlarla görüşmeler yapar.</div></div></div>
+      <div class="step-item"><div class="step-num">4</div><div><div class="step-title">Değerlendirme Raporu</div><div class="step-desc">Ziyaret sonrası programın güçlü ve gelişime açık yönleri raporlanır.</div></div></div>
+      <div class="step-item"><div class="step-num">5</div><div><div class="step-title">Karar</div><div class="step-desc">Akreditasyon Kurulu programın akreditasyon alıp almayacağına karar verir (2 veya 5 yıllık süre).</div></div></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title"><span class="mi" style="color:var(--gold-dk)">public</span> EUR-ACE Etiketi</div>
+    <p class="prose">MÜDEK, Avrupa Mühendislik Eğitimi Akreditasyon Ağı (ENAEE) üyesidir ve başarıyla akredite edilen programlara EUR-ACE etiketi verme yetkisine sahiptir. Bu etiket, mezunların uluslararası arenada tanınırlığını güçlendirir.</p>
+  </div>
+</div>
+<script src="assets/ktun-shell.js"></script>
+<script src="help-widget.js" defer></script>
+<script>
+  KTUN.renderPublicTopbar({ active: 'akreditasyon' });
+  KTUN.renderHero({ eyebrow: 'MÜDEK', title: 'Akreditasyon Süreci', sub: 'Mühendislik programlarının kalite değerlendirme ve belgelendirme süreci' });
+</script>
+</body>
+</html>

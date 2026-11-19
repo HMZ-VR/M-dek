@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MÜDEK – Yönetim Paneli</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+  <link rel="stylesheet" href="assets/ktun-design.css">
+</head>
+<body>
+
+<div id="topbarMount"></div>
+<div id="heroMount"></div>
+
+<div class="page-body">
+  <div class="section-hd">
+    <h2>Modüller</h2>
+    <div class="section-hd-line"></div>
+    <span id="moduleCount" style="font-size:12px;color:var(--muted);white-space:nowrap"></span>
+  </div>
+
+  <div id="moduleGrid" class="mod-grid"></div>
+</div>
+
+<script src="assets/ktun-shell.js"></script>
+<script src="help-widget.js" defer></script>
+<script>
+  const auth = KTUN.requireAuth();
+  if (!auth) throw new Error('redirecting');
+  const { user, role } = auth;
+  if (role === 'student') location.href = 'student-surveys.html';
+
+  KTUN.renderTopbar();
+  KTUN.renderHero({
+    eyebrow: 'Yönetim Paneli',
+    title: `Hoş geldin, <em>${KTUN.htmlEscape(user.full_name || user.username || '—')}</em>`,
+    sub: 'Aşağıdan yetki verilen modüllere erişebilirsiniz.',
+    pill: { icon: 'verified_user', label: KTUN.roleLabel(role) },
+  });
+  KTUN.renderFooter();
+
+  const ICONS = {
+    'courses': 'menu_book', 'instructors': 'person', 'exams': 'task',
+    'users': 'manage_accounts', 'reports': 'trending_up', 'offerings': 'link',
+    'committees': 'groups', 'courses-teachers': 'school', 'change-password': 'key',
+    'my-exams': 'assignment_ind', 'course-performance': 'analytics',
+    'student-portfolio': 'school', 'mudek-reports': 'fact_check',
+    'survey-management': 'assignment', 'mudek-rehber': 'menu_book',
+  };
+
+  const MODULES = [
+    { id:'my-exams',          name:'Derslerim & Sınavlarım',   desc:'Verdiğiniz dersler ve sınavlarınız.', roles:['ogretim_uyesi'] },
+    { id:'exams',             name:'Sınav Yönetimi',           desc:'Sınav oluşturun, soruları yönetin.', roles:['admin','bolum_baskani','ogretim_uyesi'] },
+    { id:'survey-management', name:'Anket Yönetimi',           desc:'Ders anketleri oluşturun, soruları yönetin ve sonuçları görüntüleyin.', roles:['admin','bolum_baskani','mudek_kurul_uyesi','ogretim_uyesi'] },
+    { id:'mudek-rehber',      name:'MÜDEK Rehberi',            desc:'MÜDEK, DÖÇ ve PÇ hesaplamalarını adım adım açıklayan rehber (PDF indirilebilir).', roles:['admin','bolum_baskani','mudek_kurul_uyesi','ogretim_uyesi','arastirma_gorevlisi','komisyon_uyesi','student'] },
+    { id:'courses',           name:'Ders Yönetimi',            desc:'Ders ekleme, silme ve güncelleme işlemleri.', roles:['admin','bolum_baskani'] },
+    { id:'instructors',       name:'Hoca Yönetimi',            desc:'Yeni öğretim üyeleri ekleyin.', roles:['admin','bolum_baskani'] },
+    { id:'offerings',         name:'Ders-Hoca Eşleştirme',     desc:'Ders açılışı oluştur, hocayı ata/kaldır.', roles:['admin','bolum_baskani'] },
+    { id:'users',             name:'Kullanıcı & Rol Yönetimi', desc:'Kullanıcı rollerini düzenleyin.', roles:['admin','bolum_baskani'] },
+    { id:'committees',        name:'Komiteler',                desc:'Komite oluştur, üye ata.', roles:['admin','bolum_baskani','mudek_kurul_uyesi','komisyon_uyesi'] },
+    { id:'courses-teachers',  name:'Dersler-Hoca Listesi',     desc:'Kim hangi dersi veriyor?', roles:['admin','bolum_baskani','mudek_kurul_uyesi','ogretim_uyesi','arastirma_gorevlisi'] },
+    { id:'reports',           name:'Raporlar',                 desc:'Sistem performans ve başarı analizleri.', roles:['admin','mudek_kurul_uyesi','bolum_baskani'] },
+    { id:'mudek-reports',     name:'Değerlendirme Raporları',  desc:'Geri bildirimler ve olası çözümler.', roles:['admin','mudek_kurul_uyesi','bolum_baskani'] },
+    { id:'course-performance',name:'Anket Raporları',          desc:'Sistem performans ve başarı analizleri.', roles:['admin','mudek_kurul_uyesi','bolum_baskani'] },
+    { id:'student-portfolio', name:'Öğrenci Yetkinlik Karnesi',desc:'Öğrenci bazlı detaylı PÇ kazanım raporu ve transkripti.', roles:['admin','bolum_baskani','ogretim_uyesi','mudek_kurul_uyesi'] },
+    { id:'change-password',   name:'Şifre Değiştir',           desc:'Hesap şifrenizi değiştirin.', roles:['admin','bolum_baskani','ogretim_uyesi','mudek_kurul_uyesi','arastirma_gorevlisi','komisyon_uyesi'] },
+  ];
+
+  const grid = document.getElementById('moduleGrid');
+  const visible = MODULES.filter(m => m.roles.includes(role));
+  document.getElementById('moduleCount').textContent = visible.length + ' modül';
+
+  if (visible.length === 0) {
+    grid.innerHTML = `
+      <div class="empty-state" style="grid-column:1/-1">
+        <span class="mi">lock</span>
+        <h3>Erişilebilir Modül Yok</h3>
+        <p>Bu kullanıcı rolü için henüz modül tanımlanmamış.</p>
+      </div>`;
+  } else {
+    grid.innerHTML = visible.map(m => `
+      <a href="javascript:void(0)" class="mod-card" data-id="${m.id}">
+        <div class="mod-card-top">
+          <div class="mod-icon"><span class="mi">${ICONS[m.id] || 'widgets'}</span></div>
+          <div class="mod-name">${KTUN.htmlEscape(m.name)}</div>
+        </div>
+        <div class="mod-card-body">
+          <div class="mod-desc">${KTUN.htmlEscape(m.desc)}</div>
+          <div class="mod-arrow"><span>Aç</span><span class="mi">arrow_forward</span></div>
+        </div>
+      </a>`).join('');
+    grid.querySelectorAll('.mod-card').forEach(el => {
+      el.addEventListener('click', () => {
+        const id = el.dataset.id;
+        if (id === 'committees') {
+          const managers = ['admin','bolum_baskani','mudek_kurul_uyesi'];
+          location.href = managers.includes(role) ? 'committees.html' : 'my-committees.html';
+        } else {
+          location.href = id + '.html';
+        }
+      });
+    });
+  }
+</script>
+</body>
+</html>

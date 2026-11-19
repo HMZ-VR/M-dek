@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Anket Yönetimi – MÜDEK</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+  <link rel="stylesheet" href="assets/ktun-design.css">
+  <style>
+    .stats-row { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:22px; }
+    .stat-card  { background:var(--white); border:1px solid var(--border); border-radius:var(--r); padding:16px 18px; box-shadow:var(--shadow); display:flex; align-items:center; gap:14px; }
+    .stat-icon  { width:42px; height:42px; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .stat-val   { font-size:22px; font-weight:700; color:var(--navy); font-family:'Playfair Display',serif; line-height:1; }
+    .stat-lbl   { font-size:11.5px; color:var(--muted); margin-top:3px; }
+
+    .survey-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(360px,1fr)); gap:16px; }
+    .survey-card {
+      background:var(--white); border:1px solid var(--border); border-radius:var(--r);
+      box-shadow:var(--shadow); overflow:hidden; transition:all var(--ease);
+    }
+    .survey-card:hover { border-color:var(--gold); box-shadow:var(--shadow-md); transform:translateY(-2px); }
+    .survey-card-hd  { padding:16px 18px 10px; display:flex; justify-content:space-between; align-items:flex-start; }
+    .survey-card-bd  { padding:0 18px 16px; }
+    .survey-card-ft  { padding:12px 18px; border-top:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; background:rgba(11,31,69,.02); }
+    .course-tag { font-size:12px; font-weight:700; color:var(--navy); background:rgba(11,31,69,.07); padding:3px 9px; border-radius:6px; }
+    .survey-name { font-size:15px; font-weight:700; color:var(--navy); margin:7px 0 4px; }
+    .survey-meta { font-size:12px; color:var(--muted); display:flex; gap:12px; flex-wrap:wrap; }
+    .survey-meta .mi { font-size:13px; vertical-align:middle; }
+
+    .progress-bar { height:5px; background:var(--border); border-radius:3px; margin-top:10px; overflow:hidden; }
+    .progress-fill { height:100%; border-radius:3px; transition:width .5s; }
+
+    .q-type-badge { font-size:10px; font-weight:700; padding:2px 7px; border-radius:4px; letter-spacing:.04em; text-transform:uppercase; }
+    .q-type-likert { background:rgba(11,31,69,.08); color:var(--navy); }
+    .q-type-mc     { background:rgba(201,168,76,.15); color:var(--gold-dk); }
+    .q-type-open   { background:rgba(5,150,105,.1); color:var(--green); }
+
+    .question-item-edit {
+      border:1px solid var(--border); border-radius:var(--r-sm); padding:12px 14px;
+      margin-bottom:8px; display:flex; justify-content:space-between; align-items:flex-start; gap:10px;
+      transition:border-color var(--ease);
+    }
+    .question-item-edit:hover { border-color:var(--gold); }
+
+    @media(max-width:768px) { .stats-row { grid-template-columns:repeat(2,1fr); } .survey-grid { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+
+<div id="topbarMount"></div>
+<div id="heroMount"></div>
+
+<main class="page-body">
+
+  <!-- İstatistik -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-icon" style="background:rgba(11,31,69,.08);color:var(--navy)"><span class="mi">assignment</span></div>
+      <div><div class="stat-val" id="totalSurveys">–</div><div class="stat-lbl">Toplam Anket</div></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:rgba(5,150,105,.1);color:var(--green)"><span class="mi">check_circle</span></div>
+      <div><div class="stat-val" id="activeSurveys">–</div><div class="stat-lbl">Aktif Anket</div></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:rgba(180,83,9,.1);color:var(--amber)"><span class="mi">group</span></div>
+      <div><div class="stat-val" id="totalResponses">–</div><div class="stat-lbl">Toplam Yanıt</div></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:rgba(220,38,38,.08);color:var(--red)"><span class="mi">lock</span></div>
+      <div><div class="stat-val" id="closedSurveys">–</div><div class="stat-lbl">Kapanmış</div></div>
+    </div>
+  </div>
+
+  <!-- Başlık + Arama -->
+  <div class="section-hd">
+    <h2>Anketler</h2>
+    <div class="section-hd-line"></div>
+    <input id="searchBox" placeholder="Ders ara…" style="max-width:260px">
+    <button class="btn btn-gold" id="newSurveyBtn"><span class="mi">add</span> Yeni Anket</button>
+  </div>
+
+  <div class="survey-grid" id="surveyGrid">
+    <div class="empty-state" style="grid-column:1/-1"><span class="mi">hourglass_empty</span><h3>Yükleniyor…</h3></div>
+  </div>
+
+</main>
+
+<!-- Anket Oluştur -->
+<div class="modal-backdrop" id="createModal" style="display:none">
+  <div class="modal" style="max-width:500px">
+    <div class="modal-hd">
+      <span style="display:flex;align-items:center;gap:8px"><span class="mi" style="color:var(--gold-dk)">add_circle</span>Yeni Anket Başlat</span>
+      <button class="modal-close" data-close="createModal"><span class="mi">close</span></button>
+    </div>
+    <div class="modal-bd">
+      <div class="form-row" style="grid-template-columns:1fr">
+        <div>
+          <label>Ders Açılışı Seçin</label>
+          <select id="offeringSelect"><option value="">Yükleniyor…</option></select>
+        </div>
+      </div>
+      <div class="alert alert-info" style="margin-top:4px">
+        <span class="mi">info</span>
+        <span>Anket başlatıldığında dersin DÖÇ'leri otomatik olarak Likert (1-5) sorulara dönüştürülür. Sonradan ek özel sorular ekleyebilirsiniz.</span>
+      </div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn" data-close="createModal">İptal</button>
+      <button class="btn btn-gold" id="createSurveyBtn"><span class="mi">rocket_launch</span> Anketi Başlat</button>
+    </div>
+  </div>
+</div>
+
+<!-- Özel Soru Ekle -->
+<div class="modal-backdrop" id="questionModal" style="display:none">
+  <div class="modal" style="max-width:580px">
+    <div class="modal-hd">
+      <span style="display:flex;align-items:center;gap:8px"><span class="mi" style="color:var(--gold-dk)">help_outline</span>Özel Soru Ekle</span>
+      <button class="modal-close" data-close="questionModal"><span class="mi">close</span></button>
+    </div>
+    <div class="modal-bd">
+      <div id="existingQuestions" style="margin-bottom:16px"></div>
+      <hr style="border:none;border-top:1px solid var(--border);margin-bottom:16px">
+      <strong style="font-size:13px;color:var(--navy)">Yeni Soru</strong>
+      <div class="form-row" style="grid-template-columns:1fr;margin-top:12px">
+        <div>
+          <label>Soru Tipi</label>
+          <select id="qType">
+            <option value="likert">Likert (1–5)</option>
+            <option value="multiple_choice">Çoktan Seçmeli</option>
+            <option value="open_ended">Açık Uçlu</option>
+          </select>
+        </div>
+        <div>
+          <label>Soru Metni</label>
+          <textarea id="qText" rows="3" placeholder="Soruyu yazın…" style="resize:vertical"></textarea>
+        </div>
+        <div id="optionsGroup" style="display:none">
+          <label>Seçenekler (virgülle ayırın)</label>
+          <input type="text" id="qOptions" placeholder="Evet, Hayır, Kararsızım">
+        </div>
+        <div>
+          <label>Program Çıktısı / PÇ (Opsiyonel)</label>
+          <select id="qCriterion"><option value="">— PÇ seçilmedi —</option></select>
+        </div>
+        <div>
+          <label>Sıra No</label>
+          <input type="number" id="qOrder" value="1" min="1" style="max-width:100px">
+        </div>
+      </div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn" data-close="questionModal">Kapat</button>
+      <button class="btn btn-gold" id="addQuestionBtn"><span class="mi">add</span> Soruyu Ekle</button>
+    </div>
+  </div>
+</div>
+
+<script src="assets/ktun-shell.js"></script>
+<script src="help-widget.js" defer></script>
+<script>
+  const auth = KTUN.requireAuth({ roles: ['admin', 'bolum_baskani', 'mudek_kurul_uyesi', 'ogretim_uyesi'] });
+  if (!auth) throw new Error('redirecting');
+  KTUN.renderTopbar({ back: { href: 'dashboard.html', label: 'Panel' } });
+  KTUN.renderHero({ eyebrow: 'Değerlendirme', title: 'Anket Yönetimi', sub: 'Ders anketlerini oluşturun, yönetin ve sonuçlarını takip edin' });
+
+  const esc = KTUN.htmlEscape;
+  const IS_INSTRUCTOR = auth.role === 'ogretim_uyesi';
+  let allSurveys = [];
+  let activeSurveyIdForQ = null;
+
+  async function api(path, opts) {
+    const res = await KTUN.apiFetch(path, opts || {});
+    if (!res.ok) {
+      let msg = `HTTP ${res.status}`;
+      try { const j = await res.json(); msg = j.detail || j.message || msg; } catch {}
+      throw new Error(msg);
+    }
+    const ct = res.headers.get('content-type') || '';
+    return ct.includes('application/json') ? res.json() : res.text();
+  }
+
+  /* ── Modal ── */
+  function openModal(id)  { document.getElementById(id).style.display = 'flex'; }
+  function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+  document.querySelectorAll('.modal-backdrop').forEach(bd => {
+    bd.addEventListener('click', e => { if (e.target === bd) bd.style.display = 'none'; });
+  });
+  document.querySelectorAll('[data-close]').forEach(btn => {
+    btn.addEventListener('click', () => closeModal(btn.dataset.close));
+  });
+
+  /* ── Veri Yükleme ── */
+  async function loadSurveys() {
+    const grid = document.getElementById('surveyGrid');
+    try {
+      allSurveys = await api('/api/surveys/all');
+      if (!Array.isArray(allSurveys)) allSurveys = [];
+      renderSurveys(allSurveys);
+      updateStats(allSurveys);
+    } catch (e) {
+      grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><span class="mi">error</span><h3>Anketler yüklenemedi</h3><p>${esc(e.message)}</p></div>`;
+    }
+  }
+
+  function renderSurveys(surveys) {
+    const grid = document.getElementById('surveyGrid');
+    if (!surveys.length) {
+      grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1">
+        <span class="mi">assignment</span><h3>Henüz anket oluşturulmamış</h3>
+        <button class="btn btn-gold" onclick="openCreateModal()"><span class="mi">add</span> İlk Anketi Oluştur</button>
+      </div>`;
+      return;
+    }
+    grid.innerHTML = surveys.map(s => {
+      const pct = s.total_students > 0 ? Math.round(s.response_count / s.total_students * 100) : 0;
+      const barColor = pct >= 70 ? 'var(--green)' : pct >= 40 ? 'var(--amber)' : 'var(--red)';
+      return `
+        <div class="survey-card">
+          <div class="survey-card-hd">
+            <div>
+              <span class="course-tag">${esc(s.course_code)}</span>
+              <div class="survey-name">${esc(s.course_name)}</div>
+            </div>
+            <span class="badge ${s.is_active ? 'badge-green' : 'badge-red'}">
+              <span class="mi" style="font-size:12px">${s.is_active ? 'signal_cellular_alt' : 'lock'}</span>
+              ${s.is_active ? 'Aktif' : 'Kapalı'}
+            </span>
+          </div>
+          <div class="survey-card-bd">
+            <div class="survey-meta">
+              <span><span class="mi">event</span> ${esc(s.term || '—')}</span>
+              <span><span class="mi">person</span> ${esc(s.instructor_name || 'Atanmamış')}</span>
+              <span><span class="mi">layers</span> Şube ${esc(s.section || '—')}</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px">
+              <span style="font-size:13px;color:var(--muted)"><strong style="color:var(--navy)">${s.response_count}</strong> / ${s.total_students} yanıt</span>
+              <span style="font-size:13px;font-weight:700;color:${barColor}">%${pct}</span>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${barColor}"></div></div>
+            ${s.custom_question_count > 0 ? `<div style="margin-top:7px;font-size:11px;color:var(--muted)"><span class="mi" style="font-size:13px;vertical-align:middle">help_outline</span> ${s.custom_question_count} özel soru</div>` : ''}
+          </div>
+          <div class="survey-card-ft">
+            <div style="display:flex;gap:6px">
+              <button class="btn btn-sm btn-outline" onclick="location.href='survey-results.html?id=${s.id}'"><span class="mi">bar_chart</span> Sonuçlar</button>
+              <button class="btn btn-sm btn-outline" onclick="openQuestionModal(${s.id})"><span class="mi">add</span> Soru</button>
+            </div>
+            ${s.is_active
+              ? `<button class="btn btn-sm" style="color:var(--red);border-color:rgba(220,38,38,.3)" onclick="closeSurvey(${s.id})"><span class="mi">lock</span> Kapat</button>`
+              : `<span style="font-size:11px;color:var(--muted)">${formatDate(s.created_at)}</span>`}
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  function updateStats(surveys) {
+    document.getElementById('totalSurveys').textContent   = surveys.length;
+    document.getElementById('activeSurveys').textContent  = surveys.filter(s => s.is_active).length;
+    document.getElementById('closedSurveys').textContent  = surveys.filter(s => !s.is_active).length;
+    document.getElementById('totalResponses').textContent = surveys.reduce((a, s) => a + (s.response_count || 0), 0);
+  }
+
+  document.getElementById('searchBox').addEventListener('input', function() {
+    const q = this.value.toLowerCase();
+    renderSurveys(allSurveys.filter(s =>
+      (s.course_code + s.course_name + (s.instructor_name || '')).toLowerCase().includes(q)
+    ));
+  });
+
+  /* ── Anket Oluştur ── */
+  async function openCreateModal() {
+    openModal('createModal');
+    try {
+      let offerings;
+      if (IS_INSTRUCTOR) {
+        const data = await api('/api/my-courses');
+        offerings = (data && Array.isArray(data.offerings)) ? data.offerings : [];
+      } else {
+        const list = await api('/api/course-offerings');
+        offerings = Array.isArray(list) ? list : [];
+      }
+      const sel = document.getElementById('offeringSelect');
+      sel.innerHTML = '<option value="">— Ders seçin —</option>' +
+        offerings.map(o =>
+          `<option value="${o.id}">${esc(o.course_code)} – ${esc(o.course_name)} (${esc(o.term)}, Ş:${esc(o.section)})</option>`
+        ).join('');
+    } catch (e) { KTUN.toast(e.message, 'danger'); }
+  }
+
+  document.getElementById('newSurveyBtn').addEventListener('click', openCreateModal);
+  document.getElementById('createSurveyBtn').addEventListener('click', createSurvey);
+
+  async function createSurvey() {
+    const offeringId = document.getElementById('offeringSelect').value;
+    if (!offeringId) { KTUN.toast('Lütfen bir ders seçin.', 'warning'); return; }
+    try {
+      const data = await api(`/api/offerings/${offeringId}/start-survey`, { method: 'POST' });
+      KTUN.toast(data.message || 'Anket başlatıldı', 'success');
+      closeModal('createModal');
+      loadSurveys();
+    } catch (e) { KTUN.toast(e.message, 'danger'); }
+  }
+
+  /* ── Anket Kapat ── */
+  async function closeSurvey(id) {
+    if (!confirm('Bu anketi kapatmak istediğinize emin misiniz?')) return;
+    try {
+      const data = await api(`/api/surveys/${id}/close`, { method: 'POST' });
+      KTUN.toast(data.message || 'Anket kapatıldı', 'success');
+      loadSurveys();
+    } catch (e) { KTUN.toast(e.message, 'danger'); }
+  }
+
+  /* ── Özel Soru ── */
+  document.getElementById('qType').addEventListener('change', function() {
+    document.getElementById('optionsGroup').style.display = this.value === 'multiple_choice' ? 'block' : 'none';
+  });
+
+  async function openQuestionModal(surveyId) {
+    activeSurveyIdForQ = surveyId;
+    openModal('questionModal');
+    try {
+      const pos = await api('/api/program-outcomes');
+      const sel = document.getElementById('qCriterion');
+      sel.innerHTML = '<option value="">— PÇ seçilmedi —</option>' +
+        (Array.isArray(pos) ? pos : []).map(po => `<option value="${po.id}">${esc(po.code)} – ${esc(po.title)}</option>`).join('');
+    } catch {}
+    await loadExistingQuestions(surveyId);
+  }
+
+  async function loadExistingQuestions(surveyId) {
+    const container = document.getElementById('existingQuestions');
+    try {
+      const questions = await api(`/api/surveys/${surveyId}/custom-questions`);
+      if (!questions.length) {
+        container.innerHTML = '<p style="font-size:13px;color:var(--muted);text-align:center">Henüz özel soru eklenmemiş.</p>';
+        return;
+      }
+      const orphanCount = questions.filter(q => !q.program_outcome_code).length;
+      const orphanWarn = orphanCount > 0
+        ? `<div style="background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);border-radius:6px;padding:8px 10px;margin-bottom:10px;font-size:12px;color:var(--red);display:flex;align-items:center;gap:6px">
+             <span class="mi" style="font-size:16px">warning</span>
+             ${orphanCount} sorunun PÇ bağlantısı yok. Raporlamaya katkı vermezler — lütfen güncelleyin.
+           </div>`
+        : '';
+      container.innerHTML = orphanWarn +
+        '<p style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.04em">Mevcut Sorular</p>' +
+        questions.map(q => {
+          const tc = q.q_type === 'likert' ? 'q-type-likert' : q.q_type === 'multiple_choice' ? 'q-type-mc' : 'q-type-open';
+          const tl = q.q_type === 'likert' ? 'Likert' : q.q_type === 'multiple_choice' ? 'Çoktan Seçmeli' : 'Açık Uçlu';
+          const poBadge = q.program_outcome_code
+            ? `<span class="q-type-badge q-type-likert" style="margin-left:4px">${esc(q.program_outcome_code)}</span>`
+            : `<span class="q-type-badge" style="margin-left:4px;background:rgba(239,68,68,.12);color:var(--red);border:1px solid rgba(239,68,68,.3)" title="Eski MÜDEK kriter kodu (Ö1..Ö11) PÇ ile eşlenmedi.">
+                 <span class="mi" style="font-size:11px;vertical-align:middle">warning</span> PÇ Bağlantısı Eksik – Lütfen Güncelleyin
+               </span>`;
+          const cardStyle = q.program_outcome_code ? '' : 'border-left:3px solid var(--red);';
+          return `<div class="question-item-edit" style="${cardStyle}">
+            <div style="flex:1">
+              <span class="q-type-badge ${tc}">${tl}</span>
+              ${poBadge}
+              <div style="margin-top:6px;font-size:13px;color:var(--navy)">${esc(q.q_text)}</div>
+            </div>
+            <button class="btn btn-sm btn-outline" style="color:var(--red)" onclick="deleteQuestion(${q.id})"><span class="mi">delete</span></button>
+          </div>`;
+        }).join('');
+    } catch (e) {
+      container.innerHTML = `<p style="color:var(--red);font-size:13px">${esc(e.message)}</p>`;
+    }
+  }
+
+  document.getElementById('addQuestionBtn').addEventListener('click', addQuestion);
+  async function addQuestion() {
+    const qType = document.getElementById('qType').value;
+    const qText = document.getElementById('qText').value.trim();
+    if (!qText) { KTUN.toast('Soru metni boş olamaz.', 'warning'); return; }
+    let options = null;
+    if (qType === 'multiple_choice') {
+      const raw = document.getElementById('qOptions').value.trim();
+      if (!raw) { KTUN.toast('Seçenekleri girin.', 'warning'); return; }
+      options = JSON.stringify(raw.split(',').map(s => s.trim()).filter(Boolean));
+    }
+    const poRaw = document.getElementById('qCriterion').value;
+    const program_outcome_id = poRaw ? parseInt(poRaw, 10) : null;
+    const order = parseInt(document.getElementById('qOrder').value) || 1;
+    try {
+      const data = await api(`/api/surveys/${activeSurveyIdForQ}/questions`, {
+        method: 'POST',
+        body: JSON.stringify({ q_type: qType, q_text: qText, q_order: order, options, program_outcome_id })
+      });
+      KTUN.toast(data.message || 'Soru eklendi', 'success');
+      document.getElementById('qText').value = '';
+      document.getElementById('qOptions').value = '';
+      await loadExistingQuestions(activeSurveyIdForQ);
+      loadSurveys();
+    } catch (e) { KTUN.toast(e.message, 'danger'); }
+  }
+
+  async function deleteQuestion(id) {
+    if (!confirm('Bu soruyu silmek istediğinize emin misiniz?')) return;
+    try {
+      const data = await api(`/api/survey-questions/${id}`, { method: 'DELETE' });
+      KTUN.toast(data.message || 'Soru silindi', 'success');
+      await loadExistingQuestions(activeSurveyIdForQ);
+      loadSurveys();
+    } catch (e) { KTUN.toast(e.message, 'danger'); }
+  }
+
+  function formatDate(d) {
+    if (!d) return '—';
+    return new Date(d).toLocaleDateString('tr-TR', { day: '2-digit', month: 'short', year: 'numeric' });
+  }
+
+  loadSurveys();
+</script>
+</body>
+</html>

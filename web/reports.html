@@ -1,0 +1,1321 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MÜDEK Raporları & Analizi</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+  <link rel="stylesheet" href="assets/ktun-design.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+  <script src="Roboto-Regular.js"></script>
+  <style>
+    /* ── Sayfa-spesifik: tabs, kpi, chart, heatmap ── */
+    .main-tabs {
+      display:flex; gap:6px; background:var(--white);
+      border:1px solid var(--border); border-radius:var(--r);
+      padding:6px; box-shadow:var(--shadow); margin-bottom:22px;
+    }
+    .main-tab {
+      flex:1; display:flex; align-items:center; justify-content:center; gap:7px;
+      padding:11px 16px; border-radius:var(--r-sm);
+      border:none; background:transparent;
+      font-family:inherit; font-size:13.5px; font-weight:600;
+      color:var(--muted); cursor:pointer; transition:all var(--ease);
+    }
+    .main-tab .mi { font-size:18px; }
+    .main-tab.active { background:var(--navy); color:var(--gold); }
+    .main-tab:not(.active):hover { background:var(--cream); color:var(--navy); }
+    .tab-panel { display:none; }
+    .tab-panel.active { display:block; }
+
+    .panel-stack { display:flex; flex-direction:column; gap:18px; }
+
+    .kpi-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:14px; }
+    .kpi-card {
+      background:var(--white); border:1px solid var(--border);
+      border-radius:var(--r); padding:18px 20px;
+      box-shadow:var(--shadow);
+      border-left:4px solid var(--navy);
+    }
+    .kpi-card.gold   { border-left-color:var(--gold); }
+    .kpi-card.green  { border-left-color:var(--green); }
+    .kpi-card.amber  { border-left-color:var(--amber); }
+    .kpi-label { font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; margin-bottom:8px; }
+    .kpi-value { font-size:30px; font-weight:700; font-family:'Playfair Display', serif; color:var(--navy); }
+    .kpi-sub { font-size:11px; color:var(--muted); margin-top:4px; }
+
+    .two-col { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+    @media (max-width: 900px) { .two-col { grid-template-columns:1fr; } }
+
+    .panel-section {
+      background:var(--white); border:1px solid var(--border);
+      border-radius:var(--r); box-shadow:var(--shadow); overflow:hidden;
+    }
+    .panel-section-head {
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      padding:14px 20px; border-bottom:1px solid var(--border);
+      background:var(--cream);
+    }
+    .panel-section-title {
+      font-family:'Playfair Display', serif;
+      font-size:15px; font-weight:700; color:var(--navy);
+      display:flex; align-items:center; gap:8px;
+    }
+    .panel-section-title .mi { color:var(--gold-dk); font-size:18px; }
+    .panel-section-body { padding:18px 20px; }
+
+    .filter-row { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+    .sel {
+      padding:9px 12px; border:1px solid var(--border);
+      border-radius:var(--r-sm); background:var(--white);
+      font-family:inherit; font-size:13px; color:var(--text);
+      outline:none; transition:border-color .15s, box-shadow .15s;
+      min-width:240px;
+    }
+    .sel:focus { border-color:var(--navy); box-shadow:0 0 0 3px rgba(11,31,69,.10); }
+
+    .data-tbl { width:100%; border-collapse:collapse; font-size:13px; }
+    .data-tbl th {
+      font-size:11.5px; font-weight:700; color:var(--navy);
+      text-transform:uppercase; letter-spacing:.04em;
+      padding:11px 14px; border-bottom:2px solid var(--gold);
+      background:var(--cream); text-align:left; white-space:nowrap;
+    }
+    .data-tbl td { padding:11px 14px; border-bottom:1px solid var(--border); color:var(--text); }
+    .data-tbl tr:last-child td { border-bottom:none; }
+    .data-tbl tr:hover td { background:rgba(247,245,240,.6); }
+
+    .prog-wrap { display:flex; align-items:center; gap:10px; }
+    .prog-bar-bg {
+      flex:1; height:8px; background:var(--cream);
+      border:1px solid var(--border);
+      border-radius:4px; overflow:hidden; min-width:80px;
+    }
+    .prog-bar-fill { height:100%; transition:width .4s; }
+    .prog-pct { font-size:12px; font-weight:700; min-width:42px; text-align:right; }
+
+    .doc-item {
+      display:flex; align-items:center; gap:14px;
+      padding:12px 18px; border-bottom:1px solid var(--border);
+    }
+    .doc-item:last-child { border-bottom:none; }
+    .doc-num {
+      width:38px; height:38px; border-radius:9px;
+      background:rgba(11,31,69,.06); border:1px solid var(--border);
+      color:var(--navy); font-size:12px; font-weight:700;
+      display:flex; align-items:center; justify-content:center; flex-shrink:0;
+    }
+    .doc-info { flex:1; min-width:0; }
+    .doc-desc { font-size:12px; color:var(--muted); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+    .heat-wrap { overflow:auto; border:1px solid var(--border); border-radius:var(--r-sm); }
+    .heat-tbl { border-collapse:collapse; min-width:600px; font-size:12px; }
+    .heat-tbl th, .heat-tbl td { border:1px solid var(--border); padding:6px 10px; text-align:center; }
+    .heat-tbl th { background:var(--cream); color:var(--navy); font-weight:700; white-space:nowrap; }
+    .heat-tbl td:first-child, .heat-tbl td:nth-child(2) { text-align:left; background:var(--cream); font-size:11px; }
+
+    .btn-export {
+      display:inline-flex; align-items:center; gap:6px;
+      border:1px solid var(--border); border-radius:var(--r-sm);
+      padding:6px 12px; font-family:inherit; font-size:12px;
+      font-weight:600; cursor:pointer; transition:all var(--ease);
+      background:var(--white); color:var(--muted); white-space:nowrap;
+    }
+    .btn-export:hover { border-color:var(--green); color:var(--green); background:rgba(5,150,105,.06); }
+    .btn-export.pdf:hover { border-color:var(--red); color:var(--red); background:rgba(184,39,44,.06); }
+    .btn-export .mi { font-size:14px; }
+    .export-group { display:flex; gap:6px; }
+
+    .empty {
+      text-align:center; padding:40px 20px;
+      color:var(--muted); font-size:13.5px;
+    }
+    .empty .mi { font-size:36px; color:var(--border); display:block; margin:0 auto 10px; }
+
+    .chart-box { position:relative; height:260px; }
+
+    .evidence-clickable { cursor:pointer; transition:background .15s; }
+    .evidence-clickable:hover { background:rgba(201,168,76,.06); }
+    .ev-modal-bd { max-height:65vh; overflow:auto; padding:16px 20px; }
+    .ev-summary {
+      display:flex; gap:14px; flex-wrap:wrap;
+      padding:10px 14px; margin:0 0 14px;
+      background:var(--cream); border-radius:var(--r-sm);
+      font-size:12.5px; color:var(--navy);
+    }
+    .ev-summary strong { font-family:'Playfair Display',serif; font-size:16px; color:var(--navy); }
+    .ev-doc-row.expandable { cursor:pointer; }
+    .ev-doc-row.expandable:hover { background:rgba(11,31,69,.04); }
+    .ev-sub-row td { background:var(--cream); padding:0 !important; }
+    .ev-sub-table { width:100%; border-collapse:collapse; font-size:12px; margin:8px 14px; }
+    .ev-sub-table th, .ev-sub-table td { padding:6px 8px; border-bottom:1px solid var(--border); text-align:left; }
+    .ev-sub-table th { background:rgba(11,31,69,.05); font-weight:600; color:var(--navy); }
+    .ev-empty { padding:30px; text-align:center; color:var(--muted); }
+  </style>
+</head>
+<body>
+
+<div id="topbarMount"></div>
+
+<main class="page-body-wide">
+
+  <div class="section-hd">
+    <h2>MÜDEK Raporları &amp; Analizi</h2>
+    <div class="section-hd-line"></div>
+  </div>
+
+  <div class="main-tabs">
+    <button class="main-tab active" id="tab-bolum"><span class="mi">apartment</span> Bölüm Genel</button>
+    <button class="main-tab" id="tab-ders"><span class="mi">menu_book</span> Ders Bazlı DÖÇ / PÇ</button>
+    <button class="main-tab" id="tab-sinav"><span class="mi">description</span> Sınav Detayı</button>
+    <button class="main-tab" id="tab-trend"><span class="mi">timeline</span> Dönem Karşılaştırma</button>
+  </div>
+
+  <!-- ════ SEKME 1: BÖLÜM GENEL ════ -->
+  <div id="panel-bolum" class="tab-panel active">
+    <div class="panel-stack">
+
+      <div class="kpi-grid">
+        <div class="kpi-card"><div class="kpi-label">Toplam Ders</div><div class="kpi-value" id="kpiCourses">–</div></div>
+        <div class="kpi-card gold"><div class="kpi-label">Toplam Sınav</div><div class="kpi-value" id="kpiExams">–</div></div>
+        <div class="kpi-card green"><div class="kpi-label">Program Çıktıları</div><div class="kpi-value" id="kpiPO">–</div></div>
+        <div class="kpi-card amber"><div class="kpi-label">PÇ Sayısı</div><div class="kpi-value" id="kpiPO2">–</div></div>
+      </div>
+
+      <div class="panel-section">
+        <div class="panel-section-head">
+          <div class="panel-section-title"><span class="mi">format_list_numbered</span> Program Çıktıları Özeti</div>
+        </div>
+        <div style="overflow:auto;max-height:340px;">
+          <div id="poSummaryList"><div class="empty"><span class="mi">hourglass_empty</span>Yükleniyor…</div></div>
+        </div>
+      </div>
+
+      <div class="panel-section">
+        <div class="panel-section-head">
+          <div class="panel-section-title"><span class="mi">table_chart</span> Ders Şubesi Performansı</div>
+          <div class="export-group">
+            <button class="btn-export" onclick="exportBolumExcel()"><span class="mi">file_download</span> Excel</button>
+            <button class="btn-export pdf" onclick="exportBolumPDF()"><span class="mi">picture_as_pdf</span> PDF</button>
+          </div>
+        </div>
+        <div style="overflow:auto;">
+          <table class="data-tbl">
+            <thead>
+              <tr>
+                <th>Ders</th><th>Dönem</th><th>Şube</th><th>Hoca</th>
+                <th style="text-align:center;">Öğrenci</th>
+                <th style="text-align:center;">Ank. Kat.</th>
+                <th style="text-align:center;">Ort. Puan</th>
+                <th style="text-align:center;">Durum</th>
+              </tr>
+            </thead>
+            <tbody id="coursePerformBody">
+              <tr><td colspan="8" class="empty"><span class="mi">hourglass_empty</span>Yükleniyor…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ════ SEKME 2: DERS BAZLI ════ -->
+  <div id="panel-ders" class="tab-panel">
+    <div class="panel-stack">
+
+      <div class="panel-section">
+        <div class="panel-section-head">
+          <div class="panel-section-title"><span class="mi">filter_list</span> Ders Seç</div>
+        </div>
+        <div class="panel-section-body">
+          <div class="filter-row">
+            <select class="sel" id="courseSelect"><option value="">Ders seçin…</option></select>
+            <button class="btn" id="btnLoadCourse"><span class="mi">search</span> Analiz Et</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="courseAnalysisWrap" style="display:none;">
+        <div class="panel-stack">
+
+          <div class="kpi-grid" id="dersKpi" style="display:none;">
+            <div class="kpi-card"><div class="kpi-label">Toplam Öğrenci</div><div class="kpi-value" id="dersTotal">–</div></div>
+            <div class="kpi-card green"><div class="kpi-label">Değerlendirilen</div><div class="kpi-value" id="dersPassing">–</div><div class="kpi-sub">Başarı notu ≥ 40</div></div>
+            <div class="kpi-card gold"><div class="kpi-label">DÖÇ Sayısı</div><div class="kpi-value" id="dersDocCount">–</div></div>
+            <div class="kpi-card amber"><div class="kpi-label">PÇ Sayısı</div><div class="kpi-value" id="dersPcCount">–</div></div>
+          </div>
+
+          <div class="two-col">
+            <div class="panel-section">
+              <div class="panel-section-head">
+                <div class="panel-section-title"><span class="mi">my_location</span> DÖÇ Başarı Oranları</div>
+                <div class="export-group">
+                  <button class="btn-export" onclick="exportDersExcel()"><span class="mi">file_download</span> Excel</button>
+                  <button class="btn-export pdf" onclick="exportDersPDF()"><span class="mi">picture_as_pdf</span> PDF</button>
+                </div>
+              </div>
+              <div id="docAttainmentList" style="overflow:auto;max-height:400px;">
+                <div class="empty"><span class="mi">inbox</span>Ders seçilmedi.</div>
+              </div>
+            </div>
+
+            <div class="panel-section">
+              <div class="panel-section-head">
+                <div class="panel-section-title"><span class="mi">donut_large</span> PÇ Başarı Oranları</div>
+              </div>
+              <div id="pcAttainmentList" style="overflow:auto;max-height:400px;">
+                <div class="empty"><span class="mi">inbox</span>Ders seçilmedi.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="two-col">
+            <div class="panel-section">
+              <div class="panel-section-head"><div class="panel-section-title"><span class="mi">bar_chart</span> DÖÇ Grafik</div></div>
+              <div class="panel-section-body"><div class="chart-box"><canvas id="docChart"></canvas></div></div>
+            </div>
+            <div class="panel-section">
+              <div class="panel-section-head"><div class="panel-section-title"><span class="mi">bar_chart</span> PÇ Grafik</div></div>
+              <div class="panel-section-body"><div class="chart-box"><canvas id="pcChart"></canvas></div></div>
+            </div>
+          </div>
+
+          <div class="panel-section">
+            <div class="panel-section-head">
+              <div class="panel-section-title"><span class="mi">grading</span> Harf Notu Dağılımı</div>
+            </div>
+            <div class="panel-section-body" id="letterDistContainer">
+              <div class="empty"><span class="mi">inbox</span>Ders seçilmedi.</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ════ SEKME 3: SINAV DETAYI ════ -->
+  <div id="panel-sinav" class="tab-panel">
+    <div class="panel-stack">
+
+      <div class="panel-section">
+        <div class="panel-section-head">
+          <div class="panel-section-title"><span class="mi">filter_list</span> Sınav Seç</div>
+        </div>
+        <div class="panel-section-body">
+          <div class="filter-row">
+            <select class="sel" id="examSelect" style="min-width:340px;"><option value="">Sınav seçin…</option></select>
+            <button class="btn" id="btnLoadExam"><span class="mi">search</span> Yükle</button>
+          </div>
+          <div id="examMeta" style="font-size:12px;color:var(--muted);margin-top:10px;"></div>
+        </div>
+      </div>
+
+      <div class="panel-section">
+        <div class="panel-section-head">
+          <div class="panel-section-title"><span class="mi">format_list_numbered</span> Soru Bazlı İstatistikler</div>
+          <div class="export-group">
+            <button class="btn-export" onclick="exportSinavExcel()"><span class="mi">file_download</span> Excel</button>
+            <button class="btn-export pdf" onclick="exportSinavPDF()"><span class="mi">picture_as_pdf</span> PDF</button>
+          </div>
+        </div>
+        <div style="overflow:auto;">
+          <table class="data-tbl">
+            <thead>
+              <tr>
+                <th>Soru</th><th>Max Puan</th>
+                <th style="text-align:center;">Ort. Puan</th>
+                <th style="text-align:center;">Başarı</th>
+                <th>Dağılım</th>
+              </tr>
+            </thead>
+            <tbody id="qStatsBody">
+              <tr><td colspan="5" class="empty"><span class="mi">hourglass_empty</span>Yükleniyor…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="panel-section">
+        <div class="panel-section-head">
+          <div class="panel-section-title"><span class="mi">whatshot</span> Öğrenci × Soru Puan Isı Haritası</div>
+        </div>
+        <div class="panel-section-body">
+          <div class="heat-wrap">
+            <table class="heat-tbl">
+              <thead id="heatHead"></thead>
+              <tbody id="heatBody"><tr><td colspan="3" class="empty">Sınav seçin.</td></tr></tbody>
+            </table>
+          </div>
+          <div style="display:flex;gap:16px;margin-top:10px;font-size:12px;color:var(--muted);">
+            <span>Lejand:</span>
+            <span style="display:flex;align-items:center;gap:5px;"><span style="width:14px;height:14px;border-radius:3px;background:#fee2e2;display:inline-block;border:1px solid #fca5a5;"></span>Düşük</span>
+            <span style="display:flex;align-items:center;gap:5px;"><span style="width:14px;height:14px;border-radius:3px;background:#fef9c3;display:inline-block;border:1px solid #fde68a;"></span>Orta</span>
+            <span style="display:flex;align-items:center;gap:5px;"><span style="width:14px;height:14px;border-radius:3px;background:#dcfce7;display:inline-block;border:1px solid #86efac;"></span>İyi</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ════ SEKME 4: TREND ════ -->
+  <div id="panel-trend" class="tab-panel">
+    <div class="panel-stack">
+
+      <div class="panel-section">
+        <div class="panel-section-head">
+          <div class="panel-section-title"><span class="mi">timeline</span> Program Çıktıları (PÇ) Dönem Trendi</div>
+          <div style="font-size:11px;color:var(--muted);">Tüm derslerden hesaplanan PÇ ortalaması</div>
+        </div>
+        <div class="panel-section-body">
+          <div style="position:relative;height:340px;"><canvas id="trendChart"></canvas></div>
+        </div>
+      </div>
+
+      <div class="panel-section">
+        <div class="panel-section-head">
+          <div class="panel-section-title"><span class="mi">table_chart</span> PÇ Dönem Başarı Tablosu (%)</div>
+          <div class="export-group">
+            <button class="btn-export" onclick="exportTrendExcel()"><span class="mi">file_download</span> Excel</button>
+            <button class="btn-export pdf" onclick="exportTrendPDF()"><span class="mi">picture_as_pdf</span> PDF</button>
+          </div>
+        </div>
+        <div style="overflow:auto;">
+          <table class="data-tbl">
+            <thead id="trendTblHead"></thead>
+            <tbody id="trendTblBody">
+              <tr><td colspan="3" class="empty"><span class="mi">hourglass_empty</span>Yükleniyor…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="panel-section">
+        <div class="panel-section-head">
+          <div class="panel-section-title"><span class="mi">menu_book</span> Ders Bazlı DÖÇ Trendi</div>
+        </div>
+        <div class="panel-section-body">
+          <div class="filter-row">
+            <select class="sel" id="trendCourseSelect"><option value="">Ders seçin…</option></select>
+            <button class="btn" id="btnLoadCourseTrend"><span class="mi">timeline</span> Görüntüle</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="courseTrendWrap" style="display:none;">
+        <div class="panel-stack">
+          <div class="two-col">
+            <div class="panel-section">
+              <div class="panel-section-head"><div class="panel-section-title"><span class="mi">my_location</span> DÖÇ Dönem Trendi</div></div>
+              <div class="panel-section-body"><div style="position:relative;height:280px;"><canvas id="docTrendChart"></canvas></div></div>
+            </div>
+            <div class="panel-section">
+              <div class="panel-section-head"><div class="panel-section-title"><span class="mi">donut_large</span> PÇ Dönem Trendi</div></div>
+              <div class="panel-section-body"><div style="position:relative;height:280px;"><canvas id="pcTrendChart"></canvas></div></div>
+            </div>
+          </div>
+
+          <div class="panel-section">
+            <div class="panel-section-head">
+              <div class="panel-section-title"><span class="mi">table_chart</span> <span id="courseTrendTitle">DÖÇ Dönem Detayı</span></div>
+            </div>
+            <div style="overflow:auto;">
+              <table class="data-tbl">
+                <thead id="docTrendTblHead"></thead>
+                <tbody id="docTrendTblBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</main>
+
+<!-- Kanıt Zinciri Modali -->
+<div id="evidenceModal" class="modal-backdrop" style="display:none">
+  <div class="modal" style="max-width:980px;width:96%;">
+    <div class="modal-hd">
+      <h3 id="evidenceTitle" style="margin:0;font-family:'Playfair Display',serif;color:var(--navy);font-size:20px;">Kanıt Zinciri</h3>
+      <button class="modal-close" id="evidenceClose" aria-label="Kapat"><span class="mi">close</span></button>
+    </div>
+    <div class="ev-modal-bd" id="evidenceBody">
+      <div class="ev-empty">Yükleniyor…</div>
+    </div>
+    <div class="modal-ft" style="font-size:12px;color:var(--muted);">
+      Veriler "geçen öğrenciler" üzerinden hesaplanır (Başarı Notu ≥ 40, bütünleme replace mantığıyla).
+    </div>
+  </div>
+</div>
+
+<script src="assets/ktun-shell.js"></script>
+<script src="help-widget.js" defer></script>
+<script>
+const auth = KTUN.requireAuth({ roles: ['admin','bolum_baskani','mudek_kurul_uyesi','ogretim_uyesi'] });
+if (!auth) throw new Error('redirecting');
+KTUN.renderTopbar({ back:{ href:'dashboard.html', label:'Panel' } });
+
+const esc = KTUN.htmlEscape;
+
+async function get(url) {
+  const r = await KTUN.apiFetch(url);
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+
+let docChartInst = null, pcChartInst = null;
+
+function switchTab(name) {
+  ['bolum','ders','sinav','trend'].forEach(t => {
+    document.getElementById('tab-' + t).classList.toggle('active', t === name);
+    document.getElementById('panel-' + t).classList.toggle('active', t === name);
+  });
+  if (name === 'trend' && !trendLoaded) loadTrendTab();
+}
+['bolum','ders','sinav','trend'].forEach(t => {
+  document.getElementById('tab-' + t).addEventListener('click', () => switchTab(t));
+});
+
+document.getElementById('btnLoadCourse').addEventListener('click', loadCourseAnalysis);
+document.getElementById('btnLoadExam').addEventListener('click', loadExamDetail);
+document.getElementById('btnLoadCourseTrend').addEventListener('click', loadCourseTrend);
+
+/* ══ SEKME 1 ══ */
+async function loadBolumTab() {
+  try {
+    const [courses, exams, programOutcomes, coursePerf] = await Promise.all([
+      get('/api/courses'),
+      get('/api/exams'),
+      get('/api/program-outcomes'),
+      get('/api/reports/course-performance'),
+    ]);
+
+    _cachedCoursePerf = coursePerf;
+    _cachedPO = programOutcomes;
+
+    document.getElementById('kpiCourses').textContent = courses.length;
+    document.getElementById('kpiExams').textContent   = exams.length;
+    document.getElementById('kpiPO').textContent      = programOutcomes.length;
+    document.getElementById('kpiPO2').textContent     = programOutcomes.length;
+
+    const listEl = document.getElementById('poSummaryList');
+    if (!programOutcomes.length) {
+      listEl.innerHTML = '<div class="empty"><span class="mi">inbox</span>Program çıktısı tanımlanmamış.</div>';
+    } else {
+      listEl.innerHTML = programOutcomes.map((p, i) => `
+        <div class="doc-item">
+          <div class="doc-num">${esc(p.code || ('PÇ' + (i + 1)))}</div>
+          <div class="doc-info">
+            <div style="font-weight:600;font-size:13px;color:var(--navy);">${esc(p.code || ('PÇ' + (i + 1)))}</div>
+            <div class="doc-desc" style="white-space:normal;">${esc(p.title || p.description || '')}</div>
+          </div>
+        </div>`).join('');
+    }
+
+    const tbody = document.getElementById('coursePerformBody');
+    if (!coursePerf.length) {
+      tbody.innerHTML = '<tr><td colspan="8" class="empty"><span class="mi">inbox</span>Veri yok.</td></tr>';
+    } else {
+      tbody.innerHTML = coursePerf.map(c => {
+        const badgeCls = c.status === 'success' ? 'badge-green' : c.status === 'danger' ? 'badge-red' : 'badge';
+        const statusTxt = c.status === 'success' ? 'İyi' : c.status === 'danger' ? 'Düşük' : 'Veri Yok';
+        return `<tr>
+          <td><strong>${esc(c.code)}</strong> — ${esc(c.course_name)}</td>
+          <td>${esc(c.term || '–')}</td>
+          <td>${esc(c.section || '–')}</td>
+          <td>${esc(c.instructor_name || '–')}</td>
+          <td style="text-align:center;">${esc(c.total_students)}</td>
+          <td style="text-align:center;">${esc(c.responded_students)} <span style="color:var(--muted);font-size:11px;">(${esc(c.participation_rate)}%)</span></td>
+          <td style="text-align:center;font-weight:700;">${c.avg_score ? Number(c.avg_score).toFixed(2) + '/5' : '–'}</td>
+          <td style="text-align:center;"><span class="badge ${badgeCls}">${statusTxt}</span></td>
+        </tr>`;
+      }).join('');
+    }
+  } catch (e) {
+    console.error(e);
+    KTUN.toast('Bölüm verisi yüklenemedi: ' + e.message, 'danger');
+  }
+}
+
+/* ══ SEKME 2 ══ */
+const LETTER_ORDER = ['AA','BA','BB','CB','CC','DC','DD','FF'];
+function renderLetterDist(dist) {
+  const el = document.getElementById('letterDistContainer');
+  if (!el) return;
+  const total = LETTER_ORDER.reduce((s, l) => s + (Number(dist[l]) || 0), 0);
+  if (!total) {
+    el.innerHTML = '<div class="empty"><span class="mi">inbox</span>Harf notu hesaplanmamış (sınav sonuçları eksik olabilir).</div>';
+    return;
+  }
+  const headers = LETTER_ORDER.map(l => `<th style="text-align:center">${l}</th>`).join('') + '<th style="text-align:center">Toplam</th>';
+  const counts = LETTER_ORDER.map(l => `<td style="text-align:center">${Number(dist[l]) || 0}</td>`).join('') + `<td style="text-align:center"><strong>${total}</strong></td>`;
+  const pcts = LETTER_ORDER.map(l => {
+    const pct = total ? Math.round((Number(dist[l]) || 0) / total * 100) : 0;
+    return `<td style="text-align:center;color:var(--muted);font-size:12px">%${pct}</td>`;
+  }).join('') + '<td style="text-align:center;color:var(--muted);font-size:12px">%100</td>';
+  el.innerHTML = `
+    <div style="overflow-x:auto;padding:8px">
+      <table style="width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums">
+        <thead><tr style="background:var(--cream);color:var(--navy)">${headers}</tr></thead>
+        <tbody>
+          <tr>${counts}</tr>
+          <tr>${pcts}</tr>
+        </tbody>
+      </table>
+    </div>`;
+}
+
+async function loadCourseSelect() {
+  try {
+    const courses = await get('/api/courses');
+    const sel = document.getElementById('courseSelect');
+    sel.innerHTML = '<option value="">Ders seçin…</option>' +
+      courses.map(c => `<option value="${esc(c.id)}">${esc(c.code)} — ${esc(c.name)}</option>`).join('');
+  } catch (e) { console.error(e); }
+}
+
+async function loadCourseAnalysis() {
+  const courseId = document.getElementById('courseSelect').value;
+  if (!courseId) { KTUN.toast('Lütfen bir ders seçin.', 'warning'); return; }
+
+  document.getElementById('docAttainmentList').innerHTML = '<div class="empty"><span class="mi">hourglass_empty</span>Hesaplanıyor…</div>';
+  document.getElementById('pcAttainmentList').innerHTML  = '<div class="empty"><span class="mi">hourglass_empty</span>Hesaplanıyor…</div>';
+
+  try {
+    const [analysis, outcomes] = await Promise.all([
+      get(`/api/mudek/analysis/${courseId}?evidence=1`),
+      get(`/api/learning-outcomes/${courseId}`),
+    ]);
+
+    if (analysis.error) {
+      document.getElementById('docAttainmentList').innerHTML = `<div class="empty" style="color:var(--red)"><span class="mi">warning</span>${esc(analysis.error)}</div>`;
+      document.getElementById('pcAttainmentList').innerHTML  = '';
+      return;
+    }
+
+    document.getElementById('courseAnalysisWrap').style.display = 'block';
+    document.getElementById('dersKpi').style.display = 'grid';
+    document.getElementById('dersTotal').textContent   = analysis.students_total ?? '–';
+    document.getElementById('dersPassing').textContent = analysis.students_passing ?? '–';
+    document.getElementById('dersDocCount').textContent = Object.keys(analysis.doc_attainment || {}).length;
+    document.getElementById('dersPcCount').textContent  = Object.keys(analysis.pc_attainment  || {}).length;
+
+    renderLetterDist(analysis.letter_grade_distribution || {});
+
+    const docEl = document.getElementById('docAttainmentList');
+    const docData = analysis.doc_attainment || {};
+    const outcomeMap = {};
+    (outcomes || []).forEach(o => outcomeMap[o.id] = o);
+
+    const sel = document.getElementById('courseSelect');
+    _cachedSelectedCourse = (sel.options[sel.selectedIndex].text).split(' — ')[0] || courseId;
+    _cachedDocData = docData;
+    _cachedDocOutcomes = outcomes || [];
+    _cachedDocEvidence = analysis.doc_evidence || {};
+    _cachedPcEvidence  = analysis.pc_evidence  || {};
+    _cachedOutcomeMap  = outcomeMap;
+
+    if (!Object.keys(docData).length) {
+      docEl.innerHTML = '<div class="empty"><span class="mi">inbox</span>DÖÇ verisi yok.</div>';
+    } else {
+      const docLabels = [], docVals = [];
+      docEl.innerHTML = Object.entries(docData).map(([id, score]) => {
+        const pct = Math.round(score * 100);
+        const o = outcomeMap[id];
+        const cls = pct >= 70 ? 'var(--green)' : pct >= 40 ? 'var(--amber)' : 'var(--red)';
+        docLabels.push(`DÖÇ ${o?.sequence_number ?? id}`);
+        docVals.push(pct);
+        return `
+          <div class="doc-item evidence-clickable" data-doc-id="${esc(id)}" title="Kanıt zincirini gör">
+            <div class="doc-num">D${esc(o?.sequence_number ?? id)}</div>
+            <div class="doc-info">
+              <div style="font-weight:600;font-size:13px;color:var(--navy);display:flex;align-items:center;gap:6px;">DÖÇ ${esc(o?.sequence_number ?? id)} <span class="mi" style="font-size:14px;color:var(--gold-dk);opacity:.7">search</span></div>
+              <div class="doc-desc">${esc(o?.description ?? '')}</div>
+              <div class="prog-wrap" style="margin-top:6px;">
+                <div class="prog-bar-bg"><div class="prog-bar-fill" style="width:${pct}%;background:${cls}"></div></div>
+                <span class="prog-pct" style="color:${cls};">%${pct}</span>
+              </div>
+            </div>
+          </div>`;
+      }).join('');
+      docEl.querySelectorAll('[data-doc-id]').forEach(el => {
+        el.addEventListener('click', () => openDocEvidenceModal(el.dataset.docId));
+      });
+      buildBarChart('docChart', docLabels, docVals, 'DÖÇ Başarı %', 'rgba(11,31,69,.75)', docChartInst, c => docChartInst = c);
+    }
+
+    const pcEl = document.getElementById('pcAttainmentList');
+    const pcData = analysis.pc_attainment || {};
+    _cachedPcData = pcData;
+
+    let poNames = {};
+    try { (await get('/api/program-outcomes')).forEach(p => poNames[p.id] = { code: p.code, title: p.title }); } catch {}
+    _cachedPoMap = poNames;
+
+    if (!Object.keys(pcData).length) {
+      pcEl.innerHTML = '<div class="empty"><span class="mi">inbox</span>PÇ verisi yok.</div>';
+    } else {
+      const pcLabels = [], pcVals = [];
+      pcEl.innerHTML = Object.entries(pcData).map(([id, score]) => {
+        const pct = Math.round(score * 100);
+        const po  = poNames[id] || { code: 'PÇ' + id, title: '' };
+        const cls = pct >= 70 ? 'var(--green)' : pct >= 40 ? 'var(--amber)' : 'var(--red)';
+        pcLabels.push(po.code);
+        pcVals.push(pct);
+        return `
+          <div class="doc-item evidence-clickable" data-pc-id="${esc(id)}" title="Kanıt zincirini gör">
+            <div class="doc-num" style="background:rgba(201,168,76,.15);border-color:rgba(201,168,76,.3);color:var(--gold-dk);">${esc(po.code)}</div>
+            <div class="doc-info">
+              <div style="font-weight:600;font-size:13px;color:var(--navy);display:flex;align-items:center;gap:6px;">${esc(po.code)} <span class="mi" style="font-size:14px;color:var(--gold-dk);opacity:.7">search</span></div>
+              <div class="doc-desc">${esc(po.title)}</div>
+              <div class="prog-wrap" style="margin-top:6px;">
+                <div class="prog-bar-bg"><div class="prog-bar-fill" style="width:${pct}%;background:${cls}"></div></div>
+                <span class="prog-pct" style="color:${cls};">%${pct}</span>
+              </div>
+            </div>
+          </div>`;
+      }).join('');
+      pcEl.querySelectorAll('[data-pc-id]').forEach(el => {
+        el.addEventListener('click', () => openPcEvidenceModal(el.dataset.pcId));
+      });
+      buildBarChart('pcChart', pcLabels, pcVals, 'PÇ Başarı %', 'rgba(201,168,76,.85)', pcChartInst, c => pcChartInst = c);
+    }
+  } catch (e) {
+    document.getElementById('docAttainmentList').innerHTML = `<div class="empty" style="color:var(--red)"><span class="mi">warning</span>${esc(e.message)}</div>`;
+  }
+}
+
+function buildBarChart(canvasId, labels, data, label, color, prev, setCb) {
+  const ctx = document.getElementById(canvasId).getContext('2d');
+  if (prev) prev.destroy();
+  setCb(new Chart(ctx, {
+    type: 'bar',
+    data: { labels, datasets: [{ label, data, backgroundColor: color, borderRadius: 6, borderSkipped: false }] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      scales: {
+        y: { beginAtZero: true, max: 100,
+          ticks: { callback: v => '%' + v, font: { size: 11 }, color: '#6b7280' },
+          grid: { color: '#e5e7eb' }
+        },
+        x: { ticks: { font: { size: 11 }, color: '#374151' }, grid: { display: false } }
+      },
+      plugins: { legend: { display: false } }
+    }
+  }));
+}
+
+/* ══ SEKME 3 ══ */
+async function loadExamSelect() {
+  try {
+    const exams = await get('/api/exams');
+    const sel = document.getElementById('examSelect');
+    sel.innerHTML = '<option value="">Sınav seçin…</option>' +
+      exams.map(e => `<option value="${esc(e.id)}">${esc(e.course_code)} — ${esc(e.title)} (${esc(e.exam_type || '')}) ${e.instructor_name ? '/ ' + esc(e.instructor_name) : ''}</option>`).join('');
+  } catch (e) { console.error(e); }
+}
+
+async function loadExamDetail() {
+  const examId = document.getElementById('examSelect').value;
+  if (!examId) { KTUN.toast('Lütfen bir sınav seçin.', 'warning'); return; }
+
+  document.getElementById('qStatsBody').innerHTML = '<tr><td colspan="5" class="empty"><span class="mi">hourglass_empty</span>Yükleniyor…</td></tr>';
+  document.getElementById('heatBody').innerHTML   = '<tr><td colspan="3" class="empty"><span class="mi">hourglass_empty</span></td></tr>';
+
+  try {
+    const [stats, detailed] = await Promise.all([
+      get(`/api/exams/${examId}/questions/stats`).catch(() => []),
+      get(`/api/exams/${examId}/detailed-results`).catch(() => ({ questions: [], students: [] })),
+    ]);
+
+    _cachedQStats = stats;
+
+    try {
+      const meta = await get(`/api/exams/${examId}/header`);
+      const metaStr = `${meta.course_code || ''} ${meta.course_name || ''} | ${meta.term || ''} | ${meta.instructor_name || ''}`;
+      document.getElementById('examMeta').textContent = metaStr;
+      _cachedExamMeta = metaStr;
+    } catch {}
+
+    const tbody = document.getElementById('qStatsBody');
+    if (!stats.length) {
+      tbody.innerHTML = '<tr><td colspan="5" class="empty"><span class="mi">inbox</span>Veri yok.</td></tr>';
+    } else {
+      tbody.innerHTML = stats.map(r => {
+        const pct = Number(r.correct_rate_pct || 0).toFixed(1);
+        const cls = pct >= 70 ? 'var(--green)' : pct >= 40 ? 'var(--amber)' : 'var(--red)';
+        const badgeCls = pct >= 70 ? 'badge-green' : pct >= 40 ? 'badge-amber' : 'badge-red';
+        return `<tr>
+          <td><span style="font-weight:700;color:var(--navy);">S${esc(r.q_no)}</span></td>
+          <td style="font-weight:600;">${esc(r.points)}</td>
+          <td style="text-align:center;font-weight:700;">${Number(r.avg_score).toFixed(2)}</td>
+          <td style="text-align:center;"><span class="badge ${badgeCls}">%${pct}</span></td>
+          <td style="min-width:120px;">
+            <div class="prog-bar-bg"><div class="prog-bar-fill" style="width:${pct}%;background:${cls};"></div></div>
+          </td>
+        </tr>`;
+      }).join('');
+    }
+
+    renderHeatMap(detailed.questions || [], detailed.students || []);
+  } catch (e) {
+    document.getElementById('qStatsBody').innerHTML = `<tr><td colspan="5" class="empty" style="color:var(--red)"><span class="mi">warning</span>${esc(e.message)}</td></tr>`;
+  }
+}
+
+function renderHeatMap(questions, students) {
+  const thead = document.getElementById('heatHead');
+  const tbody = document.getElementById('heatBody');
+
+  if (!questions.length || !students.length) {
+    thead.innerHTML = '';
+    tbody.innerHTML = '<tr><td colspan="3" class="empty"><span class="mi">inbox</span>Yanıt verisi yok.</td></tr>';
+    return;
+  }
+
+  thead.innerHTML = '<tr><th>No</th><th>Ad Soyad</th>' +
+    questions.map(q => `<th>S${esc(q.q_no)}</th>`).join('') + '<th>Top</th></tr>';
+
+  tbody.innerHTML = students.map(s => {
+    let total = 0;
+    const cells = questions.map(q => {
+      const sc = s.scores?.[q.q_no];
+      const score = sc ? sc.score : 0;
+      const max   = sc ? sc.max : q.points;
+      total += score;
+      const ratio = max > 0 ? score / max : 0;
+      const bg = ratio >= 0.7 ? '#dcfce7' : ratio >= 0.4 ? '#fef9c3' : '#fee2e2';
+      const bc = ratio >= 0.7 ? '#86efac' : ratio >= 0.4 ? '#fde68a' : '#fca5a5';
+      return `<td style="background:${bg};border-color:${bc};">${esc(score)}</td>`;
+    }).join('');
+    return `<tr>
+      <td>${esc(s.student_no)}</td>
+      <td style="text-align:left;">${esc(s.name || 'İsimsiz')}</td>
+      ${cells}
+      <td style="font-weight:700;">${total.toFixed(1)}</td>
+    </tr>`;
+  }).join('');
+}
+
+/* ══ SEKME 4 ══ */
+let trendLoaded = false;
+let trendChartInst = null, docTrendChartInst = null, pcTrendChartInst = null;
+const TREND_COLORS = [
+  '#0b1f45','#c9a84c','#16a34a','#b8272c','#b45309','#0891b2',
+  '#7c3aed','#ea580c','#1e40af','#059669','#e11d48','#0284c7',
+];
+
+async function loadTrendTab() {
+  trendLoaded = true;
+
+  try {
+    const courses = await get('/api/courses');
+    const sel = document.getElementById('trendCourseSelect');
+    sel.innerHTML = '<option value="">Ders seçin…</option>' +
+      courses.map(c => `<option value="${esc(c.id)}">${esc(c.code)} — ${esc(c.name)}</option>`).join('');
+  } catch (e) { console.error(e); }
+
+  try {
+    const data = await get('/api/reports/pc-trend');
+    _cachedTrendData = data;
+
+    if (!data.terms || !data.terms.length) {
+      document.getElementById('trendTblBody').innerHTML =
+        '<tr><td colspan="3" class="empty"><span class="mi">inbox</span>Dönem verisi bulunamadı. Ders açılışlarında "Dönem" alanını doldurun.</td></tr>';
+      return;
+    }
+
+    const ctx = document.getElementById('trendChart').getContext('2d');
+    const datasets = data.program_outcomes.map((po, i) => ({
+      label: po.code,
+      data: po.scores,
+      borderColor: TREND_COLORS[i % TREND_COLORS.length],
+      backgroundColor: TREND_COLORS[i % TREND_COLORS.length] + '18',
+      borderWidth: 2.5, pointRadius: 5, pointHoverRadius: 7,
+      tension: 0.3, fill: false, spanGaps: true,
+    }));
+    if (trendChartInst) trendChartInst.destroy();
+    trendChartInst = new Chart(ctx, {
+      type: 'line',
+      data: { labels: data.terms, datasets },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        scales: {
+          y: { beginAtZero: true, max: 100,
+            ticks: { callback: v => '%' + v, font: { size: 11 }, color: '#6b7280' },
+            grid: { color: '#e5e7eb' },
+            title: { display: true, text: 'Başarı %', font: { size: 12 } } },
+          x: { ticks: { font: { size: 11 }, color: '#374151' }, grid: { display: false },
+               title: { display: true, text: 'Dönem', font: { size: 12 } } },
+        },
+        plugins: {
+          legend: { position: 'bottom', labels: { boxWidth: 14, padding: 16, font: { size: 12 } } },
+          tooltip: { callbacks: { label: c => `${c.dataset.label}: %${c.parsed.y ?? '–'}` } },
+        },
+        interaction: { intersect: false, mode: 'index' },
+      },
+    });
+
+    const thead = document.getElementById('trendTblHead');
+    const tbody = document.getElementById('trendTblBody');
+
+    thead.innerHTML = '<tr><th>PÇ</th><th>Açıklama</th>' +
+      data.terms.map(t => `<th style="text-align:center;">${esc(t)}</th>`).join('') +
+      '<th style="text-align:center;">Değişim</th></tr>';
+
+    tbody.innerHTML = data.program_outcomes.map(po => {
+      const validScores = po.scores.filter(s => s !== null);
+      const first = validScores[0], last = validScores[validScores.length - 1];
+      let change = '–', changeCls = 'badge';
+      if (first != null && last != null) {
+        const diff = last - first;
+        change = (diff >= 0 ? '+' : '') + diff.toFixed(1) + '%';
+        changeCls = diff > 0 ? 'badge-green' : diff < -2 ? 'badge-red' : 'badge-amber';
+      }
+      return `<tr>
+        <td><strong>${esc(po.code)}</strong></td>
+        <td style="font-size:12px;color:var(--muted);max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(po.title)}</td>
+        ${po.scores.map(s => {
+          if (s == null) return '<td style="text-align:center;color:var(--muted);">–</td>';
+          const cls = s >= 70 ? 'var(--green)' : s >= 40 ? 'var(--amber)' : 'var(--red)';
+          return `<td style="text-align:center;font-weight:700;color:${cls};">${s.toFixed(1)}</td>`;
+        }).join('')}
+        <td style="text-align:center;"><span class="badge ${changeCls}">${esc(change)}</span></td>
+      </tr>`;
+    }).join('');
+  } catch (e) {
+    console.error('Trend yüklenirken hata:', e);
+    document.getElementById('trendTblBody').innerHTML =
+      `<tr><td colspan="3" class="empty" style="color:var(--red)"><span class="mi">warning</span>${esc(e.message || 'Hata')}</td></tr>`;
+  }
+}
+
+async function loadCourseTrend() {
+  const courseId = document.getElementById('trendCourseSelect').value;
+  if (!courseId) { KTUN.toast('Lütfen bir ders seçin.', 'warning'); return; }
+
+  document.getElementById('courseTrendWrap').style.display = 'block';
+
+  try {
+    const data = await get(`/api/reports/course-trend/${courseId}`);
+    document.getElementById('courseTrendTitle').textContent = `${data.course_code} — ${data.course_name} DÖÇ Dönem Detayı`;
+
+    if (!data.terms.length) {
+      document.getElementById('docTrendTblBody').innerHTML =
+        '<tr><td colspan="3" class="empty"><span class="mi">inbox</span>Bu derse ait dönem verisi yok.</td></tr>';
+      return;
+    }
+
+    const docCtx = document.getElementById('docTrendChart').getContext('2d');
+    const docDatasets = data.doc_outcomes.map((d, i) => ({
+      label: `DÖÇ${d.sequence_number}`,
+      data: d.scores, borderColor: TREND_COLORS[i % TREND_COLORS.length],
+      borderWidth: 2, pointRadius: 4, tension: 0.3, fill: false, spanGaps: true,
+    }));
+    if (docTrendChartInst) docTrendChartInst.destroy();
+    docTrendChartInst = new Chart(docCtx, {
+      type: 'line', data: { labels: data.terms, datasets: docDatasets },
+      options: { responsive: true, maintainAspectRatio: false,
+        scales: { y: { beginAtZero: true, max: 100, ticks: { callback: v => '%' + v, font: { size: 10 } }, grid: { color: '#e5e7eb' } },
+                  x: { ticks: { font: { size: 10 } }, grid: { display: false } } },
+        plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } } },
+    });
+
+    const pcCtx = document.getElementById('pcTrendChart').getContext('2d');
+    const pcDatasets = data.pc_outcomes.map((p, i) => ({
+      label: p.code, data: p.scores, borderColor: TREND_COLORS[(i + 4) % TREND_COLORS.length],
+      borderWidth: 2, pointRadius: 4, tension: 0.3, fill: false, spanGaps: true,
+    }));
+    if (pcTrendChartInst) pcTrendChartInst.destroy();
+    pcTrendChartInst = new Chart(pcCtx, {
+      type: 'line', data: { labels: data.terms, datasets: pcDatasets },
+      options: { responsive: true, maintainAspectRatio: false,
+        scales: { y: { beginAtZero: true, max: 100, ticks: { callback: v => '%' + v, font: { size: 10 } }, grid: { color: '#e5e7eb' } },
+                  x: { ticks: { font: { size: 10 } }, grid: { display: false } } },
+        plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } } },
+    });
+
+    const dHead = document.getElementById('docTrendTblHead');
+    const dBody = document.getElementById('docTrendTblBody');
+    dHead.innerHTML = '<tr><th>DÖÇ</th><th>Açıklama</th>' +
+      data.terms.map(t => `<th style="text-align:center;">${esc(t)}</th>`).join('') +
+      '<th style="text-align:center;">Trend</th></tr>';
+
+    dBody.innerHTML = data.doc_outcomes.map(d => {
+      const valid = d.scores.filter(s => s !== null);
+      const first = valid[0], last = valid[valid.length - 1];
+      let arrow = '–';
+      if (first != null && last != null) {
+        const diff = last - first;
+        arrow = diff > 2 ? '<span class="mi" style="color:var(--green);font-size:18px;">arrow_upward</span>' :
+                diff < -2 ? '<span class="mi" style="color:var(--red);font-size:18px;">arrow_downward</span>' :
+                '<span class="mi" style="color:var(--amber);font-size:18px;">remove</span>';
+      }
+      return `<tr>
+        <td><strong>DÖÇ${esc(d.sequence_number)}</strong></td>
+        <td style="font-size:12px;color:var(--muted);max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(d.description || '')}</td>
+        ${d.scores.map(s => {
+          if (s == null) return '<td style="text-align:center;color:var(--muted);">–</td>';
+          const cls = s >= 70 ? 'var(--green)' : s >= 40 ? 'var(--amber)' : 'var(--red)';
+          return `<td style="text-align:center;font-weight:700;color:${cls};">${s.toFixed(1)}</td>`;
+        }).join('')}
+        <td style="text-align:center;">${arrow}</td>
+      </tr>`;
+    }).join('');
+  } catch (e) {
+    document.getElementById('docTrendTblBody').innerHTML =
+      `<tr><td colspan="3" class="empty" style="color:var(--red)"><span class="mi">warning</span>${esc(e.message || 'Hata')}</td></tr>`;
+  }
+}
+
+/* ══ EXPORT HELPERS ══ */
+let _cachedCoursePerf = [];
+let _cachedPO = [];
+let _cachedDocData = {};
+let _cachedPcData = {};
+let _cachedDocOutcomes = [];
+let _cachedSelectedCourse = '';
+let _cachedDocEvidence = {};
+let _cachedPcEvidence = {};
+let _cachedOutcomeMap = {};
+let _cachedPoMap = {};
+let _cachedQStats = [];
+let _cachedExamMeta = '';
+let _cachedTrendData = null;
+
+function tableToAOA(tblEl) {
+  const rows = [];
+  tblEl.querySelectorAll('tr').forEach(tr => {
+    const row = [];
+    tr.querySelectorAll('th, td').forEach(cell => row.push(cell.textContent.trim()));
+    rows.push(row);
+  });
+  return rows;
+}
+
+function downloadXLSX(sheets, filename) {
+  const wb = XLSX.utils.book_new();
+  sheets.forEach(({ name, data }) => {
+    const ws = XLSX.utils.aoa_to_sheet(data);
+    const colWidths = data[0].map((_, ci) => {
+      let max = 10;
+      data.forEach(r => { if (r[ci]) max = Math.max(max, String(r[ci]).length + 2); });
+      return { wch: Math.min(max, 50) };
+    });
+    ws['!cols'] = colWidths;
+    XLSX.utils.book_append_sheet(wb, ws, name.substring(0, 31));
+  });
+  XLSX.writeFile(wb, filename);
+}
+
+function makePDF(title, headRows, bodyRows, filename, orientation) {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: orientation || 'landscape', unit: 'mm', format: 'a4' });
+  if (window.ROBOTO_BASE64) {
+    doc.addFileToVFS('Roboto-Regular.ttf', window.ROBOTO_BASE64);
+    doc.addFont('Roboto-Regular.ttf', 'Roboto', 'normal');
+    doc.setFont('Roboto');
+  }
+  doc.setFontSize(14); doc.text(title, 14, 16);
+  doc.setFontSize(9); doc.setTextColor(120);
+  doc.text('Konya Teknik Universitesi - MUDEK Akreditasyon Raporu', 14, 22);
+  doc.text(new Date().toLocaleDateString('tr-TR'), doc.internal.pageSize.getWidth() - 14, 22, { align: 'right' });
+  doc.setTextColor(0);
+  doc.autoTable({
+    startY: 28, head: headRows, body: bodyRows,
+    styles: { fontSize: 8, cellPadding: 3, font: window.ROBOTO_BASE64 ? 'Roboto' : 'helvetica' },
+    headStyles: { fillColor: [11, 31, 69], textColor: 255, fontStyle: 'bold', fontSize: 8 },
+    alternateRowStyles: { fillColor: [247, 245, 240] },
+    margin: { left: 14, right: 14 }, tableWidth: 'auto',
+  });
+  doc.save(filename);
+}
+
+function exportBolumExcel() {
+  if (!_cachedCoursePerf.length) { KTUN.toast('Önce verinin yüklenmesini bekleyin.', 'warning'); return; }
+  const header = ['Ders Kodu', 'Ders Adı', 'Dönem', 'Şube', 'Hoca', 'Öğrenci', 'Anket Katılım', 'Ort. Puan', 'Durum'];
+  const data = [header];
+  _cachedCoursePerf.forEach(c => {
+    data.push([c.code, c.course_name, c.term || '', c.section || '', c.instructor_name || '',
+      c.total_students, c.responded_students + ' (' + c.participation_rate + '%)',
+      c.avg_score ? c.avg_score.toFixed(2) : '–',
+      c.status === 'success' ? 'İyi' : c.status === 'danger' ? 'Düşük' : 'Veri Yok']);
+  });
+  downloadXLSX([{ name: 'Ders Performansı', data }], 'MUDEK_Ders_Performansi.xlsx');
+}
+
+function exportBolumPDF() {
+  if (!_cachedCoursePerf.length) { KTUN.toast('Önce verinin yüklenmesini bekleyin.', 'warning'); return; }
+  const head = [['Ders', 'Dönem', 'Şube', 'Hoca', 'Öğrenci', 'Anket Kat.', 'Ort.', 'Durum']];
+  const body = _cachedCoursePerf.map(c => [
+    c.code + ' - ' + c.course_name, c.term || '–', c.section || '–', c.instructor_name || '–',
+    c.total_students, c.responded_students + ' (' + c.participation_rate + '%)',
+    c.avg_score ? c.avg_score.toFixed(2) : '–',
+    c.status === 'success' ? 'İyi' : c.status === 'danger' ? 'Düşük' : 'Veri Yok']);
+  makePDF('Ders Şubesi Performans Raporu', head, body, 'MUDEK_Ders_Performansi.pdf');
+}
+
+function exportDersExcel() {
+  if (!Object.keys(_cachedDocData).length && !Object.keys(_cachedPcData).length) {
+    KTUN.toast('Önce bir ders seçip analiz edin.', 'warning'); return;
+  }
+  const sheets = [];
+  const outcomeMap = {};
+  _cachedDocOutcomes.forEach(o => outcomeMap[o.id] = o);
+  const docRows = [['DÖÇ', 'Açıklama', 'Başarı (%)']];
+  Object.entries(_cachedDocData).forEach(([id, score]) => {
+    const o = outcomeMap[id];
+    docRows.push(['DÖÇ' + (o?.sequence_number ?? id), o?.description ?? '', Math.round(score * 100)]);
+  });
+  sheets.push({ name: 'DÖÇ Başarı', data: docRows });
+  const pcRows = [['PÇ', 'Açıklama', 'Başarı (%)']];
+  Object.entries(_cachedPcData).forEach(([id, score]) => {
+    pcRows.push(['PÇ' + id, '', Math.round(score * 100)]);
+  });
+  sheets.push({ name: 'PÇ Başarı', data: pcRows });
+  downloadXLSX(sheets, 'MUDEK_DOC_PC_' + (_cachedSelectedCourse || 'Rapor') + '.xlsx');
+}
+
+function exportDersPDF() {
+  if (!Object.keys(_cachedDocData).length) { KTUN.toast('Önce bir ders seçip analiz edin.', 'warning'); return; }
+  const outcomeMap = {};
+  _cachedDocOutcomes.forEach(o => outcomeMap[o.id] = o);
+  const head = [['DÖÇ / PÇ', 'Açıklama', 'Başarı (%)']];
+  const body = [];
+  Object.entries(_cachedDocData).forEach(([id, score]) => {
+    const o = outcomeMap[id];
+    body.push(['DÖÇ' + (o?.sequence_number ?? id), (o?.description ?? '').substring(0, 60), Math.round(score * 100) + '%']);
+  });
+  body.push([{ content: '── Program Çıktıları ──', colSpan: 3, styles: { fontStyle: 'bold', fillColor: [247, 245, 240] } }]);
+  Object.entries(_cachedPcData).forEach(([id, score]) => {
+    body.push(['PÇ' + id, '', Math.round(score * 100) + '%']);
+  });
+  makePDF('DÖÇ / PÇ Başarı Raporu — ' + _cachedSelectedCourse, head, body, 'MUDEK_DOC_PC_Rapor.pdf', 'portrait');
+}
+
+function exportSinavExcel() {
+  if (!_cachedQStats.length) { KTUN.toast('Önce bir sınav seçip yükleyin.', 'warning'); return; }
+  const header = ['Soru No', 'Max Puan', 'Ort. Puan', 'Başarı (%)'];
+  const data = [header];
+  _cachedQStats.forEach(r => {
+    data.push(['S' + r.q_no, r.points, Number(r.avg_score).toFixed(2), Number(r.correct_rate_pct || 0).toFixed(1) + '%']);
+  });
+  const heatTbl = document.querySelector('#heatBody');
+  if (heatTbl && heatTbl.rows.length > 1) {
+    const heatData = tableToAOA(document.querySelector('.heat-tbl'));
+    downloadXLSX([{ name: 'Soru İstatistikleri', data }, { name: 'Isı Haritası', data: heatData }], 'MUDEK_Sinav_Detay.xlsx');
+  } else {
+    downloadXLSX([{ name: 'Soru İstatistikleri', data }], 'MUDEK_Sinav_Detay.xlsx');
+  }
+}
+
+function exportSinavPDF() {
+  if (!_cachedQStats.length) { KTUN.toast('Önce bir sınav seçip yükleyin.', 'warning'); return; }
+  const head = [['Soru', 'Max Puan', 'Ort. Puan', 'Başarı (%)']];
+  const body = _cachedQStats.map(r => ['S' + r.q_no, r.points, Number(r.avg_score).toFixed(2), Number(r.correct_rate_pct || 0).toFixed(1) + '%']);
+  makePDF('Sınav Soru İstatistikleri' + (_cachedExamMeta ? ' — ' + _cachedExamMeta : ''), head, body, 'MUDEK_Sinav_Rapor.pdf', 'portrait');
+}
+
+function exportTrendExcel() {
+  if (!_cachedTrendData || !_cachedTrendData.terms.length) { KTUN.toast('Dönem verisi bulunamadı.', 'warning'); return; }
+  const header = ['PÇ', 'Açıklama', ..._cachedTrendData.terms, 'Değişim'];
+  const data = [header];
+  _cachedTrendData.program_outcomes.forEach(po => {
+    const valid = po.scores.filter(s => s !== null);
+    const first = valid[0], last = valid[valid.length - 1];
+    let change = '–';
+    if (first != null && last != null) {
+      const diff = last - first;
+      change = (diff >= 0 ? '+' : '') + diff.toFixed(1) + '%';
+    }
+    data.push([po.code, po.title, ...po.scores.map(s => s != null ? s.toFixed(1) : '–'), change]);
+  });
+  downloadXLSX([{ name: 'PÇ Dönem Trendi', data }], 'MUDEK_PC_Trend.xlsx');
+}
+
+function exportTrendPDF() {
+  if (!_cachedTrendData || !_cachedTrendData.terms.length) { KTUN.toast('Dönem verisi bulunamadı.', 'warning'); return; }
+  const head = [['PÇ', ..._cachedTrendData.terms, 'Değişim']];
+  const body = _cachedTrendData.program_outcomes.map(po => {
+    const valid = po.scores.filter(s => s !== null);
+    const first = valid[0], last = valid[valid.length - 1];
+    let change = '–';
+    if (first != null && last != null) {
+      const diff = last - first;
+      change = (diff >= 0 ? '+' : '') + diff.toFixed(1) + '%';
+    }
+    return [po.code, ...po.scores.map(s => s != null ? s.toFixed(1) + '%' : '–'), change];
+  });
+  makePDF('PÇ Dönem Karşılaştırma Raporu', head, body, 'MUDEK_PC_Trend.pdf');
+}
+
+/* ══ Kanıt Zinciri Modali ══ */
+const _evModal = document.getElementById('evidenceModal');
+document.getElementById('evidenceClose').addEventListener('click', () => _evModal.style.display = 'none');
+_evModal.addEventListener('click', e => { if (e.target === _evModal) _evModal.style.display = 'none'; });
+
+function _pctClass(pct) {
+  return pct >= 70 ? 'badge badge-green' : pct >= 40 ? 'badge badge-amber' : 'badge badge-red';
+}
+
+function _catLabel(c) {
+  return c === 'vize' ? 'Vize' : c === 'final' ? 'Final' : c === 'butunleme' ? 'Bütünleme' : (c || '—');
+}
+
+function _renderQuestionTable(evList) {
+  if (!evList || !evList.length) {
+    return '<div class="ev-empty">Bu DÖÇ için kanıt verisi yok.</div>';
+  }
+  const total = evList.reduce((s, e) => s + (e.contribution_pct || 0), 0);
+  const rows = evList.map(e => {
+    const pct = +e.contribution_pct.toFixed(2);
+    const qNorm = +(e.q_norm * 100).toFixed(1);
+    return `
+      <tr>
+        <td>${esc(e.exam_title)}</td>
+        <td><span class="badge badge-gold">${esc(_catLabel(e.category))}</span></td>
+        <td style="text-align:center"><strong>S${esc(e.q_no)}</strong></td>
+        <td style="font-size:12px;color:var(--muted);max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(e.q_text || '')}">${esc(e.q_text || '—')}</td>
+        <td style="text-align:right">%${qNorm}</td>
+        <td style="text-align:right">${(+e.weight).toFixed(3)}</td>
+        <td style="text-align:right"><span class="${_pctClass(pct)}">%${pct.toFixed(1)}</span></td>
+      </tr>`;
+  }).join('');
+  return `
+    <table class="tbl">
+      <thead>
+        <tr>
+          <th>Sınav</th>
+          <th>Kategori</th>
+          <th style="text-align:center">Soru</th>
+          <th>Soru Metni</th>
+          <th style="text-align:right">Sınıf Ort.</th>
+          <th style="text-align:right">Soru→DÖÇ Ağırlığı</th>
+          <th style="text-align:right">Katkı %</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+      <tfoot>
+        <tr>
+          <td colspan="6" style="text-align:right;font-weight:600;color:var(--navy)">Toplam</td>
+          <td style="text-align:right;font-weight:700;color:var(--navy)">%${total.toFixed(1)}</td>
+        </tr>
+      </tfoot>
+    </table>`;
+}
+
+function openDocEvidenceModal(docId) {
+  const o = _cachedOutcomeMap[docId];
+  const score = _cachedDocData[docId];
+  const pct = score != null ? Math.round(score * 100) : null;
+  const seq = o?.sequence_number ?? docId;
+  const evList = _cachedDocEvidence[docId] || [];
+
+  document.getElementById('evidenceTitle').innerHTML =
+    `DÖÇ ${esc(seq)} — Kanıt Zinciri`;
+
+  document.getElementById('evidenceBody').innerHTML = `
+    <div class="ev-summary">
+      <div><strong>DÖÇ ${esc(seq)}</strong></div>
+      <div style="flex:1;color:var(--muted);">${esc(o?.description || '')}</div>
+      ${pct != null ? `<div>DÖÇ Başarı: <span class="${_pctClass(pct)}">%${pct}</span></div>` : ''}
+    </div>
+    ${_renderQuestionTable(evList)}
+  `;
+  _evModal.style.display = 'flex';
+}
+
+function openPcEvidenceModal(poId) {
+  const po = _cachedPoMap[poId] || { code: 'PÇ' + poId, title: '' };
+  const score = _cachedPcData[poId];
+  const pct = score != null ? Math.round(score * 100) : null;
+  const docContribs = _cachedPcEvidence[poId] || [];
+
+  document.getElementById('evidenceTitle').innerHTML =
+    `${esc(po.code)} — Kanıt Zinciri`;
+
+  let body = `
+    <div class="ev-summary">
+      <div><strong>${esc(po.code)}</strong></div>
+      <div style="flex:1;color:var(--muted);">${esc(po.title)}</div>
+      ${pct != null ? `<div>PÇ Başarı: <span class="${_pctClass(pct)}">%${pct}</span></div>` : ''}
+    </div>
+  `;
+
+  if (!docContribs.length) {
+    body += '<div class="ev-empty">Bu PÇ için kanıt verisi yok.</div>';
+  } else {
+    const totalPct = docContribs.reduce((s, e) => s + (e.contribution_pct || 0), 0);
+    const rows = docContribs.map((c, i) => {
+      const docPct = Math.round(c.doc_score * 100);
+      const cPct = +c.contribution_pct.toFixed(2);
+      const seq = c.outcome_seq ?? c.outcome_id;
+      const qEv = _cachedDocEvidence[c.outcome_id] || _cachedDocEvidence[String(c.outcome_id)] || [];
+      return `
+        <tr class="ev-doc-row expandable" data-pc-doc-idx="${i}">
+          <td><strong style="color:var(--navy)">DÖÇ ${esc(seq)}</strong> <span class="mi" style="font-size:12px;color:var(--muted);vertical-align:middle">expand_more</span></td>
+          <td style="text-align:right"><span class="${_pctClass(docPct)}">%${docPct}</span></td>
+          <td style="text-align:right">${(+c.matrix_value).toFixed(2)}</td>
+          <td style="text-align:right"><span class="${_pctClass(cPct)}">%${cPct.toFixed(1)}</span></td>
+        </tr>
+        <tr class="ev-sub-row" id="pcDocSub_${i}" style="display:none">
+          <td colspan="4">
+            <div style="padding:10px 4px;">
+              ${_renderQuestionTable(qEv)}
+            </div>
+          </td>
+        </tr>`;
+    }).join('');
+    body += `
+      <table class="tbl">
+        <thead>
+          <tr>
+            <th>DÖÇ</th>
+            <th style="text-align:right">DÖÇ Başarı %</th>
+            <th style="text-align:right">DÖÇ→PÇ Matris</th>
+            <th style="text-align:right">Katkı %</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+        <tfoot>
+          <tr>
+            <td colspan="3" style="text-align:right;font-weight:600;color:var(--navy)">Toplam</td>
+            <td style="text-align:right;font-weight:700;color:var(--navy)">%${totalPct.toFixed(1)}</td>
+          </tr>
+        </tfoot>
+      </table>
+      <div style="margin-top:8px;font-size:12px;color:var(--muted);">DÖÇ satırına tıklayarak o DÖÇ'ye katkı sağlayan soruları görebilirsiniz.</div>
+    `;
+  }
+
+  document.getElementById('evidenceBody').innerHTML = body;
+
+  document.querySelectorAll('#evidenceBody [data-pc-doc-idx]').forEach(row => {
+    row.addEventListener('click', () => {
+      const sub = document.getElementById('pcDocSub_' + row.dataset.pcDocIdx);
+      if (!sub) return;
+      sub.style.display = sub.style.display === 'none' ? 'table-row' : 'none';
+      const icon = row.querySelector('.mi');
+      if (icon) icon.textContent = sub.style.display === 'none' ? 'expand_more' : 'expand_less';
+    });
+  });
+
+  _evModal.style.display = 'flex';
+}
+
+(async function init() {
+  await Promise.all([loadBolumTab(), loadCourseSelect(), loadExamSelect()]);
+})();
+</script>
+
+</body>
+</html>

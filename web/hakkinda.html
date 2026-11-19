@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hakkında – MÜDEK</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+  <link rel="stylesheet" href="assets/ktun-design.css">
+  <style>
+    .page-inner { max-width:860px; margin:0 auto; padding:32px 24px 60px; display:flex; flex-direction:column; gap:24px; }
+    .prose { font-size:14.5px; line-height:1.75; color:var(--text); margin:0; }
+    .goal-list { display:flex; flex-direction:column; gap:10px; margin-top:4px; }
+    .goal-item { display:flex; align-items:flex-start; gap:10px; }
+    .goal-item .mi { color:var(--gold-dk); flex-shrink:0; margin-top:2px; }
+    .goal-text { font-size:14px; color:var(--text); line-height:1.6; }
+  </style>
+</head>
+<body>
+<div id="topbarMount"></div>
+<div id="heroMount"></div>
+<div class="page-inner">
+  <div class="card">
+    <div class="card-title"><span class="mi" style="color:var(--gold-dk)">info</span> MÜDEK Hakkında</div>
+    <p class="prose">MÜDEK (Mühendislik Değerlendirme Kurulu), 2002 yılında üniversitelerin mühendislik programlarını bağımsız olarak değerlendirmek amacıyla kurulmuş bir dernektir. 2007 yılında Yükseköğretim Kurulu (YÖK) tarafından Türkiye'de mühendislik programları için akreditasyon yetkisi tanınmıştır.</p>
+  </div>
+  <div class="card">
+    <div class="card-title"><span class="mi" style="color:var(--gold-dk)">flag</span> Temel Amaçlar</div>
+    <div class="goal-list">
+      <div class="goal-item"><span class="mi">check_circle</span><span class="goal-text">Mühendislik eğitim programlarının kalitesini yükseltmek</span></div>
+      <div class="goal-item"><span class="mi">check_circle</span><span class="goal-text">Öğrenci ve mezunların uluslararası standartlarda tanınırlığını sağlamak</span></div>
+      <div class="goal-item"><span class="mi">check_circle</span><span class="goal-text">Üniversiteler arasında kalite güvence kültürünü yaygınlaştırmak</span></div>
+      <div class="goal-item"><span class="mi">check_circle</span><span class="goal-text">Türkiye'nin mühendislik eğitiminde uluslararası saygınlığını artırmak</span></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title"><span class="mi" style="color:var(--gold-dk)">public</span> Uluslararası Üyelikler</div>
+    <p class="prose">MÜDEK, Avrupa Mühendislik Eğitimi Akreditasyon Ağı (ENAEE) üyesidir ve başarıyla akredite edilen programlara uluslararası geçerliliğe sahip EUR-ACE etiketi verme yetkisine sahiptir.</p>
+  </div>
+</div>
+<script src="assets/ktun-shell.js"></script>
+<script src="help-widget.js" defer></script>
+<script>
+  KTUN.renderPublicTopbar({ active: '' });
+  KTUN.renderHero({ eyebrow: 'MÜDEK', title: 'Hakkımızda', sub: 'Mühendislik Değerlendirme Kurulu hakkında bilgi' });
+</script>
+</body>
+</html>

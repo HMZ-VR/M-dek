@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Excel ile Not Yükle – MÜDEK</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+  <link rel="stylesheet" href="assets/ktun-design.css">
+  <style>
+    .form-field { display:flex; flex-direction:column; gap:6px; margin-bottom:18px; }
+    .form-field label {
+      font-size:11px; font-weight:700; color:var(--muted);
+      text-transform:uppercase; letter-spacing:.04em;
+      display:flex; align-items:center; gap:6px;
+    }
+    .form-field label .mi { font-size:14px; color:var(--gold-dk); }
+    .form-field select, .form-field input[type="file"] {
+      padding:10px 12px; font-size:13.5px; font-family:inherit;
+      background:var(--white); border:1px solid var(--border);
+      border-radius:var(--r-sm); color:var(--text);
+      outline:none; transition:border-color .15s, box-shadow .15s;
+    }
+    .form-field input[type="file"] { border-style:dashed; cursor:pointer; }
+    .form-field select:focus, .form-field input[type="file"]:focus {
+      border-color:var(--navy);
+      box-shadow:0 0 0 3px rgba(11,31,69,.10);
+    }
+    .file-info { font-size:12px; color:var(--muted); min-height:18px; margin-top:4px; }
+    .file-info.ok { color:var(--green); }
+
+    .progress-wrap {
+      width:100%; height:8px; background:var(--cream);
+      border:1px solid var(--border);
+      border-radius:4px; overflow:hidden;
+      margin-top:10px; display:none;
+    }
+    .progress-bar {
+      height:100%; width:0%;
+      background:linear-gradient(90deg, var(--navy), var(--gold));
+      transition:width .15s;
+    }
+
+    .info-table {
+      width:100%; border-collapse:collapse; font-size:13px;
+      background:var(--white); border:1px solid var(--border); border-radius:var(--r-sm);
+      overflow:hidden; margin:10px 0;
+    }
+    .info-table th, .info-table td {
+      padding:8px 10px; border-bottom:1px solid var(--border); text-align:left;
+    }
+    .info-table th { background:var(--cream); color:var(--navy); font-weight:700; }
+    .info-table tr:last-child td { border-bottom:none; }
+
+    .danger-zone {
+      margin-top:24px; padding-top:20px;
+      border-top:2px dashed rgba(184,39,44,.3);
+      display:none;
+    }
+    .danger-zone h3 {
+      font-family:'Playfair Display', serif;
+      color:var(--red); font-size:16px; margin-bottom:8px;
+      display:flex; align-items:center; gap:8px;
+    }
+    .danger-zone p { color:var(--muted); font-size:13px; line-height:1.55; margin-bottom:14px; }
+  </style>
+</head>
+<body>
+
+<div id="topbarMount"></div>
+
+<main class="page-body">
+
+  <div class="section-hd">
+    <h2>Excel ile Öğrenci Notları Yükle</h2>
+    <div class="section-hd-line"></div>
+  </div>
+
+  <div class="alert alert-info">
+    <span class="mi">info</span>
+    <div>
+      <strong>Nasıl Kullanılır?</strong> Bir sınav seçin, Excel dosyasını yükleyin. Sistem öğrenci notlarını otomatik kaydeder.
+      Ayrıca aşağıdaki butondan örnek şablonu indirebilirsiniz.
+    </div>
+  </div>
+
+  <div class="card mb-3">
+    <div class="card-title"><span class="mi" style="color:var(--gold-dk)">description</span> Beklenen Excel Formatı</div>
+    <table class="info-table">
+      <thead>
+        <tr>
+          <th>Öğrenci No</th><th>Ad Soyad</th>
+          <th>Soru1</th><th>Soru2</th><th>Soru3</th><th>…</th><th>Proje</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>202012345</td><td>Ali Yılmaz</td>
+          <td>8</td><td>15</td><td>10</td><td>…</td><td>75</td>
+        </tr>
+      </tbody>
+    </table>
+    <p style="font-size:12.5px;color:var(--muted);line-height:1.55;">
+      <strong>Not:</strong> "Öğrenci No" zorunludur. "Ad Soyad" opsiyoneldir. Soru kolonları "Soru1", "Soru2"… şeklinde.
+      <strong>"Proje"</strong> kolonu opsiyoneldir — sınavda proje varsa öğrencinin proje puanı.
+    </p>
+    <div style="margin-top:10px;">
+      <button class="btn btn-outline btn-sm" id="btnTemplate">
+        <span class="mi">file_download</span> Örnek Şablonu İndir
+      </button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="mi" style="color:var(--gold-dk)">upload_file</span> Yükleme</div>
+
+    <div class="form-field">
+      <label><span class="mi">assignment</span> Sınav Seçin</label>
+      <select id="examSelect">
+        <option value="">Sınavlar yükleniyor…</option>
+      </select>
+    </div>
+
+    <div class="form-field">
+      <label><span class="mi">attach_file</span> Excel Dosyası Seçin</label>
+      <input type="file" id="fileInput" accept=".xlsx,.xls">
+      <div class="file-info" id="fileInfo"></div>
+      <div class="progress-wrap" id="progressWrap"><div class="progress-bar" id="progressBar"></div></div>
+    </div>
+
+    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+      <button class="btn btn-gold" id="uploadBtn" disabled>
+        <span class="mi">cloud_upload</span> Yükle ve Kaydet
+      </button>
+      <span id="status" style="font-size:13px;color:var(--muted);"></span>
+    </div>
+
+    <div class="danger-zone" id="deleteSection">
+      <h3><span class="mi">warning</span> Tehlikeli Bölge</h3>
+      <p>
+        Bu sınava yüklenmiş tüm öğrenci cevaplarını kalıcı olarak siler.
+        <strong>Bu işlem geri alınamaz!</strong> Sorular ve DÖÇ eşleştirmeleri silinmez, sadece Excel'den yüklenen veriler.
+      </p>
+      <button class="btn btn-danger" id="btnDelete">
+        <span class="mi">delete_forever</span> Bu Sınavın Tüm Verilerini Sil
+      </button>
+      <span id="deleteStatus" style="margin-left:12px;font-size:13px;color:var(--muted);"></span>
+    </div>
+  </div>
+
+</main>
+
+<script src="assets/ktun-shell.js"></script>
+<script src="help-widget.js" defer></script>
+<script>
+  const auth = KTUN.requireAuth();
+  if (!auth) throw new Error('redirecting');
+  KTUN.renderTopbar({ back:{ href:'dashboard.html', label:'Panel' } });
+
+  const role = auth.role;
+  const ALLOWED = ['admin', 'instructor', 'ogretim_uyesi', 'bolum_baskani', 'mudek_kurul_uyesi'];
+  if (!ALLOWED.includes(role)) {
+    alert('Bu sayfaya erişim yetkiniz yok. Sadece öğretim üyeleri ve yöneticiler Excel yükleyebilir.');
+    location.href = 'dashboard.html';
+  }
+
+  const esc = KTUN.htmlEscape;
+
+  async function loadExams() {
+    try {
+      const r = await KTUN.apiFetch('/api/exams');
+      if (!r.ok) throw new Error(await r.text());
+      const exams = await r.json();
+      const select = document.getElementById('examSelect');
+      select.innerHTML = '<option value="">— Sınav Seçin —</option>';
+      exams.forEach(e => {
+        const ins = e.instructor_name ? ` | ${e.instructor_name}` : '';
+        const opt = document.createElement('option');
+        opt.value = e.id;
+        opt.textContent = `${e.course_code} - ${e.course_name} - ${e.title} (${e.date})${ins}`;
+        select.appendChild(opt);
+      });
+    } catch (e) {
+      KTUN.toast('Sınavlar yüklenemedi: ' + e.message, 'danger');
+    }
+  }
+
+  function refreshUploadEnabled() {
+    const examId = document.getElementById('examSelect').value;
+    const hasFile = document.getElementById('fileInput').files.length > 0;
+    document.getElementById('uploadBtn').disabled = !(examId && hasFile);
+  }
+
+  document.getElementById('fileInput').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    const fileInfo = document.getElementById('fileInfo');
+    if (file) {
+      fileInfo.textContent = `📄 ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+      fileInfo.classList.add('ok');
+    } else {
+      fileInfo.textContent = '';
+      fileInfo.classList.remove('ok');
+    }
+    refreshUploadEnabled();
+  });
+
+  document.getElementById('examSelect').addEventListener('change', function () {
+    document.getElementById('deleteSection').style.display = this.value ? 'block' : 'none';
+    refreshUploadEnabled();
+  });
+
+  document.getElementById('btnTemplate').addEventListener('click', async () => {
+    const btn = document.getElementById('btnTemplate');
+    const original = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="mi">hourglass_empty</span> Hazırlanıyor…';
+    try {
+      const selectedExam = document.getElementById('examSelect').value;
+      const res = await KTUN.apiFetch('/api/templates/exam-results.xlsx'
+        + (selectedExam ? `?exam_id=${encodeURIComponent(selectedExam)}` : ''));
+      if (!res.ok) throw new Error(await res.text());
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'sinav-sonuclari-sablonu.xlsx';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      KTUN.toast('Şablon indirildi.', 'success');
+    } catch (e) {
+      KTUN.toast('Şablon indirilemedi: ' + e.message, 'danger');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = original;
+    }
+  });
+
+  document.getElementById('uploadBtn').addEventListener('click', uploadExcel);
+
+  function uploadExcel() {
+    const examId = document.getElementById('examSelect').value;
+    const file = document.getElementById('fileInput').files[0];
+    if (!examId || !file) { KTUN.toast('Lütfen sınav ve dosya seçin.', 'warning'); return; }
+
+    const uploadBtn = document.getElementById('uploadBtn');
+    const status = document.getElementById('status');
+    const wrap = document.getElementById('progressWrap');
+    const bar = document.getElementById('progressBar');
+
+    uploadBtn.disabled = true;
+    status.textContent = 'Yükleniyor…';
+    status.style.color = 'var(--navy)';
+    wrap.style.display = 'block';
+    bar.style.width = '0%';
+
+    const fd = new FormData();
+    fd.append('file', file);
+
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', '/api/exams/' + encodeURIComponent(examId) + '/upload-results');
+    xhr.setRequestHeader('Authorization', 'Bearer ' + (sessionStorage.getItem('token') || ''));
+
+    xhr.upload.addEventListener('progress', (e) => {
+      if (e.lengthComputable) {
+        const pct = Math.round((e.loaded / e.total) * 100);
+        bar.style.width = pct + '%';
+        status.textContent = 'Yükleniyor… %' + pct;
+      }
+    });
+
+    xhr.onload = () => {
+      uploadBtn.disabled = false;
+      try {
+        const result = JSON.parse(xhr.responseText || '{}');
+        if (xhr.status === 401) {
+          sessionStorage.clear();
+          alert('Oturum sona erdi.');
+          location.href = 'login.html';
+          return;
+        }
+        if (xhr.status >= 200 && xhr.status < 300) {
+          status.textContent = '';
+          bar.style.width = '100%';
+          KTUN.toast(result.message || `${result.students_processed ?? 0} öğrenci için ${result.responses_inserted ?? 0} cevap kaydedildi.`, 'success');
+          document.getElementById('fileInput').value = '';
+          document.getElementById('fileInfo').textContent = '';
+          refreshUploadEnabled();
+          setTimeout(() => { wrap.style.display = 'none'; bar.style.width = '0%'; }, 1500);
+        } else {
+          throw new Error(result.detail || 'Bilinmeyen hata');
+        }
+      } catch (e) {
+        status.textContent = '';
+        wrap.style.display = 'none';
+        KTUN.toast('Yükleme başarısız: ' + e.message, 'danger');
+      }
+    };
+
+    xhr.onerror = () => {
+      uploadBtn.disabled = false;
+      status.textContent = '';
+      wrap.style.display = 'none';
+      KTUN.toast('Ağ hatası — yükleme tamamlanamadı.', 'danger');
+    };
+
+    xhr.send(fd);
+  }
+
+  document.getElementById('btnDelete').addEventListener('click', async () => {
+    const examId = document.getElementById('examSelect').value;
+    if (!examId) { KTUN.toast('Önce bir sınav seçin.', 'warning'); return; }
+    const examText = document.getElementById('examSelect').selectedOptions[0].text;
+
+    if (!confirm(
+      '⚠️ ÇOK DİKKAT!\n\n' +
+      `"${examText}" sınavının TÜM öğrenci cevaplarını silmek üzeresiniz.\n\n` +
+      '• Tüm öğrenci notları silinecek\n' +
+      '• Sorular ve DÖÇ eşleştirmeleri silinmeyecek\n' +
+      '• Bu işlem GERİ ALINAMAZ!\n\nDevam ediyor musunuz?'
+    )) return;
+
+    if (!confirm('🚨 SON UYARI!\n\nSilmeye devam etmek istediğinize EMİN MİSİNİZ?')) return;
+
+    const deleteStatus = document.getElementById('deleteStatus');
+    deleteStatus.textContent = 'Siliniyor…';
+    deleteStatus.style.color = 'var(--amber)';
+
+    try {
+      const res = await KTUN.apiFetch(`/api/exams/${examId}/responses`, { method: 'DELETE' });
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.detail || 'Silme başarısız');
+      deleteStatus.textContent = '';
+      KTUN.toast((result.message || 'Silindi.') + ` (${result.deleted_count ?? 0} kayıt)`, 'success');
+      setTimeout(() => location.reload(), 1500);
+    } catch (e) {
+      deleteStatus.textContent = '';
+      KTUN.toast('Silme başarısız: ' + e.message, 'danger');
+    }
+  });
+
+  loadExams();
+</script>
+
+</body>
+</html>

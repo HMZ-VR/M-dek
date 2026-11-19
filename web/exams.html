@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sınav Yönetimi – MÜDEK</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+  <link rel="stylesheet" href="assets/ktun-design.css">
+  <style>
+    .stats-row { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:18px; }
+    .stat-card { background:var(--white); border:1px solid var(--border); border-radius:var(--r); padding:16px 18px; box-shadow:var(--shadow); display:flex; align-items:center; gap:14px; }
+    .stat-icon { width:42px; height:42px; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .stat-val { font-size:22px; font-weight:700; color:var(--navy); font-family:'Playfair Display', serif; line-height:1; }
+    .stat-lbl { font-size:11.5px; color:var(--muted); margin-top:3px; }
+    .exam-item { display:flex; align-items:center; gap:14px; padding:14px 16px; border:1px solid var(--border); border-radius:var(--r-sm); background:var(--white); transition:all var(--ease); }
+    .exam-item + .exam-item { margin-top:8px; }
+    .exam-item:hover { border-left:3px solid var(--gold); transform:translateX(2px); box-shadow:var(--shadow-md); }
+    .exam-icon { width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .exam-icon.midterm { background:rgba(11,31,69,.08); color:var(--navy); }
+    .exam-icon.final   { background:rgba(5,150,105,.10); color:var(--green); }
+    .exam-icon.resit   { background:rgba(180,83,9,.10); color:var(--amber); }
+    .exam-icon.other   { background:rgba(201,168,76,.15); color:var(--gold-dk); }
+    .exam-info { flex:1; min-width:0; }
+    .exam-title-row { display:flex; align-items:center; gap:8px; font-weight:700; font-size:14px; color:var(--navy); margin-bottom:4px; flex-wrap:wrap; }
+    .exam-meta { font-size:12px; color:var(--muted); display:flex; gap:12px; flex-wrap:wrap; }
+    .exam-meta .mi { font-size:13px; vertical-align:middle; }
+    @media(max-width:600px) { .stats-row { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+
+<div id="topbarMount"></div>
+<div id="heroMount"></div>
+
+<main class="page-body">
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-icon" style="background:rgba(11,31,69,.08); color:var(--navy)"><span class="mi">description</span></div>
+      <div><div class="stat-val" id="statTotal">–</div><div class="stat-lbl">Toplam Sınav</div></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:rgba(5,150,105,.10); color:var(--green)"><span class="mi">check_circle</span></div>
+      <div><div class="stat-val" id="statFinal">–</div><div class="stat-lbl">Final Sınavı</div></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:rgba(180,83,9,.10); color:var(--amber)"><span class="mi">refresh</span></div>
+      <div><div class="stat-val" id="statResit">–</div><div class="stat-lbl">Bütünleme</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="mi" style="color:var(--gold-dk)">add_circle</span> Yeni Sınav Oluştur</div>
+    <div class="form-row">
+      <div>
+        <label>Ders / Şube</label>
+        <select id="courseSelect"><option value="">Yükleniyor…</option></select>
+      </div>
+      <div>
+        <label>Sınav Türü</label>
+        <select id="examType">
+          <option value="">Seçiniz…</option>
+          <option value="midterm">Vize</option>
+          <option value="final">Final</option>
+          <option value="resit">Bütünleme</option>
+        </select>
+      </div>
+      <div>
+        <label>Sınav Tarihi</label>
+        <input type="date" id="examDate">
+      </div>
+    </div>
+    <div class="flex gap-2 items-center">
+      <button class="btn" id="createBtn"><span class="mi">add</span> Sınavı Oluştur</button>
+      <span id="createStatus" style="font-size:13px"></span>
+    </div>
+  </div>
+
+  <div class="section-hd mt-4">
+    <h2>Mevcut Sınavlar</h2>
+    <div class="section-hd-line"></div>
+    <span id="examCount" class="badge badge-gold">0</span>
+  </div>
+
+  <div class="card" style="padding:16px">
+    <div class="form-row mb-3">
+      <input type="search" id="filterSearch" placeholder="Ders adı veya kod ile ara…">
+      <select id="filterType">
+        <option value="">Tüm türler</option>
+        <option value="midterm">Vize</option>
+        <option value="final">Final</option>
+        <option value="resit">Bütünleme</option>
+      </select>
+    </div>
+    <div id="examList"><div class="empty-state"><span class="mi">hourglass_top</span><h3>Yükleniyor…</h3></div></div>
+  </div>
+</main>
+
+<script src="assets/ktun-shell.js"></script>
+<script src="help-widget.js" defer></script>
+<script>
+  const auth = KTUN.requireAuth();
+  if (!auth) throw new Error('redirecting');
+  const { role } = auth;
+  KTUN.renderTopbar({ back:{ href:'dashboard.html', label:'Panele Dön' } });
+  KTUN.renderHero({
+    eyebrow:'Akademik Süreç',
+    title:'Sınav <em>Yönetimi</em>',
+    sub:'Yeni sınav oluşturun, soruları yönetin ve listeyi filtreleyin.',
+  });
+  KTUN.renderFooter();
+
+  const IS_INSTRUCTOR = role === 'ogretim_uyesi';
+  const EP_COURSES = IS_INSTRUCTOR ? '/api/my-courses' : '/api/course-offerings';
+  const EP_EXAMS   = IS_INSTRUCTOR ? '/api/my-exams'   : '/api/exams';
+
+  let allExams = [];
+
+  async function api(url, opts) {
+    const r = await KTUN.apiFetch(url, opts || {});
+    if (!r.ok) throw new Error(await r.text());
+    return r.json();
+  }
+
+  async function loadCourses() {
+    const sel = document.getElementById('courseSelect');
+    try {
+      const data = await api(EP_COURSES);
+      const courses = IS_INSTRUCTOR ? (data.offerings || []) : (Array.isArray(data) ? data : (data.offerings || []));
+      sel.innerHTML = '<option value="">Ders seçiniz…</option>' +
+        courses.map(c => {
+          const label = IS_INSTRUCTOR
+            ? `${c.course_code} – ${c.course_name} (${c.term})`
+            : `${c.course_code} – ${c.course_name} (${c.instructor_name || '?'})`;
+          return `<option value="${c.id}">${KTUN.htmlEscape(label)}</option>`;
+        }).join('');
+    } catch {
+      sel.innerHTML = '<option value="">Dersler yüklenemedi</option>';
+    }
+  }
+
+  async function loadExams() {
+    try {
+      allExams = await api(EP_EXAMS);
+      updateStats();
+      filterExams();
+    } catch {
+      document.getElementById('examList').innerHTML =
+        `<div class="empty-state"><span class="mi" style="color:var(--red)">error</span><h3>Sınavlar yüklenemedi</h3></div>`;
+    }
+  }
+
+  function updateStats() {
+    document.getElementById('statTotal').textContent = allExams.length;
+    document.getElementById('statFinal').textContent = allExams.filter(e => e.exam_type === 'final').length;
+    document.getElementById('statResit').textContent = allExams.filter(e => e.exam_type === 'resit').length;
+  }
+
+  function examType(t) {
+    const map = {
+      midterm: { label:'Vize',      cls:'midterm', icon:'edit_note' },
+      final:   { label:'Final',     cls:'final',   icon:'school' },
+      resit:   { label:'Bütünleme', cls:'resit',   icon:'refresh' },
+    };
+    return map[t] || { label: t || '—', cls:'other', icon:'description' };
+  }
+
+  function renderExams(exams) {
+    const list = document.getElementById('examList');
+    document.getElementById('examCount').textContent = exams.length;
+    if (!exams.length) {
+      list.innerHTML = `<div class="empty-state"><span class="mi">inbox</span><h3>Sınav yok</h3><p>Yukarıdan yeni sınav oluşturabilirsiniz.</p></div>`;
+      return;
+    }
+    list.innerHTML = [...exams].sort((a,b) => (b.date || '').localeCompare(a.date || '')).map(e => {
+      const type = examType(e.exam_type);
+      const instr = (!IS_INSTRUCTOR && e.instructor_name)
+        ? `<span><span class="mi">person</span> ${KTUN.htmlEscape(e.instructor_name)}</span>` : '';
+      return `
+        <div class="exam-item">
+          <div class="exam-icon ${type.cls}"><span class="mi">${type.icon}</span></div>
+          <div class="exam-info">
+            <div class="exam-title-row">
+              ${KTUN.htmlEscape(e.title)}
+              <span class="badge${type.cls === 'final' ? ' badge-green' : type.cls === 'resit' ? ' badge-amber' : ''}">${type.label}</span>
+            </div>
+            <div class="exam-meta">
+              <span><span class="mi">menu_book</span> ${KTUN.htmlEscape(e.course_code)} – ${KTUN.htmlEscape(e.course_name)}</span>
+              <span><span class="mi">schedule</span> ${KTUN.htmlEscape(e.term)} · Şube ${KTUN.htmlEscape(String(e.section || ''))}</span>
+              ${e.date ? `<span><span class="mi" style="color:var(--green)">event</span> ${KTUN.htmlEscape(e.date)}</span>` : ''}
+              ${instr}
+            </div>
+          </div>
+          <div class="flex gap-1">
+            <button class="btn btn-sm btn-outline" data-act="q" data-id="${e.id}" data-title="${KTUN.htmlEscape(e.title)}" data-course="${KTUN.htmlEscape(e.course_name||'')}">
+              <span class="mi">checklist</span> Sorular
+            </button>
+            <button class="btn btn-sm btn-outline" data-act="del" data-id="${e.id}">
+              <span class="mi">delete</span>
+            </button>
+          </div>
+        </div>`;
+    }).join('');
+    list.querySelectorAll('button[data-act]').forEach(b => {
+      b.addEventListener('click', () => {
+        if (b.dataset.act === 'q') {
+          sessionStorage.setItem('selectedExamId', b.dataset.id);
+          sessionStorage.setItem('selectedExamTitle', b.dataset.title);
+          sessionStorage.setItem('selectedCourseName', b.dataset.course);
+          location.href = 'questions.html';
+        } else {
+          deleteExam(+b.dataset.id);
+        }
+      });
+    });
+  }
+
+  function filterExams() {
+    const q  = document.getElementById('filterSearch').value.trim().toLowerCase();
+    const tp = document.getElementById('filterType').value;
+    renderExams(allExams.filter(e => {
+      const matchText = !q
+        || (e.course_code || '').toLowerCase().includes(q)
+        || (e.course_name || '').toLowerCase().includes(q)
+        || (e.title || '').toLowerCase().includes(q);
+      const matchType = !tp || e.exam_type === tp;
+      return matchText && matchType;
+    }));
+  }
+  document.getElementById('filterSearch').addEventListener('input', filterExams);
+  document.getElementById('filterType').addEventListener('change', filterExams);
+
+  function setStatus(msg, kind) {
+    const el = document.getElementById('createStatus');
+    el.textContent = msg || '';
+    el.style.color = kind === 'ok' ? 'var(--green)' : kind === 'err' ? 'var(--red)' : 'var(--muted)';
+  }
+
+  document.getElementById('createBtn').addEventListener('click', async () => {
+    const offeringId = document.getElementById('courseSelect').value;
+    const examT      = document.getElementById('examType').value;
+    const date       = document.getElementById('examDate').value;
+    if (!offeringId) return setStatus('Lütfen ders seçin.', 'err');
+    if (!examT)      return setStatus('Lütfen sınav türü seçin.', 'err');
+    const titles = { midterm:'Vize', final:'Final', resit:'Bütünleme' };
+    const btn = document.getElementById('createBtn');
+    btn.disabled = true;
+    setStatus('Oluşturuluyor…', '');
+    try {
+      await api('/api/exams', {
+        method:'POST',
+        body: JSON.stringify({ offering_id: parseInt(offeringId), title: titles[examT] || examT, exam_type: examT, date: date || null }),
+      });
+      setStatus('✓ Sınav oluşturuldu', 'ok');
+      document.getElementById('examType').value = '';
+      document.getElementById('examDate').value = '';
+      await loadExams();
+      setTimeout(() => setStatus('', ''), 2500);
+    } catch (e) {
+      setStatus('Oluşturulamadı: ' + e.message, 'err');
+    } finally { btn.disabled = false; }
+  });
+
+  async function deleteExam(id) {
+    if (!confirm('Bu sınavı silmek üzeresiniz!\n\nTüm sorular, cevaplar ve notlar kalıcı silinecek.\n\nDevam edilsin mi?')) return;
+    try {
+      await api(`/api/exams/${id}`, { method:'DELETE' });
+      await loadExams();
+    } catch (e) {
+      alert('Silme başarısız: ' + e.message);
+    }
+  }
+
+  Promise.all([loadCourses(), loadExams()]);
+</script>
+</body>
+</html>

@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bilgisayar Mühendisliği – MÜDEK</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+  <link rel="stylesheet" href="assets/ktun-design.css">
+  <style>
+    .dept-hero-band {
+      background:linear-gradient(135deg,var(--navy) 0%,#1a3a7a 100%);
+      color:#fff; padding:60px 0 48px;
+    }
+    .dept-hero-inner { max-width:1100px; margin:0 auto; padding:0 24px; }
+    .dept-hero-eyebrow { font-size:12px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--gold-lt); margin-bottom:14px; }
+    .dept-hero-title { font-family:'Playfair Display',serif; font-size:clamp(28px,5vw,48px); font-weight:700; margin-bottom:14px; line-height:1.15; }
+    .dept-hero-sub { font-size:15px; opacity:.8; max-width:600px; line-height:1.65; }
+
+    .page-inner { max-width:1100px; margin:0 auto; padding:40px 24px 60px; display:flex; flex-direction:column; gap:28px; }
+
+    .vision-box {
+      background:linear-gradient(135deg,rgba(11,31,69,.04),rgba(201,168,76,.06));
+      border:1px solid var(--border); border-left:4px solid var(--gold);
+      border-radius:var(--r); padding:24px 28px;
+    }
+    .vision-label { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.1em; color:var(--gold-dk); margin-bottom:10px; }
+    .vision-text  { font-size:15px; line-height:1.75; color:var(--text); }
+
+    .staff-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:14px; }
+    .staff-card {
+      background:var(--white); border:1px solid var(--border); border-radius:var(--r);
+      padding:18px 16px; text-align:center; transition:box-shadow var(--ease);
+    }
+    .staff-card:hover { box-shadow:var(--shadow-md); }
+    .staff-avatar {
+      width:52px; height:52px; border-radius:50%;
+      background:linear-gradient(135deg,var(--navy),var(--gold-dk));
+      color:#fff; font-size:20px; font-weight:700;
+      display:flex; align-items:center; justify-content:center;
+      margin:0 auto 12px;
+    }
+    .staff-name { font-weight:700; font-size:13px; color:var(--text); margin-bottom:4px; }
+    .staff-role { font-size:11.5px; color:var(--muted); }
+
+    .course-list { display:flex; flex-direction:column; gap:8px; }
+    .course-row {
+      display:flex; align-items:center; gap:12px;
+      padding:11px 16px; background:var(--white);
+      border:1px solid var(--border); border-radius:var(--r-sm);
+      transition:border-color var(--ease);
+    }
+    .course-row:hover { border-color:var(--gold); }
+    .course-row-code {
+      font-family:monospace; font-size:12px; font-weight:700; color:var(--navy);
+      background:rgba(11,31,69,.07); border:1px solid rgba(11,31,69,.12);
+      border-radius:4px; padding:2px 8px; flex-shrink:0;
+    }
+    .course-row-name { flex:1; font-size:13.5px; color:var(--text); }
+
+    .pc-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:10px; }
+    .pc-item {
+      display:flex; align-items:center; gap:10px;
+      padding:10px 14px; background:var(--white);
+      border:1px solid var(--border); border-radius:var(--r-sm);
+    }
+    .pc-code { font-weight:700; font-size:13px; color:var(--navy); min-width:36px; }
+    .pc-title { font-size:12.5px; color:var(--text); flex:1; }
+
+    .contact-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:20px; }
+    .contact-item { display:flex; align-items:flex-start; gap:12px; }
+    .contact-icon {
+      width:36px; height:36px; border-radius:9px; flex-shrink:0;
+      background:rgba(11,31,69,.07); color:var(--navy);
+      display:flex; align-items:center; justify-content:center;
+    }
+    .contact-label { font-size:11px; color:var(--muted); font-weight:600; margin-bottom:3px; }
+    .contact-val   { font-size:13.5px; color:var(--text); font-weight:500; }
+
+    .empty { text-align:center; padding:28px; color:var(--muted); display:flex; align-items:center; justify-content:center; gap:8px; font-size:13.5px; }
+  </style>
+</head>
+<body>
+
+<div id="topbarMount"></div>
+
+<div class="dept-hero-band">
+  <div class="dept-hero-inner">
+    <div class="dept-hero-eyebrow">Konya Teknik Üniversitesi · Mühendislik Fakültesi</div>
+    <div class="dept-hero-title">Bilgisayar Mühendisliği</div>
+    <div class="dept-hero-sub">Yazılım, donanım ve sistem tasarımında teorik temeller ile pratik becerileri birleştiren, MÜDEK akredite bir eğitim programı.</div>
+  </div>
+</div>
+
+<div class="page-inner">
+
+  <div class="vision-box">
+    <div class="vision-label">Bölüm Vizyonu</div>
+    <div class="vision-text">
+      Bilgisayar mühendisliği alanında ulusal ve uluslararası düzeyde rekabetçi, araştırmacı, yenilikçi ve mesleki etik değerlere bağlı mühendisler yetiştirmek; ürettiği bilgi ve teknoloji ile topluma katkı sağlamak.
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">
+      <span class="mi" style="color:var(--gold-dk)">people</span>
+      Akademik Kadro
+    </div>
+    <div class="staff-grid" id="staffGrid">
+      <div class="empty"><span class="mi">hourglass_empty</span> Yükleniyor…</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">
+      <span class="mi" style="color:var(--gold-dk)">menu_book</span>
+      Aktif Dersler
+    </div>
+    <div class="course-list" id="courseList">
+      <div class="empty"><span class="mi">hourglass_empty</span> Yükleniyor…</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">
+      <span class="mi" style="color:var(--gold-dk)">verified</span>
+      Program Çıktıları (MÜDEK)
+    </div>
+    <div class="pc-grid" id="pcGrid">
+      <div class="empty"><span class="mi">hourglass_empty</span> Yükleniyor…</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">
+      <span class="mi" style="color:var(--gold-dk)">contact_mail</span>
+      İletişim
+    </div>
+    <div class="contact-grid">
+      <div class="contact-item">
+        <div class="contact-icon"><span class="mi">location_on</span></div>
+        <div>
+          <div class="contact-label">Adres</div>
+          <div class="contact-val">KTÜ Mühendislik Fakültesi, 42075 Selçuklu / Konya</div>
+        </div>
+      </div>
+      <div class="contact-item">
+        <div class="contact-icon"><span class="mi">mail</span></div>
+        <div>
+          <div class="contact-label">E-posta</div>
+          <div class="contact-val">bilgisayar@ktun.edu.tr</div>
+        </div>
+      </div>
+      <div class="contact-item">
+        <div class="contact-icon"><span class="mi">phone</span></div>
+        <div>
+          <div class="contact-label">Telefon</div>
+          <div class="contact-val">+90 332 205 10 00</div>
+        </div>
+      </div>
+      <div class="contact-item">
+        <div class="contact-icon"><span class="mi">schedule</span></div>
+        <div>
+          <div class="contact-label">Çalışma Saatleri</div>
+          <div class="contact-val">Pazartesi–Cuma, 08:30–17:00</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="assets/ktun-shell.js"></script>
+<script src="help-widget.js" defer></script>
+<script>
+  KTUN.renderPublicTopbar({ active: '' });
+  const esc = KTUN.htmlEscape;
+
+  async function tryLoad(url) {
+    try {
+      const res = await KTUN.apiFetch(url);
+      if (!res.ok) return null;
+      return res.json();
+    } catch(_) { return null; }
+  }
+
+  const AUTH_MSG = `<div class="empty"><span class="mi">lock</span> Bu bilgilere erişmek için <a href="login.html" style="color:var(--navy);font-weight:600;margin-left:4px;">giriş yapınız</a>.</div>`;
+
+  async function loadStaff() {
+    const el = document.getElementById('staffGrid');
+    const data = await tryLoad('/api/instructors');
+    if (!data || !data.length) { el.innerHTML = AUTH_MSG; return; }
+    el.innerHTML = data.map(i => {
+      const ini = (i.full_name || 'U').split(' ').map(w => w[0]).slice(0,2).join('').toUpperCase();
+      return `
+        <div class="staff-card">
+          <div class="staff-avatar">${ini}</div>
+          <div class="staff-name">${esc(i.full_name || '–')}</div>
+          <div class="staff-role">${esc(i.title || 'Öğretim Üyesi')}</div>
+        </div>`;
+    }).join('');
+  }
+
+  async function loadCourses() {
+    const el = document.getElementById('courseList');
+    const data = await tryLoad('/api/courses');
+    if (!data || !data.length) { el.innerHTML = AUTH_MSG; return; }
+    el.innerHTML = data.map(c => `
+      <div class="course-row">
+        <span class="course-row-code">${esc(c.code || c.course_code || '')}</span>
+        <span class="course-row-name">${esc(c.name || c.course_name || '')}</span>
+        ${c.credits ? `<span class="badge">${c.credits} AKTS</span>` : ''}
+      </div>`).join('');
+  }
+
+  async function loadProgramOutcomes() {
+    const el = document.getElementById('pcGrid');
+    const data = await tryLoad('/api/program-outcomes');
+    if (!data || !data.length) { el.innerHTML = AUTH_MSG; return; }
+    el.innerHTML = data.map(po => `
+      <div class="pc-item">
+        <span class="pc-code">${esc(po.code)}</span>
+        <span class="pc-title">${esc(po.title || po.description || '')}</span>
+      </div>`).join('');
+  }
+
+  Promise.all([loadStaff(), loadCourses(), loadProgramOutcomes()]);
+</script>
+</body>
+</html>

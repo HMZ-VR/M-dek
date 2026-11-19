@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Çalıştaylar – MÜDEK</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+  <link rel="stylesheet" href="assets/ktun-design.css">
+  <style>
+    .page-inner { max-width:860px; margin:0 auto; padding:32px 24px 60px; display:flex; flex-direction:column; gap:24px; }
+    .prose { font-size:14.5px; line-height:1.75; color:var(--text); margin:0; }
+    .event-list { display:flex; flex-direction:column; gap:12px; }
+    .event-item { display:flex; gap:14px; align-items:flex-start; padding:16px 18px; background:var(--white); border:1px solid var(--border); border-left:3px solid var(--gold); border-radius:var(--r-sm); }
+    .event-date { font-family:monospace; font-size:12px; font-weight:700; color:var(--navy); background:rgba(11,31,69,.07); border-radius:5px; padding:4px 9px; flex-shrink:0; white-space:nowrap; }
+    .event-title { font-weight:700; font-size:14px; color:var(--navy); margin-bottom:4px; }
+    .event-desc  { font-size:13px; color:var(--muted); line-height:1.55; }
+  </style>
+</head>
+<body>
+<div id="topbarMount"></div>
+<div id="heroMount"></div>
+<div class="page-inner">
+  <div class="card">
+    <div class="card-title"><span class="mi" style="color:var(--gold-dk)">groups</span> Çalıştaylar Hakkında</div>
+    <p class="prose">MÜDEK, her yıl üniversitelerden akademisyenlerin ve paydaşların katılımıyla ulusal çalıştaylar düzenlemektedir. Bu çalıştaylarda kalite güvence süreçleri, akreditasyon deneyimleri ve uluslararası gelişmeler ele alınmaktadır. Konya Teknik Üniversitesi olarak biz de bu çalıştaylara aktif olarak katılmakta ve deneyimlerimizi paylaşmaktayız.</p>
+  </div>
+  <div class="card">
+    <div class="card-title"><span class="mi" style="color:var(--gold-dk)">event</span> Yaklaşan Etkinlikler</div>
+    <div class="event-list">
+      <div class="event-item">
+        <span class="event-date">Haz 2025</span>
+        <div>
+          <div class="event-title">Mühendislik Eğitiminde Kalite Güvence Çalıştayı</div>
+          <div class="event-desc">Program çıktıları, ölçme-değerlendirme süreçleri ve akreditasyon deneyimlerinin paylaşılacağı ulusal çalıştay.</div>
+        </div>
+      </div>
+      <div class="event-item">
+        <span class="event-date">Eyl 2025</span>
+        <div>
+          <div class="event-title">EUR-ACE Etiketi Bilgilendirme Toplantısı</div>
+          <div class="event-desc">Uluslararası akreditasyon ve EUR-ACE etiketi süreçleri hakkında bilgilendirme toplantısı.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="assets/ktun-shell.js"></script>
+<script src="help-widget.js" defer></script>
+<script>
+  KTUN.renderPublicTopbar({ active: '' });
+  KTUN.renderHero({ eyebrow: 'MÜDEK', title: 'Çalıştaylar', sub: 'Kalite güvence ve akreditasyon çalıştayları' });
+</script>
+</body>
+</html>

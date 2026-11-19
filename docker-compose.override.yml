@@ -1,0 +1,33 @@
+# Yerel geliştirme/doğrulama ek ayarları — DEPLOY'A DAHİL ETMEYİN.
+# Bu dosya `docker compose` tarafından otomatik yüklenir (compose.override).
+# Production sunucusunda silin veya `docker compose -f docker-compose.yml ...`
+# ile yalnızca temel dosyayı kullanın.
+services:
+  web:
+    ports:
+      # preview araçları 80'e bağlanamadığından nginx'e 8080 üzerinden de erişim
+      - "8080:80"
+
+  api:
+    ports:
+      # API'yi yalnızca yerelde doğrudan açar (Swagger/test için). Production'da
+      # base docker-compose.yml bu portu açmaz.
+      - "8000:8000"
+    environment:
+      # Şifre sıfırlama e-postalarını yerelde MailHog'a yönlendir (gerçek SMTP gerekmez).
+      SMTP_HOST: mailhog
+      SMTP_PORT: "1025"
+      SMTP_STARTTLS: "false"
+      SMTP_SSL: "false"
+      SMTP_FROM: mudek@ktun.edu.tr
+      PUBLIC_BASE_URL: http://localhost:8080
+    depends_on:
+      - mailhog
+
+  # Yerel SMTP yakalayıcı: gönderilen e-postaları http://localhost:8025 arayüzünde gösterir.
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: mudek_mailhog
+    ports:
+      - "8025:8025"   # Web arayüzü
+    restart: unless-stopped

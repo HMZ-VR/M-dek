@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Soru Yönetimi – MÜDEK</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+  <link rel="stylesheet" href="assets/ktun-design.css">
+  <style>
+    /* Sayfa-spesifik: tam yükseklik split layout */
+    html, body { height:100%; }
+    body { overflow:hidden; display:flex; flex-direction:column; }
+    #topbar { flex-shrink:0; }
+
+    .exam-bar {
+      flex-shrink:0;
+      display:flex; align-items:center; gap:14px;
+      padding:14px 40px;
+      background:var(--white);
+      border-bottom:1px solid var(--border);
+    }
+    .exam-bar-title {
+      font-family:'Playfair Display', serif;
+      font-size:18px; font-weight:700; color:var(--navy);
+    }
+    .exam-bar-sub { font-size:12px; color:var(--muted); margin-top:2px; }
+    .exam-bar-spacer { flex:1; }
+    .score-pill {
+      display:inline-flex; align-items:center; gap:7px;
+      padding:7px 16px; border-radius:99px;
+      background:rgba(5,150,105,.1); border:1px solid rgba(5,150,105,.25);
+      color:var(--green); font-weight:700; font-size:13px;
+    }
+    .score-pill .mi { font-size:15px; }
+
+    .layout { display:flex; flex:1; overflow:hidden; }
+
+    .sidebar {
+      width:360px; flex-shrink:0;
+      display:flex; flex-direction:column;
+      background:var(--white);
+      border-right:1px solid var(--border);
+      overflow:hidden;
+    }
+    .sidebar-form {
+      padding:20px;
+      border-bottom:1px solid var(--border);
+      background:var(--cream);
+    }
+    .sidebar-form-title {
+      font-size:11.5px; font-weight:700; color:var(--navy);
+      text-transform:uppercase; letter-spacing:.06em;
+      margin-bottom:14px;
+      display:flex; align-items:center; gap:7px;
+    }
+    .sidebar-form-title .mi { font-size:16px; color:var(--gold-dk); }
+
+    .qf-row { display:flex; gap:10px; margin-bottom:10px; }
+    .qf-group { display:flex; flex-direction:column; gap:5px; }
+    .qf-group.flex1 { flex:1; }
+    .qf-group label {
+      font-size:11px; font-weight:600; color:var(--muted);
+      text-transform:uppercase; letter-spacing:.04em;
+    }
+    .qf-group input, .qf-group textarea {
+      padding:8px 11px; font-size:13px; font-family:inherit;
+      background:var(--white); border:1px solid var(--border);
+      border-radius:var(--r-sm); color:var(--text);
+      outline:none; transition:border-color .15s, box-shadow .15s;
+      width:100%;
+    }
+    .qf-group input:focus, .qf-group textarea:focus {
+      border-color:var(--navy);
+      box-shadow:0 0 0 3px rgba(11,31,69,.10);
+    }
+    .qf-group textarea { resize:none; }
+
+    .sidebar-list { flex:1; overflow-y:auto; padding:12px; }
+    .sidebar-list::-webkit-scrollbar { width:5px; }
+    .sidebar-list::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+
+    .list-header {
+      font-size:11px; font-weight:700; color:var(--muted);
+      text-transform:uppercase; letter-spacing:.05em;
+      padding:4px 6px 10px;
+    }
+
+    .q-card {
+      display:flex; align-items:center; gap:10px;
+      padding:11px 12px;
+      border:1px solid var(--border);
+      border-radius:var(--r-sm);
+      margin-bottom:6px;
+      cursor:pointer;
+      transition:all .15s;
+      background:var(--white);
+    }
+    .q-card:hover { border-color:var(--gold); background:rgba(201,168,76,.06); }
+    .q-card.active {
+      border-color:var(--navy);
+      background:rgba(11,31,69,.04);
+      box-shadow:var(--shadow);
+    }
+    .q-num {
+      width:34px; height:34px; border-radius:8px;
+      background:rgba(11,31,69,.06); border:1px solid var(--border);
+      color:var(--navy); font-size:13px; font-weight:700;
+      display:flex; align-items:center; justify-content:center;
+      flex-shrink:0;
+    }
+    .q-card.active .q-num { background:var(--navy); color:var(--gold); border-color:var(--navy); }
+    .q-info { flex:1; min-width:0; }
+    .q-info-top { display:flex; align-items:center; gap:7px; font-size:13px; font-weight:600; margin-bottom:2px; }
+    .q-pts {
+      font-size:11px; font-weight:700;
+      background:rgba(201,168,76,.15); color:var(--gold-dk);
+      border-radius:4px; padding:2px 7px;
+    }
+    .q-text {
+      font-size:12px; color:var(--muted);
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    }
+    .q-del {
+      width:30px; height:30px; border-radius:6px;
+      background:none; border:1px solid transparent;
+      color:var(--muted); cursor:pointer;
+      display:flex; align-items:center; justify-content:center;
+      transition:all .15s; flex-shrink:0;
+    }
+    .q-del .mi { font-size:16px; }
+    .q-del:hover { background:rgba(184,39,44,.08); border-color:rgba(184,39,44,.2); color:var(--red); }
+
+    .main {
+      flex:1; overflow-y:auto;
+      padding:28px 32px;
+      display:flex; flex-direction:column; gap:18px;
+    }
+    .main::-webkit-scrollbar { width:6px; }
+    .main::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+
+    .empty-pane {
+      display:flex; flex-direction:column;
+      align-items:center; justify-content:center;
+      flex:1; text-align:center; color:var(--muted); gap:14px;
+    }
+    .empty-pane-icon {
+      width:72px; height:72px; border-radius:18px;
+      background:rgba(11,31,69,.06); border:1px solid var(--border);
+      display:flex; align-items:center; justify-content:center;
+      color:var(--navy);
+    }
+    .empty-pane-icon .mi { font-size:32px; }
+    .empty-pane h3 { font-size:17px; color:var(--navy); font-weight:700; font-family:'Playfair Display', serif; }
+    .empty-pane p  { font-size:13px; line-height:1.6; }
+
+    .detail-card {
+      background:var(--white); border:1px solid var(--border);
+      border-radius:var(--r); padding:24px;
+      box-shadow:var(--shadow);
+    }
+    .detail-head {
+      display:flex; align-items:flex-start; justify-content:space-between;
+      gap:12px; margin-bottom:16px;
+    }
+    .detail-num { display:flex; align-items:center; gap:12px; }
+    .detail-num-badge {
+      width:42px; height:42px; border-radius:10px;
+      background:var(--navy); color:var(--gold);
+      display:flex; align-items:center; justify-content:center;
+      font-size:15px; font-weight:700;
+    }
+    .detail-num-title { font-family:'Playfair Display', serif; font-size:18px; font-weight:700; color:var(--navy); }
+    .detail-num-sub { font-size:12px; color:var(--muted); margin-top:2px; }
+    .pts-badge {
+      display:inline-flex; align-items:center; gap:6px;
+      background:rgba(201,168,76,.15); border:1px solid rgba(201,168,76,.3);
+      color:var(--gold-dk); border-radius:99px;
+      padding:5px 13px; font-weight:700; font-size:12.5px;
+    }
+    .pts-badge .mi { font-size:14px; }
+
+    .detail-text {
+      font-size:14px; line-height:1.7; color:var(--text);
+      background:var(--cream); border:1px solid var(--border);
+      border-radius:var(--r-sm); padding:14px 16px;
+      min-height:60px;
+    }
+    .detail-text.empty { color:var(--muted); font-style:italic; }
+
+    .stats-grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:14px; }
+    .stat-card {
+      background:var(--white); border:1px solid var(--border);
+      border-radius:var(--r); padding:18px;
+      box-shadow:var(--shadow); text-align:center;
+    }
+    .stat-label {
+      font-size:11px; font-weight:700; color:var(--muted);
+      text-transform:uppercase; letter-spacing:.05em; margin-bottom:8px;
+    }
+    .stat-val { font-size:26px; font-weight:700; font-family:'Playfair Display', serif; }
+    .stat-sub { font-size:11px; color:var(--muted); margin-top:4px; }
+
+    .dist-card {
+      background:var(--white); border:1px solid var(--border);
+      border-radius:var(--r); padding:20px; box-shadow:var(--shadow);
+    }
+    .dist-title {
+      font-size:13px; font-weight:700; color:var(--navy);
+      margin-bottom:16px; display:flex; align-items:center; gap:8px;
+      font-family:'Playfair Display', serif;
+    }
+    .dist-title .mi { color:var(--gold-dk); font-size:18px; }
+    .dist-row { display:flex; align-items:center; gap:12px; margin-bottom:10px; }
+    .dist-lbl { width:48px; font-size:11px; font-weight:700; color:var(--muted); flex-shrink:0; }
+    .dist-bar-wrap { flex:1; height:8px; background:var(--cream); border-radius:4px; overflow:hidden; border:1px solid var(--border); }
+    .dist-bar { height:100%; border-radius:4px; background:linear-gradient(90deg, var(--navy), var(--gold)); transition:width .4s ease; }
+    .dist-pts { width:42px; text-align:right; font-size:11px; font-weight:700; color:var(--muted); flex-shrink:0; }
+
+    .edit-row { display:flex; gap:8px; margin-top:14px; }
+  </style>
+</head>
+<body>
+
+<div id="topbarMount"></div>
+
+<div class="exam-bar">
+  <div>
+    <div class="exam-bar-title" id="examTitle">Yükleniyor…</div>
+    <div class="exam-bar-sub" id="examCourse"></div>
+  </div>
+  <div class="exam-bar-spacer"></div>
+  <div class="score-pill">
+    <span class="mi">grade</span>
+    <span id="totalScore">0</span> Puan
+  </div>
+</div>
+
+<div class="layout">
+
+  <aside class="sidebar">
+    <div class="sidebar-form">
+      <div class="sidebar-form-title"><span class="mi">add_circle</span> Yeni Soru</div>
+      <div class="qf-row">
+        <div class="qf-group" style="width:90px;">
+          <label>No</label>
+          <input type="number" id="qNumber" placeholder="1" min="1"/>
+        </div>
+        <div class="qf-group flex1">
+          <label>Puan</label>
+          <input type="number" id="qPoints" placeholder="20" min="0" step="0.5"/>
+        </div>
+      </div>
+      <div class="qf-group" style="margin-bottom:12px;">
+        <label>Soru Metni (opsiyonel)</label>
+        <textarea id="qText" rows="2" placeholder="Soru açıklaması…"></textarea>
+      </div>
+      <button class="btn" id="addBtn" style="width:100%;justify-content:center">
+        <span class="mi">add</span> Soruyu Ekle
+      </button>
+    </div>
+
+    <div class="sidebar-list">
+      <div class="list-header" id="listHeader">Sorular</div>
+      <div id="questionList">
+        <div style="text-align:center;padding:30px 0;color:var(--muted);font-size:13px;">
+          <span class="mi" style="font-size:22px">hourglass_empty</span>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <section class="main" id="main">
+    <div class="empty-pane" id="emptyState">
+      <div class="empty-pane-icon"><span class="mi">description</span></div>
+      <h3>Soru Seçilmedi</h3>
+      <p>Detayını görmek için soldan bir soruya tıklayın<br>veya yeni bir soru ekleyin.</p>
+    </div>
+  </section>
+
+</div>
+
+<script src="assets/ktun-shell.js"></script>
+<script src="help-widget.js" defer></script>
+<script>
+  const auth = KTUN.requireAuth();
+  if (!auth) throw new Error('redirecting');
+  KTUN.renderTopbar({ back:{ href:'my-exams.html', label:'Sınavlar' } });
+
+  const examId   = sessionStorage.getItem('selectedExamId');
+  const examTitle  = sessionStorage.getItem('selectedExamTitle')  || 'Sınav';
+  const courseName = sessionStorage.getItem('selectedCourseName') || '';
+
+  if (!examId) {
+    alert('Sınav seçilmedi!');
+    location.href = 'my-exams.html';
+  }
+
+  document.getElementById('examTitle').textContent  = examTitle;
+  document.getElementById('examCourse').textContent = courseName;
+
+  let questions = [];
+  let activeId  = null;
+  let editingId = null;
+
+  const esc = KTUN.htmlEscape;
+
+  async function loadQuestions() {
+    try {
+      const r = await KTUN.apiFetch(`/api/exams/${examId}/questions`);
+      if (!r.ok) throw new Error(await r.text());
+      questions = await r.json();
+      renderList();
+      renderStats();
+      updateScore();
+    } catch (e) {
+      document.getElementById('questionList').innerHTML =
+        `<div style="color:var(--red);text-align:center;padding:20px;font-size:13px;">Sorular yüklenemedi.</div>`;
+    }
+  }
+
+  function renderList() {
+    const list = document.getElementById('questionList');
+    const hdr  = document.getElementById('listHeader');
+
+    if (!questions.length) {
+      hdr.textContent = 'Sorular';
+      list.innerHTML = `<div style="text-align:center;padding:30px 12px;color:var(--muted);font-size:13px;">Henüz soru eklenmemiş.</div>`;
+      return;
+    }
+
+    hdr.textContent = `${questions.length} Soru`;
+    list.innerHTML = [...questions].sort((a,b) => a.q_no - b.q_no).map(q => `
+      <div class="q-card ${activeId===q.id?'active':''}" data-id="${q.id}">
+        <div class="q-num">${esc(q.q_no)}</div>
+        <div class="q-info">
+          <div class="q-info-top">
+            <span>Soru ${esc(q.q_no)}</span>
+            <span class="q-pts">${esc(q.points)}p</span>
+          </div>
+          <div class="q-text">${esc(q.text || '—')}</div>
+        </div>
+        <button class="q-del" data-del-id="${q.id}" title="Sil">
+          <span class="mi">delete</span>
+        </button>
+      </div>`).join('');
+
+    list.querySelectorAll('.q-card').forEach(el => {
+      el.addEventListener('click', () => selectQuestion(parseInt(el.dataset.id, 10)));
+    });
+    list.querySelectorAll('.q-del').forEach(btn => {
+      btn.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        deleteQuestion(parseInt(btn.dataset.delId, 10));
+      });
+    });
+  }
+
+  function renderStats() {
+    if (!questions.length) {
+      if (!activeId) showEmpty();
+      return;
+    }
+    if (activeId) {
+      const q = questions.find(x => x.id === activeId);
+      if (q) { renderDetail(q); return; }
+    }
+
+    const total  = questions.reduce((s,q) => s + Number(q.points || 0), 0);
+    const avgPts = (total / questions.length).toFixed(1);
+
+    document.getElementById('main').innerHTML = `
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Toplam Soru</div>
+          <div class="stat-val" style="color:var(--navy)">${questions.length}</div>
+          <div class="stat-sub">sınav sorusu</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Toplam Puan</div>
+          <div class="stat-val" style="color:var(--green)">${total}</div>
+          <div class="stat-sub">puan</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Soru Başı Ort.</div>
+          <div class="stat-val" style="color:var(--gold-dk)">${avgPts}</div>
+          <div class="stat-sub">ortalama puan</div>
+        </div>
+      </div>
+      ${renderDistCard()}
+    `;
+  }
+
+  function renderDistCard() {
+    const sorted = [...questions].sort((a,b) => a.q_no - b.q_no);
+    const maxPts = Math.max(...sorted.map(q => Number(q.points || 0))) || 1;
+    const rows = sorted.map(q => `
+      <div class="dist-row">
+        <div class="dist-lbl">S${esc(q.q_no)}</div>
+        <div class="dist-bar-wrap"><div class="dist-bar" style="width:${(Number(q.points||0) / maxPts) * 100}%"></div></div>
+        <div class="dist-pts">${esc(q.points)}p</div>
+      </div>`).join('');
+    return `
+      <div class="dist-card">
+        <div class="dist-title"><span class="mi">bar_chart</span> Puan Dağılımı</div>
+        ${rows}
+      </div>`;
+  }
+
+  function selectQuestion(id) {
+    activeId = id;
+    editingId = null;
+    renderList();
+    const q = questions.find(x => x.id === id);
+    if (q) renderDetail(q);
+  }
+
+  function renderDetail(q) {
+    document.getElementById('main').innerHTML = `
+      <div class="detail-card">
+        <div class="detail-head">
+          <div class="detail-num">
+            <div class="detail-num-badge">${esc(q.q_no)}</div>
+            <div>
+              <div class="detail-num-title">Soru ${esc(q.q_no)}</div>
+              <div class="detail-num-sub">Soru detayı</div>
+            </div>
+          </div>
+          <div class="pts-badge"><span class="mi">grade</span> ${esc(q.points)} Puan</div>
+        </div>
+
+        <div class="detail-text ${q.text ? '' : 'empty'}">
+          ${q.text ? esc(q.text) : 'Bu soru için metin girilmemiş.'}
+        </div>
+
+        <div class="edit-row">
+          <button class="btn btn-outline btn-sm" id="btnEdit"><span class="mi">edit</span> Düzenle</button>
+          <button class="btn btn-outline btn-sm" id="btnDel" style="color:var(--red);border-color:rgba(184,39,44,.25)">
+            <span class="mi">delete</span> Sil
+          </button>
+        </div>
+      </div>
+      ${renderDistCard()}
+    `;
+    document.getElementById('btnEdit').addEventListener('click', () => startEdit(q.id));
+    document.getElementById('btnDel').addEventListener('click', () => deleteQuestion(q.id));
+  }
+
+  function startEdit(id) {
+    const q = questions.find(x => x.id === id);
+    if (!q) return;
+    editingId = id;
+    document.getElementById('main').innerHTML = `
+      <div class="detail-card">
+        <div class="detail-head">
+          <div class="detail-num">
+            <div class="detail-num-badge">${esc(q.q_no)}</div>
+            <div>
+              <div class="detail-num-title">Soru ${esc(q.q_no)} – Düzenle</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="qf-row" style="margin-bottom:12px;">
+          <div class="qf-group" style="width:90px;">
+            <label>No</label>
+            <input type="number" id="editNo" value="${esc(q.q_no)}"/>
+          </div>
+          <div class="qf-group flex1">
+            <label>Puan</label>
+            <input type="number" id="editPts" value="${esc(q.points)}" min="0" step="0.5"/>
+          </div>
+        </div>
+        <div class="qf-group" style="margin-bottom:14px;">
+          <label>Soru Metni</label>
+          <textarea id="editText" rows="4">${esc(q.text || '')}</textarea>
+        </div>
+
+        <div class="edit-row">
+          <button class="btn btn-sm" id="btnSave"><span class="mi">check</span> Kaydet</button>
+          <button class="btn btn-outline btn-sm" id="btnCancel"><span class="mi">close</span> Vazgeç</button>
+        </div>
+      </div>`;
+    document.getElementById('btnSave').addEventListener('click', () => saveEdit(q.id));
+    document.getElementById('btnCancel').addEventListener('click', () => selectQuestion(q.id));
+  }
+
+  async function saveEdit(id) {
+    const q_no = parseInt(document.getElementById('editNo').value, 10);
+    const pts  = parseFloat(document.getElementById('editPts').value);
+    const text = document.getElementById('editText').value.trim();
+
+    if (!q_no || isNaN(pts)) { KTUN.toast('No ve puan zorunlu.', 'warning'); return; }
+
+    const btn = document.getElementById('btnSave');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="mi">hourglass_empty</span> Kaydediliyor…';
+
+    try {
+      const r = await KTUN.apiFetch(`/api/questions/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify({ q_no, points: pts, text })
+      });
+      if (!r.ok) throw new Error(await r.text());
+      await loadQuestions();
+      activeId  = id;
+      editingId = null;
+      const q = questions.find(x => x.id === id);
+      if (q) renderDetail(q);
+      KTUN.toast('Soru güncellendi.', 'success');
+    } catch (e) {
+      KTUN.toast('Güncelleme başarısız: ' + e.message, 'danger');
+      btn.disabled = false;
+      btn.innerHTML = '<span class="mi">check</span> Kaydet';
+    }
+  }
+
+  document.getElementById('addBtn').addEventListener('click', handleAddQuestion);
+
+  async function handleAddQuestion() {
+    const q_no = parseInt(document.getElementById('qNumber').value, 10);
+    const pts  = parseFloat(document.getElementById('qPoints').value);
+    const text = document.getElementById('qText').value.trim();
+
+    if (!q_no || isNaN(pts)) { KTUN.toast('Soru no ve puan zorunludur.', 'warning'); return; }
+
+    const btn = document.getElementById('addBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="mi">hourglass_empty</span> Ekleniyor…';
+
+    try {
+      const r = await KTUN.apiFetch(`/api/exams/${examId}/questions`, {
+        method: 'POST',
+        body: JSON.stringify({ q_no, points: pts, text })
+      });
+      if (!r.ok) throw new Error(await r.text());
+      const newQ = await r.json();
+      document.getElementById('qNumber').value = q_no + 1;
+      document.getElementById('qPoints').value = '';
+      document.getElementById('qText').value   = '';
+      await loadQuestions();
+      activeId = newQ.id || null;
+      if (activeId) {
+        renderList();
+        const q = questions.find(x => x.id === activeId);
+        if (q) renderDetail(q);
+      } else {
+        renderStats();
+      }
+      KTUN.toast('Soru eklendi.', 'success');
+    } catch (e) {
+      KTUN.toast('Eklenemedi: ' + e.message, 'danger');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<span class="mi">add</span> Soruyu Ekle';
+    }
+  }
+
+  async function deleteQuestion(id) {
+    if (!confirm('Bu soruyu silmek istiyor musun?')) return;
+    try {
+      const r = await KTUN.apiFetch(`/api/questions/${id}`, { method: 'DELETE' });
+      if (!r.ok) throw new Error(await r.text());
+      if (activeId === id) activeId = null;
+      await loadQuestions();
+      if (!activeId) renderStats();
+      KTUN.toast('Soru silindi.', 'success');
+    } catch (e) {
+      KTUN.toast('Silme başarısız: ' + e.message, 'danger');
+    }
+  }
+
+  function updateScore() {
+    const total = questions.reduce((s,q) => s + Number(q.points || 0), 0);
+    document.getElementById('totalScore').textContent = total;
+  }
+
+  function showEmpty() {
+    document.getElementById('main').innerHTML = `
+      <div class="empty-pane">
+        <div class="empty-pane-icon"><span class="mi">description</span></div>
+        <h3>Soru Seçilmedi</h3>
+        <p>Detayını görmek için soldan bir soruya tıklayın<br>veya yeni bir soru ekleyin.</p>
+      </div>`;
+  }
+
+  loadQuestions();
+</script>
+</body>
+</html>

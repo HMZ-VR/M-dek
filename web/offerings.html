@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ders Açılışları – MÜDEK</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+  <link rel="stylesheet" href="assets/ktun-design.css">
+</head>
+<body>
+
+<div id="topbarMount"></div>
+<div id="heroMount"></div>
+
+<main class="page-body-wide">
+  <div style="display:grid; grid-template-columns:380px 1fr; gap:20px;">
+    <section class="card" style="height:fit-content">
+      <div class="card-title"><span class="mi" style="color:var(--gold-dk)">add_circle</span> Yeni Açılış</div>
+      <div class="mt-2">
+        <label>Ders</label>
+        <select id="courseSel"><option value="">Yükleniyor…</option></select>
+      </div>
+      <div class="mt-2">
+        <label>Dönem</label>
+        <select id="termSel"><option value="Güz">Güz</option><option value="Bahar">Bahar</option></select>
+      </div>
+      <div class="mt-2">
+        <label>Şube</label>
+        <input id="sectionInp" placeholder="A / 1">
+      </div>
+      <div class="mt-2">
+        <label>Öğretim Üyesi (opsiyonel)</label>
+        <select id="instSel"><option value="">Seçiniz…</option></select>
+      </div>
+      <div class="mt-3">
+        <button id="createBtn" class="btn"><span class="mi">save</span> Oluştur</button>
+      </div>
+      <div id="createStatus" class="mt-2" style="font-size:13px"></div>
+    </section>
+
+    <section class="card" style="padding:0; overflow:hidden">
+      <div class="flex justify-between items-center" style="padding:18px 22px; border-bottom:1px solid var(--border)">
+        <div class="card-title" style="margin:0">Mevcut Açılışlar</div>
+        <span id="offCount" class="badge badge-gold">0</span>
+      </div>
+      <div class="table-wrap" style="border:none; border-radius:0">
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th>Ders</th>
+              <th style="width:140px">Dönem / Şube</th>
+              <th style="width:300px">Öğretim Üyesi</th>
+              <th style="width:160px;text-align:right">İşlem</th>
+            </tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</main>
+
+<script src="assets/ktun-shell.js"></script>
+<script src="help-widget.js" defer></script>
+<script>
+  const auth = KTUN.requireAuth({ roles:['admin','bolum_baskani'] });
+  if (!auth) throw new Error('redirecting');
+  KTUN.renderTopbar({ back:{ href:'dashboard.html', label:'Panele Dön' } });
+  KTUN.renderHero({
+    eyebrow:'Ders Atama',
+    title:'Ders <em>Açılışları</em>',
+    sub:'Açılış oluşturun ve öğretim üyesi atayın.',
+  });
+  KTUN.renderFooter();
+
+  const courseSel    = document.getElementById('courseSel');
+  const termSel      = document.getElementById('termSel');
+  const sectionInp   = document.getElementById('sectionInp');
+  const instSel      = document.getElementById('instSel');
+  const createBtn    = document.getElementById('createBtn');
+  const createStatus = document.getElementById('createStatus');
+  const rowsEl       = document.getElementById('rows');
+  const offCount     = document.getElementById('offCount');
+
+  let INSTRUCTORS = [];
+
+  function setMsg(ok, msg) {
+    createStatus.textContent = (ok ? '✓ ' : '✕ ') + msg;
+    createStatus.style.color = ok ? 'var(--green)' : 'var(--red)';
+  }
+
+  async function api(url, opts) {
+    const r = await KTUN.apiFetch(url, opts || {});
+    const body = await r.json().catch(() => null);
+    if (!r.ok) throw new Error(body?.detail ? (typeof body.detail === 'string' ? body.detail : JSON.stringify(body.detail)) : r.statusText);
+    return body;
+  }
+
+  async function loadCourses() {
+    const list = await api('/api/courses');
+    courseSel.innerHTML = '<option value="">Seçiniz…</option>' + list.map(r =>
+      `<option value="${r.id}">${KTUN.htmlEscape(r.code)} – ${KTUN.htmlEscape(r.name)}</option>`).join('');
+  }
+  async function loadInstructors() {
+    INSTRUCTORS = await api('/api/instructors');
+    instSel.innerHTML = '<option value="">Seçiniz…</option>' + INSTRUCTORS.map(r =>
+      `<option value="${r.id}">${KTUN.htmlEscape((r.title || '') + ' ' + r.name)}</option>`).join('');
+  }
+
+  async function loadList() {
+    const offs = await api('/api/course-offerings');
+    offCount.textContent = offs.length;
+    if (!offs.length) {
+      rowsEl.innerHTML = `<tr><td colspan="4"><div class="empty-state">
+        <span class="mi">link_off</span><h3>Açılış yok</h3>
+        <p>Sol formdan yeni açılış oluşturun.</p></div></td></tr>`;
+      return;
+    }
+    const instOpts = INSTRUCTORS.map(r =>
+      `<option value="${r.id}">${KTUN.htmlEscape((r.title || '') + ' ' + r.name)}</option>`).join('');
+    rowsEl.innerHTML = offs.map(o => `
+      <tr>
+        <td><strong class="text-navy">${KTUN.htmlEscape(o.course_code)}</strong> – ${KTUN.htmlEscape(o.course_name)}</td>
+        <td>${KTUN.htmlEscape(o.term || '-')} / ${KTUN.htmlEscape(o.section || '-')}</td>
+        <td>
+          <div class="mb-1">${o.instructor_name ? `<strong>${KTUN.htmlEscape(o.instructor_name)}</strong>` : '<span class="badge">atanmamış</span>'}</div>
+          <select data-assign="${o.id}">
+            <option value="">— Atama yok —</option>
+            ${instOpts}
+          </select>
+        </td>
+        <td class="actions">
+          <button class="btn btn-sm" data-save="${o.id}"><span class="mi">save</span> Kaydet</button>
+          <button class="btn btn-sm btn-outline" data-del="${o.id}"><span class="mi">delete</span></button>
+        </td>
+      </tr>`).join('');
+    offs.forEach(o => {
+      const sel = rowsEl.querySelector(`select[data-assign="${o.id}"]`);
+      if (sel && o.instructor_id) sel.value = String(o.instructor_id);
+    });
+  }
+
+  createBtn.addEventListener('click', async () => {
+    createStatus.textContent = '';
+    const course_id = Number(courseSel.value);
+    const term = termSel.value;
+    const section = sectionInp.value.trim();
+    const instructor_id = instSel.value ? Number(instSel.value) : null;
+    if (!course_id || !term || !section) return setMsg(false, 'Ders, dönem ve şube zorunlu.');
+    try {
+      await api('/api/course-offerings', { method:'POST', body: JSON.stringify({ course_id, term, section, instructor_id }) });
+      setMsg(true, 'Açılış oluşturuldu.');
+      sectionInp.value = ''; instSel.value = '';
+      await loadList();
+    } catch (e) { setMsg(false, e.message); }
+  });
+
+  rowsEl.addEventListener('click', async (e) => {
+    const del = e.target.closest('button[data-del]');
+    const save = e.target.closest('button[data-save]');
+    if (del) {
+      const id = Number(del.dataset.del);
+      if (!confirm('Bu açılış silinsin mi? (Sınav/ilişkileri varsa backend engeller)')) return;
+      try { await api(`/api/course-offerings/${id}`, { method:'DELETE' }); await loadList(); }
+      catch (err) { KTUN.toast('Silme hatası: ' + err.message, 'danger'); }
+    }
+    if (save) {
+      const id = Number(save.dataset.save);
+      const sel = rowsEl.querySelector(`select[data-assign="${id}"]`);
+      const instructor_id = sel.value ? Number(sel.value) : null;
+      try {
+        await api(`/api/course-offerings/${id}`, { method:'PUT', body: JSON.stringify({ instructor_id }) });
+        KTUN.toast('Öğretim üyesi güncellendi.', 'success');
+        await loadList();
+      } catch (err) { KTUN.toast('Güncelleme hatası: ' + err.message, 'danger'); }
+    }
+  });
+
+  (async () => {
+    await Promise.all([loadCourses(), loadInstructors()]);
+    await loadList();
+  })();
+</script>
+</body>
+</html>

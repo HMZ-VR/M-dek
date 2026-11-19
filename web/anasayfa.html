@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ana Sayfa – MÜDEK</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+  <link rel="stylesheet" href="assets/ktun-design.css">
+  <style>
+    .home-inner { max-width:1100px; margin:0 auto; padding:32px 24px 60px; display:flex; flex-direction:column; gap:28px; }
+
+    /* ── Slider ────────────────────────────────── */
+    .slider { position:relative; border-radius:var(--r); overflow:hidden; background:var(--border); box-shadow:var(--shadow-lg); }
+    .track  { display:flex; will-change:transform; transition:transform .55s ease; }
+    .slide  { flex:0 0 100%; height:clamp(240px,42vw,500px); background-size:cover; background-position:center; position:relative; display:flex; align-items:flex-end; padding:22px; color:#fff; font-weight:700; font-size:clamp(16px,2.2vw,28px); line-height:1.25; font-family:'Playfair Display',serif; }
+    .slide::before { content:""; position:absolute; inset:0; background:linear-gradient(to top, rgba(11,31,69,.7), rgba(11,31,69,.2) 50%, transparent); }
+    .slide > span { position:relative; z-index:1; text-shadow:0 2px 10px rgba(0,0,0,.4); }
+    .slide-nav { position:absolute; inset:0; display:flex; justify-content:space-between; align-items:center; padding:0 10px; pointer-events:none; }
+    .slide-btn { pointer-events:auto; width:40px; height:40px; border:none; border-radius:50%; cursor:pointer; background:rgba(255,255,255,.85); font-size:20px; display:flex; align-items:center; justify-content:center; box-shadow:var(--shadow-md); color:var(--navy); transition:background var(--ease); }
+    .slide-btn:hover { background:#fff; }
+    .dots { position:absolute; left:0; right:0; bottom:12px; display:flex; gap:8px; justify-content:center; z-index:2; }
+    .dot  { width:8px; height:8px; border-radius:50%; background:rgba(255,255,255,.55); cursor:pointer; transition:background var(--ease); }
+    .dot.active { background:#fff; }
+
+    /* ── News cards ────────────────────────────── */
+    .news-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:14px; }
+    .news-card { background:var(--white); border:1px solid var(--border); border-radius:var(--r); padding:18px 20px; transition:box-shadow var(--ease), border-color var(--ease); }
+    .news-card:hover { box-shadow:var(--shadow-md); border-color:var(--gold); }
+    .news-card-title { font-weight:700; font-size:14.5px; color:var(--navy); margin-bottom:8px; }
+    .news-card-body  { font-size:13px; color:var(--muted); line-height:1.6; }
+
+    /* ── Quick links ───────────────────────────── */
+    .quick-links { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:12px; }
+    .quick-link {
+      display:flex; flex-direction:column; align-items:center; gap:8px;
+      padding:20px 12px; text-align:center;
+      background:var(--white); border:1px solid var(--border); border-radius:var(--r);
+      text-decoration:none; color:var(--text);
+      transition:border-color var(--ease), box-shadow var(--ease), transform var(--ease);
+    }
+    .quick-link:hover { border-color:var(--gold); box-shadow:var(--shadow); transform:translateY(-2px); }
+    .quick-link .mi { font-size:28px; color:var(--navy); }
+    .quick-link-label { font-size:12.5px; font-weight:600; color:var(--navy); }
+  </style>
+</head>
+<body>
+
+<div id="topbarMount"></div>
+
+<div class="home-inner">
+
+  <!-- Slider -->
+  <section class="slider" aria-label="Duyuru slaytları">
+    <div class="track" id="track">
+      <div class="slide" style="background-image:url('https://picsum.photos/id/1015/1600/900');">
+        <span>2025 Akreditasyon Başvuruları Başladı</span>
+      </div>
+      <div class="slide" style="background-image:url('https://picsum.photos/id/1011/1600/900');">
+        <span>Yeni Belgeler Yayınlandı</span>
+      </div>
+      <div class="slide" style="background-image:url('https://picsum.photos/id/1012/1600/900');">
+        <span>Haziran 2025 Çalıştayı</span>
+      </div>
+    </div>
+    <div class="slide-nav">
+      <button class="slide-btn" id="prev" aria-label="Önceki">‹</button>
+      <button class="slide-btn" id="next" aria-label="Sonraki">›</button>
+    </div>
+    <div class="dots" id="dots"></div>
+  </section>
+
+  <!-- Hızlı erişim -->
+  <div class="card">
+    <div class="card-title"><span class="mi" style="color:var(--gold-dk)">grid_view</span> Hızlı Erişim</div>
+    <div class="quick-links">
+      <a href="akreditasyon.html" class="quick-link">
+        <span class="mi">verified</span>
+        <span class="quick-link-label">Akreditasyon</span>
+      </a>
+      <a href="belgeler.html" class="quick-link">
+        <span class="mi">folder_open</span>
+        <span class="quick-link-label">Belgeler</span>
+      </a>
+      <a href="duyurular.html" class="quick-link">
+        <span class="mi">campaign</span>
+        <span class="quick-link-label">Duyurular</span>
+      </a>
+      <a href="calistaylar.html" class="quick-link">
+        <span class="mi">groups</span>
+        <span class="quick-link-label">Çalıştaylar</span>
+      </a>
+      <a href="hakkinda.html" class="quick-link">
+        <span class="mi">info</span>
+        <span class="quick-link-label">Hakkında</span>
+      </a>
+      <a href="iletisim.html" class="quick-link">
+        <span class="mi">contact_mail</span>
+        <span class="quick-link-label">İletişim</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Güncel Duyurular -->
+  <div class="card">
+    <div class="card-title"><span class="mi" style="color:var(--gold-dk)">campaign</span> Güncel Duyurular</div>
+    <div class="news-grid">
+      <div class="news-card">
+        <div class="news-card-title">2025 Akreditasyon Başvuru Tarihleri</div>
+        <div class="news-card-body">Başvurular 1 Mart – 30 Nisan 2025 tarihleri arasında alınacaktır.</div>
+      </div>
+      <div class="news-card">
+        <div class="news-card-title">Yeni Belgeler Yayınlandı</div>
+        <div class="news-card-body">2025 yılı için akreditasyon kılavuzları ve formlar güncellenmiştir.</div>
+      </div>
+      <div class="news-card">
+        <div class="news-card-title">Çalıştay Duyurusu</div>
+        <div class="news-card-body">Haziran ayında "Mühendislik Eğitiminde Kalite" çalıştayı düzenlenecektir.</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="assets/ktun-shell.js"></script>
+<script src="help-widget.js" defer></script>
+<script>
+  KTUN.renderPublicTopbar({ active: 'anasayfa' });
+
+  (function(){
+    const track  = document.getElementById('track');
+    const slides = Array.from(track.children);
+    const total  = slides.length;
+    const dotsEl = document.getElementById('dots');
+
+    dotsEl.innerHTML = slides.map((_,i) => `<div class="dot" data-i="${i}"></div>`).join('');
+    const dots = Array.from(dotsEl.children);
+
+    let i = 0, timer = null;
+    let dragging = false, startX = 0, deltaX = 0;
+
+    function render() {
+      track.style.transform = `translateX(-${i * 100}%)`;
+      dots.forEach((d,idx) => d.classList.toggle('active', idx === i));
+    }
+    function go(n) { i = (n + total) % total; render(); }
+    function play() { stop(); timer = setInterval(() => go(i + 1), 5000); }
+    function stop() { if (timer) { clearInterval(timer); timer = null; } }
+
+    document.getElementById('prev').addEventListener('click', () => { go(i - 1); play(); });
+    document.getElementById('next').addEventListener('click', () => { go(i + 1); play(); });
+    dots.forEach(d => d.addEventListener('click', e => { i = Number(e.currentTarget.dataset.i); render(); play(); }));
+
+    window.addEventListener('keydown', e => {
+      if (e.key === 'ArrowLeft')  { go(i - 1); play(); }
+      if (e.key === 'ArrowRight') { go(i + 1); play(); }
+    });
+
+    const onDown = x => { dragging = true; startX = x; deltaX = 0; track.style.transition = 'none'; stop(); };
+    const onMove = x => { if (!dragging) return; deltaX = x - startX; track.style.transform = `translateX(calc(-${i*100}% + ${deltaX}px))`; };
+    const onUp   = () => {
+      if (!dragging) return; dragging = false;
+      track.style.transition = 'transform .55s ease';
+      const thr = Math.min(window.innerWidth * 0.12, 180);
+      if (deltaX >  thr) i = (i - 1 + total) % total;
+      if (deltaX < -thr) i = (i + 1) % total;
+      render(); play();
+    };
+    track.addEventListener('pointerdown', e => onDown(e.clientX));
+    window.addEventListener('pointermove',  e => { if (dragging) { e.preventDefault(); onMove(e.clientX); } }, { passive: false });
+    window.addEventListener('pointerup',     onUp);
+    window.addEventListener('pointercancel', onUp);
+
+    const root = document.querySelector('.slider');
+    root.addEventListener('mouseenter', stop);
+    root.addEventListener('mouseleave', play);
+
+    render(); play();
+  })();
+</script>
+</body>
+</html>

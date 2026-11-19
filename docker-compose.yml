@@ -1,0 +1,32 @@
+
+
+services:
+  api:
+    build: ./api
+    container_name: mudek_api
+    env_file:
+      - .env
+    # NOT: API portu (8000) production'da host'a AÇILMAZ — yalnızca nginx
+    # internal docker ağı üzerinden erişir. Doğrudan açmak nginx rate-limit ve
+    # TLS katmanını baypas ettirir. Yerel geliştirme için override dosyası açar.
+    expose:
+      - "8000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./uploads:/data/uploads
+      - ./scripts:/app/scripts:ro
+    restart: unless-stopped
+
+  web:
+    image: nginx:1.27
+    container_name: mudek_web
+    ports:
+      - "80:80"
+    volumes:
+      - ./web:/usr/share/nginx/html:ro
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx/rate-limit.conf:/etc/nginx/conf.d/00-rate-limit.conf:ro
+    depends_on:
+      - api
+    restart: unless-stopped

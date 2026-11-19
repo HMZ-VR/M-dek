@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>MÜDEK – Bireysel Yetkinlik Karnesi</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --navy: #0b1f45; --navy-2: #0e2755;
+      --gold: #c9a84c; --gold-lt: #e2c97e; --gold-dk: #a8872e;
+      --red: #b8272c; --green: #059669; --amber: #b45309;
+      --white: #fff; --cream: #f7f5f0; --border: #e6e2d9;
+      --text: #18181f; --muted: #6b7280;
+      --ease: .25s cubic-bezier(.4,0,.2,1);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background: #3c4043; color: var(--text); padding: 20px 20px 20px 300px; min-height: 100vh; }
+
+    /* SIDE CONTROLS */
+    .controls {
+      position: fixed; top: 20px; left: 20px; width: 260px; z-index: 100;
+      background: var(--white); border-radius: 12px; padding: 22px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.25);
+      border-top: 3px solid var(--gold);
+    }
+    .controls h3 {
+      font-family: 'Playfair Display', serif;
+      font-size: 17px; color: var(--navy); margin-bottom: 16px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .controls h3 .mi { font-size: 20px; color: var(--gold); }
+    .input-group { margin-bottom: 14px; }
+    .input-group label {
+      display: block; font-size: 11px; font-weight: 600;
+      color: var(--muted); margin-bottom: 6px;
+      letter-spacing: .5px; text-transform: uppercase;
+    }
+    .search-box {
+      width: 100%; padding: 10px 12px;
+      border: 1px solid var(--border); border-radius: 8px;
+      font-family: inherit; font-size: 14px;
+      transition: border-color var(--ease);
+    }
+    .search-box:focus { outline: none; border-color: var(--gold); }
+    .btn {
+      width: 100%; padding: 11px; border: none; border-radius: 8px;
+      font-family: inherit; font-weight: 600; font-size: 13px;
+      cursor: pointer; margin-bottom: 8px; transition: all var(--ease);
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+    }
+    .btn-primary { background: var(--navy); color: var(--gold-lt); }
+    .btn-primary:hover { background: var(--navy-2); }
+    .btn-secondary {
+      background: var(--cream); color: var(--navy);
+      border: 1px solid var(--border);
+    }
+    .btn-secondary:hover { background: var(--white); border-color: var(--gold); }
+    .btn .mi { font-size: 16px; }
+    .back-link {
+      display: block; text-align: center; margin-top: 12px;
+      color: var(--muted); text-decoration: none; font-size: 12px;
+      padding: 8px; border-top: 1px solid var(--border);
+    }
+    .back-link:hover { color: var(--navy); }
+
+    .loading-state, .err-state {
+      padding: 14px; border-radius: 8px; font-size: 12px;
+      margin-top: 10px; text-align: center;
+    }
+    .loading-state { background: #eef2ff; color: #3730a3; }
+    .err-state { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+
+    /* A4-STYLE REPORT */
+    .report {
+      background: var(--white);
+      max-width: 900px;
+      margin: 0 auto;
+      border-radius: 8px;
+      box-shadow: 0 12px 40px rgba(0,0,0,.3);
+      overflow: hidden;
+    }
+
+    /* HEADER */
+    .report-header {
+      background: var(--navy);
+      color: var(--white);
+      padding: 32px 40px 28px;
+      position: relative;
+      border-top: 3px solid var(--gold);
+    }
+    .report-header::before {
+      content: ''; position: absolute; inset: 0;
+      background-image: radial-gradient(rgba(201,168,76,.12) 1px, transparent 1px);
+      background-size: 24px 24px; pointer-events: none;
+    }
+    .hdr-row {
+      position: relative; z-index: 1;
+      display: flex; justify-content: space-between; align-items: flex-start;
+    }
+    .hdr-brand {
+      font-family: 'Playfair Display', serif;
+      font-size: 13px; letter-spacing: 2px; text-transform: uppercase;
+      color: var(--gold); margin-bottom: 8px;
+    }
+    .hdr-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 28px; font-weight: 700; color: var(--white);
+      margin-bottom: 4px;
+    }
+    .hdr-sub { font-size: 13px; color: rgba(255,255,255,.65); font-weight: 300; }
+    .hdr-meta {
+      text-align: right; font-size: 11px; color: rgba(255,255,255,.7);
+      line-height: 1.7;
+    }
+    .hdr-meta strong { color: var(--gold-lt); font-weight: 500; }
+
+    /* STUDENT CARD */
+    .student-card {
+      background: var(--cream);
+      padding: 22px 40px;
+      border-bottom: 1px solid var(--border);
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr;
+      gap: 24px;
+    }
+    .scard-item .lbl {
+      font-size: 10px; font-weight: 600; color: var(--muted);
+      letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px;
+    }
+    .scard-item .val {
+      font-family: 'Playfair Display', serif;
+      font-size: 18px; font-weight: 700; color: var(--navy);
+    }
+    .scard-item .val.big {
+      font-size: 28px; color: var(--gold-dk);
+    }
+
+    /* SECTION */
+    .section {
+      padding: 32px 40px;
+      border-bottom: 1px solid var(--border);
+    }
+    .section:last-child { border-bottom: none; }
+    .section-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 18px; color: var(--navy);
+      margin-bottom: 4px; display: flex; align-items: center; gap: 10px;
+    }
+    .section-title .mi { color: var(--gold); font-size: 22px; }
+    .section-sub {
+      font-size: 12px; color: var(--muted);
+      margin-bottom: 22px; padding-left: 32px;
+    }
+
+    /* OVERALL CONTENT */
+    .overall-grid {
+      display: grid; grid-template-columns: 340px 1fr; gap: 32px;
+      align-items: start;
+    }
+    .radar-wrap { height: 340px; position: relative; }
+    .bars-list { display: flex; flex-direction: column; gap: 12px; }
+    .bar-row { }
+    .bar-meta {
+      display: flex; justify-content: space-between; align-items: baseline;
+      font-size: 12px; margin-bottom: 4px;
+    }
+    .bar-meta .code {
+      font-weight: 700; color: var(--navy);
+      font-family: 'Playfair Display', serif;
+    }
+    .bar-meta .pct {
+      font-weight: 700; font-size: 13px;
+      font-variant-numeric: tabular-nums;
+    }
+    .bar-meta .sub {
+      font-size: 10px; color: var(--muted); font-weight: 400;
+      margin-left: 8px; font-style: italic;
+    }
+    .bar-bg {
+      height: 8px; background: var(--border); border-radius: 4px; overflow: hidden;
+    }
+    .bar-fill {
+      height: 100%; border-radius: 4px; width: 0;
+      transition: width 1s cubic-bezier(.4,0,.2,1);
+    }
+
+    /* COURSES */
+    .course-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 20px;
+      transition: box-shadow var(--ease);
+    }
+    .course-card:hover { box-shadow: 0 6px 18px rgba(11,31,69,.08); }
+    .course-head {
+      background: linear-gradient(135deg, var(--navy-2) 0%, var(--navy) 100%);
+      color: var(--white);
+      padding: 18px 22px;
+      position: relative;
+    }
+    .course-head::after {
+      content: ''; position: absolute; bottom: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--gold-dk), var(--gold-lt), var(--gold-dk));
+      opacity: .6;
+    }
+    .course-head-row {
+      display: flex; justify-content: space-between; align-items: center;
+      flex-wrap: wrap; gap: 12px;
+    }
+    .course-code {
+      font-family: 'Playfair Display', serif;
+      font-size: 15px; color: var(--gold-lt); font-weight: 700;
+      letter-spacing: .8px;
+    }
+    .course-name {
+      font-size: 14px; color: var(--white); font-weight: 500;
+      margin-top: 2px;
+    }
+    .course-meta {
+      font-size: 11px; color: rgba(255,255,255,.6);
+      margin-top: 3px; letter-spacing: .4px;
+    }
+    .course-score {
+      text-align: right;
+    }
+    .course-score .big {
+      font-family: 'Playfair Display', serif;
+      font-size: 32px; font-weight: 700; color: var(--gold);
+      line-height: 1;
+    }
+    .course-score .lbl {
+      font-size: 10px; color: rgba(255,255,255,.6);
+      letter-spacing: 1px; text-transform: uppercase;
+      margin-top: 4px;
+    }
+    .course-body {
+      padding: 22px; display: grid;
+      grid-template-columns: 1fr 1fr; gap: 32px;
+    }
+    .course-sub {
+      font-family: 'Playfair Display', serif;
+      font-size: 13px; color: var(--navy); font-weight: 700;
+      margin-bottom: 12px; padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 6px;
+    }
+    .course-sub .tag {
+      font-family: 'Inter', sans-serif; font-size: 9px;
+      background: var(--gold); color: var(--navy);
+      padding: 2px 6px; border-radius: 10px; font-weight: 700;
+      letter-spacing: .5px;
+    }
+    .course-sub .mi { color: var(--gold); font-size: 16px; }
+    .course-empty {
+      font-size: 12px; color: var(--muted);
+      padding: 16px; background: var(--cream);
+      border-radius: 6px; text-align: center; font-style: italic;
+    }
+
+    /* NOTES */
+    .notes {
+      background: #fffbea;
+      border-left: 3px solid var(--gold);
+      padding: 16px 20px; border-radius: 6px;
+      font-size: 12px; color: #78350f; line-height: 1.65;
+    }
+    .notes strong { color: var(--navy); }
+
+    /* FOOTER */
+    .report-foot {
+      background: var(--navy);
+      color: rgba(255,255,255,.6);
+      padding: 20px 40px;
+      text-align: center;
+      font-size: 11px;
+    }
+    .report-foot strong { color: var(--gold); }
+
+    .empty-report {
+      padding: 80px 40px; text-align: center; color: var(--muted);
+    }
+    .empty-report .mi { font-size: 64px; color: var(--border); margin-bottom: 16px; }
+    .empty-report h3 {
+      font-family: 'Playfair Display', serif;
+      font-size: 22px; color: var(--navy); margin-bottom: 8px;
+    }
+
+    .mi { font-family: 'Material Icons Round'; font-style: normal;
+          display: inline-block; line-height: 1; vertical-align: middle; }
+
+    /* PRINT */
+    @media print {
+      * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+      body { background: white; padding: 0; margin: 0; font-size: 11pt; }
+      .controls, .back-link, .btn, #statusBox { display: none !important; }
+      .report { box-shadow: none; max-width: 100%; border-radius: 0; padding: 0; margin: 0; }
+      .course-card, .overall-card, .student-card { break-inside: avoid; page-break-inside: avoid; }
+      .course-card { margin-bottom: 12pt; }
+      h1, h2, h3, h4 { page-break-after: avoid; }
+      table { page-break-inside: auto; }
+      tr { page-break-inside: avoid; }
+      thead { display: table-header-group; }
+      canvas { max-width: 100% !important; height: auto !important; }
+      a { color: inherit; text-decoration: none; }
+      @page { margin: 14mm; size: A4; }
+    }
+
+    @media (max-width: 1100px) {
+      body { padding: 20px; }
+      .controls {
+        position: static; width: 100%; max-width: 900px;
+        margin: 0 auto 20px;
+      }
+      .overall-grid { grid-template-columns: 1fr; }
+      .radar-wrap { height: 300px; }
+      .course-body { grid-template-columns: 1fr; gap: 24px; }
+      .student-card { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- CONTROLS -->
+<div class="controls">
+  <h3><span class="mi">badge</span> Rapor Oluşturucu</h3>
+
+  <div class="input-group">
+    <label>Öğrenci Numarası</label>
+    <input type="text" id="studentNo" class="search-box" placeholder="Örn: 2022123456" autofocus>
+  </div>
+
+  <button class="btn btn-primary" onclick="fetchReport()">
+    <span class="mi">search</span> Raporu Getir
+  </button>
+  <button class="btn btn-secondary" onclick="window.print()">
+    <span class="mi">print</span> Yazdır / PDF
+  </button>
+
+  <div id="statusBox"></div>
+
+  <a href="dashboard.html" class="back-link">← Panele Dön</a>
+</div>
+
+<!-- REPORT -->
+<div class="report" id="report">
+  <div class="report-header">
+    <div class="hdr-row">
+      <div>
+        <div class="hdr-brand">Konya Teknik Üniversitesi</div>
+        <div class="hdr-title">Bireysel Yetkinlik Karnesi</div>
+        <div class="hdr-sub">MÜDEK Akreditasyon — Öğrenci Başarı Raporu</div>
+      </div>
+      <div class="hdr-meta">
+        <div><strong>Belge Tipi:</strong> Yetkinlik Karnesi</div>
+        <div><strong>Tarih:</strong> <span id="printDate">—</span></div>
+        <div><strong>Referans:</strong> <span id="refNo">—</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="empty-report" id="emptyState">
+    <span class="mi">description</span>
+    <h3>Rapor Hazır Değil</h3>
+    <p style="font-size:13px">Sol menüden bir öğrenci numarası girin ve "Raporu Getir"e tıklayın.</p>
+  </div>
+
+  <div id="reportContent" style="display:none">
+    <!-- STUDENT CARD -->
+    <div class="student-card">
+      <div class="scard-item">
+        <div class="lbl">Öğrenci</div>
+        <div class="val" id="sName">—</div>
+      </div>
+      <div class="scard-item">
+        <div class="lbl">Numara</div>
+        <div class="val" id="sNo">—</div>
+      </div>
+      <div class="scard-item">
+        <div class="lbl">Ders Sayısı</div>
+        <div class="val" id="sCourses">—</div>
+      </div>
+      <div class="scard-item">
+        <div class="lbl">Genel Yetkinlik</div>
+        <div class="val big" id="sScore">—</div>
+      </div>
+    </div>
+
+    <!-- OVERALL PÇ -->
+    <div class="section">
+      <div class="section-title">
+        <span class="mi">insights</span> Program Çıktısı (PÇ) Kazanımı — Genel
+      </div>
+      <div class="section-sub">
+        Tüm dersler birlikte değerlendirildiğinde, her program çıktısındaki ağırlıklı başarı yüzdesi.
+      </div>
+      <div class="overall-grid">
+        <div class="radar-wrap">
+          <canvas id="radarChart"></canvas>
+        </div>
+        <div class="bars-list" id="overallBars"></div>
+      </div>
+    </div>
+
+    <!-- PER-COURSE BREAKDOWN -->
+    <div class="section">
+      <div class="section-title">
+        <span class="mi">menu_book</span> Ders Bazlı Detaylı Kırılım
+      </div>
+      <div class="section-sub">
+        Her ders için DÖÇ (Ders Öğrenim Çıktıları) ve o dersteki PÇ katkıları.
+      </div>
+      <div id="coursesList"></div>
+    </div>
+
+    <!-- NOTES -->
+    <div class="section">
+      <div class="notes">
+        <strong>Değerlendirme Notu:</strong> Bu rapor, öğrencinin sınav yanıtları üzerinden
+        MÜDEK ders-öğrenim çıktıları (DÖÇ) ve program çıktıları (PÇ) ağırlıklarına göre
+        otomatik olarak hesaplanmıştır. DÖÇ skorları ders bazlıdır; PÇ skorları
+        <em>outcome_matrix</em> üzerinden DÖÇ katkılarının ağırlıklı toplamıdır.
+        %60 ve üzeri başarı, ilgili çıktının karşılandığı anlamına gelir.
+      </div>
+    </div>
+  </div>
+
+  <div class="report-foot">
+    Bu belge <strong>MÜDEK Akreditasyon Yönetim Sistemi</strong> tarafından otomatik oluşturulmuştur.
+    · Belge Tarihi: <span id="footerDate">—</span> · Sistem v3.0
+  </div>
+</div>
+
+<script>
+  const API_BASE = '/api';
+  let radarInstance = null;
+
+  const today = new Date().toLocaleDateString('tr-TR');
+  document.getElementById('printDate').textContent = today;
+  document.getElementById('footerDate').textContent = today;
+  document.getElementById('refNo').textContent = 'KTÜ-MDK-' + Math.floor(10000 + Math.random() * 90000);
+
+  // Enter key triggers search
+  document.getElementById('studentNo').addEventListener('keydown', e => {
+    if (e.key === 'Enter') fetchReport();
+  });
+
+  function setStatus(kind, msg) {
+    const box = document.getElementById('statusBox');
+    if (!kind) { box.innerHTML = ''; return; }
+    box.innerHTML = `<div class="${kind}-state">${msg}</div>`;
+  }
+
+  function colorFor(pct) {
+    if (pct >= 75) return '#059669';
+    if (pct >= 60) return '#c9a84c';
+    if (pct >= 40) return '#b45309';
+    return '#b8272c';
+  }
+
+  async function fetchReport() {
+    const no = document.getElementById('studentNo').value.trim();
+    if (!no) { setStatus('err', 'Lütfen öğrenci numarası girin.'); return; }
+    setStatus('loading', '⏳ Rapor hazırlanıyor...');
+
+    try {
+      const token = sessionStorage.getItem('token');
+      const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+
+      const res = await fetch(`${API_BASE}/reports/student-portfolio/${no}/detailed`, { headers });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.detail || `HTTP ${res.status}`);
+      }
+      const data = await res.json();
+      renderReport(data);
+      setStatus('', '');
+    } catch (e) {
+      console.error(e);
+      setStatus('err', 'Hata: ' + e.message);
+    }
+  }
+
+  function renderReport(data) {
+    document.getElementById('emptyState').style.display = 'none';
+    document.getElementById('reportContent').style.display = 'block';
+
+    // Student card
+    document.getElementById('sName').textContent = data.student.name || 'İsimsiz';
+    document.getElementById('sNo').textContent = data.student.student_no;
+    document.getElementById('sCourses').textContent = data.summary.total_courses;
+    document.getElementById('sScore').textContent = '%' + data.summary.overall_success_percentage;
+
+    // Overall PÇ radar + bars
+    renderOverallPO(data.program_outcomes);
+
+    // Courses
+    renderCourses(data.courses);
+  }
+
+  function renderOverallPO(po) {
+    // Radar
+    const ctx = document.getElementById('radarChart').getContext('2d');
+    if (radarInstance) radarInstance.destroy();
+
+    if (po.length === 0) {
+      document.getElementById('overallBars').innerHTML =
+        '<div class="course-empty">Kayıtlı PÇ verisi bulunamadı.</div>';
+      return;
+    }
+
+    radarInstance = new Chart(ctx, {
+      type: 'radar',
+      data: {
+        labels: po.map(p => p.code),
+        datasets: [{
+          label: 'Kazanım (%)',
+          data: po.map(p => p.percentage),
+          backgroundColor: 'rgba(201,168,76,.22)',
+          borderColor: '#c9a84c',
+          pointBackgroundColor: '#0b1f45',
+          pointBorderColor: '#c9a84c',
+          pointRadius: 4,
+          borderWidth: 2,
+        }],
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        scales: {
+          r: {
+            angleLines: { color: '#e6e2d9' },
+            grid: { color: '#e6e2d9' },
+            suggestedMin: 0, suggestedMax: 100,
+            ticks: { stepSize: 25, backdropColor: 'transparent',
+                     font: { size: 10, family: 'Inter' }, color: '#6b7280' },
+            pointLabels: { font: { size: 11, weight: '600', family: 'Inter' },
+                           color: '#0b1f45' },
+          },
+        },
+        plugins: { legend: { display: false } },
+      },
+    });
+
+    // Bars
+    const barsHtml = po.map(p => `
+      <div class="bar-row">
+        <div class="bar-meta">
+          <span><span class="code">${p.code}</span>
+            <span class="sub">${(p.title||'').substring(0,50)}${(p.title||'').length>50?'…':''}</span>
+          </span>
+          <span class="pct" style="color:${colorFor(p.percentage)}">%${p.percentage.toFixed(1)}</span>
+        </div>
+        <div class="bar-bg">
+          <div class="bar-fill" style="width:${p.percentage}%;background:${colorFor(p.percentage)}"></div>
+        </div>
+      </div>
+    `).join('');
+    document.getElementById('overallBars').innerHTML = barsHtml;
+  }
+
+  function renderCourses(courses) {
+    const list = document.getElementById('coursesList');
+    if (!courses || courses.length === 0) {
+      list.innerHTML = '<div class="course-empty">Öğrencinin girdiği ders bulunamadı.</div>';
+      return;
+    }
+
+    list.innerHTML = courses.map(c => {
+      const cloBars = c.clo_scores.length
+        ? c.clo_scores.map(d => `
+            <div class="bar-row" title="${(d.description||'').replace(/"/g,'&quot;')}">
+              <div class="bar-meta">
+                <span class="code">${d.code}</span>
+                <span class="pct" style="color:${colorFor(d.percentage)}">%${d.percentage.toFixed(1)}</span>
+              </div>
+              <div class="bar-bg">
+                <div class="bar-fill" style="width:${d.percentage}%;background:${colorFor(d.percentage)}"></div>
+              </div>
+            </div>
+          `).join('')
+        : '<div class="course-empty">DÖÇ eşleştirmesi yapılmamış.</div>';
+
+      const poBars = c.po_scores.length
+        ? c.po_scores.map(p => `
+            <div class="bar-row" title="${(p.title||'').replace(/"/g,'&quot;')}">
+              <div class="bar-meta">
+                <span class="code">${p.code}</span>
+                <span class="pct" style="color:${colorFor(p.percentage)}">%${p.percentage.toFixed(1)}</span>
+              </div>
+              <div class="bar-bg">
+                <div class="bar-fill" style="width:${p.percentage}%;background:${colorFor(p.percentage)}"></div>
+              </div>
+            </div>
+          `).join('')
+        : '<div class="course-empty">PÇ katkı verisi yok.</div>';
+
+      return `
+        <div class="course-card">
+          <div class="course-head">
+            <div class="course-head-row">
+              <div>
+                <div class="course-code">${c.course_code}</div>
+                <div class="course-name">${c.course_name}</div>
+                <div class="course-meta">
+                  <span class="mi" style="font-size:12px;vertical-align:-2px">event</span>
+                  ${c.term || 'Dönem bilinmiyor'} ·
+                  <span class="mi" style="font-size:12px;vertical-align:-2px">quiz</span>
+                  ${c.exam_count} sınav ·
+                  ${c.earned.toFixed(1)} / ${c.possible.toFixed(1)} puan
+                </div>
+              </div>
+              <div class="course-score">
+                <div class="big" style="color:${colorFor(c.overall_percentage)}">
+                  %${c.overall_percentage.toFixed(1)}
+                </div>
+                <div class="lbl">Ders Başarısı</div>
+              </div>
+            </div>
+          </div>
+          <div class="course-body">
+            <div>
+              <div class="course-sub">
+                <span class="mi">flag</span> DÖÇ Kazanımı
+                <span class="tag">Ders Öğrenim Çıktıları</span>
+              </div>
+              <div class="bars-list">${cloBars}</div>
+            </div>
+            <div>
+              <div class="course-sub">
+                <span class="mi">workspace_premium</span> PÇ Katkısı
+                <span class="tag">Program Çıktıları</span>
+              </div>
+              <div class="bars-list">${poBars}</div>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+</script>
+
+<script src="help-widget.js" defer></script>
+</body>
+</html>

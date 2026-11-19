@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Soru–DÖÇ Eşleştirme – MÜDEK</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+  <link rel="stylesheet" href="assets/ktun-design.css">
+  <style>
+    .info-banner {
+      display:flex; align-items:flex-start; gap:10px;
+      background:rgba(11,31,69,.04);
+      border:1px solid rgba(11,31,69,.12);
+      border-radius:var(--r-sm);
+      padding:14px 16px; font-size:13px; line-height:1.55;
+      margin-bottom:18px;
+    }
+    .info-banner .mi { color:var(--gold-dk); font-size:18px; flex-shrink:0; }
+
+    .q-no {
+      display:inline-flex; align-items:center; justify-content:center;
+      width:38px; height:34px; border-radius:8px;
+      background:rgba(11,31,69,.06); color:var(--navy);
+      font-weight:700; font-size:13px;
+      border:1px solid var(--border);
+    }
+    .pts-badge {
+      display:inline-block;
+      font-size:11px; font-weight:700;
+      background:rgba(201,168,76,.15); color:var(--gold-dk);
+      border-radius:4px; padding:3px 9px;
+    }
+    .map-status {
+      display:inline-flex; align-items:center; gap:6px;
+      font-size:12px; font-weight:600;
+    }
+    .map-status .mi { font-size:15px; }
+    .map-status.ok   { color:var(--green); }
+    .map-status.none { color:var(--muted); }
+
+    /* Modal — DÖÇ ağırlıkları */
+    .docm-list { display:flex; flex-direction:column; gap:10px; }
+    .doc-row {
+      display:flex; align-items:center; gap:12px;
+      padding:12px 14px;
+      background:var(--cream);
+      border:1px solid var(--border);
+      border-radius:var(--r-sm);
+      transition:border-color .15s, background .15s;
+    }
+    .doc-row:focus-within {
+      border-color:var(--navy);
+      background:var(--white);
+    }
+    .doc-num {
+      width:36px; height:36px; border-radius:8px;
+      background:var(--navy); color:var(--gold);
+      font-weight:700; font-size:12px;
+      display:flex; align-items:center; justify-content:center;
+      flex-shrink:0;
+    }
+    .doc-info { flex:1; min-width:0; }
+    .doc-title { font-weight:700; font-size:13px; color:var(--navy); }
+    .doc-desc {
+      font-size:12px; color:var(--muted); margin-top:2px;
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    }
+    .doc-input-wrap {
+      display:flex; flex-direction:column; align-items:flex-end; gap:3px;
+      flex-shrink:0;
+    }
+    .doc-input {
+      width:90px; padding:7px 10px;
+      border:1px solid var(--border);
+      border-radius:var(--r-sm);
+      font-family:inherit; font-size:13px; text-align:right;
+      outline:none; transition:border-color .15s, box-shadow .15s;
+    }
+    .doc-input:focus {
+      border-color:var(--navy);
+      box-shadow:0 0 0 3px rgba(11,31,69,.10);
+    }
+    .doc-input-hint { font-size:11px; color:var(--muted); }
+
+    .save-status { font-size:12px; font-weight:600; margin-right:auto; }
+    .save-status.ok  { color:var(--green); }
+    .save-status.err { color:var(--red); }
+
+    .exam-meta {
+      display:flex; align-items:center; gap:14px;
+      padding:12px 18px;
+      background:var(--white);
+      border:1px solid var(--border);
+      border-radius:var(--r-sm);
+      margin-bottom:18px;
+    }
+    .exam-meta-title {
+      font-family:'Playfair Display', serif;
+      font-size:16px; font-weight:700; color:var(--navy);
+    }
+    .exam-meta-sub { font-size:12px; color:var(--muted); margin-top:2px; }
+  </style>
+</head>
+<body>
+
+<div id="topbarMount"></div>
+
+<main class="page-body">
+
+  <div class="exam-meta">
+    <span class="mi" style="color:var(--gold-dk);font-size:22px;">link</span>
+    <div>
+      <div class="exam-meta-title">Soru–DÖÇ Eşleştirme</div>
+      <div class="exam-meta-sub" id="metaSub">Yükleniyor…</div>
+    </div>
+  </div>
+
+  <div class="info-banner">
+    <span class="mi">lightbulb</span>
+    <div>
+      Her soru için ilgili DÖÇ'lere <strong>ham değer</strong> girin (örn. 15 veya 20).
+      Sistem otomatik normalize ederek toplamı 1.0'a çeker ve kaydeder.
+      <strong>Boş veya 0</strong> bırakılan DÖÇ hesaba katılmaz; <strong>negatif değer</strong> kabul edilmez.
+    </div>
+  </div>
+
+  <div class="card" style="padding:0;overflow:hidden;">
+    <div class="card-title" style="padding:14px 18px;border-bottom:1px solid var(--border);margin:0;">
+      <span class="mi" style="color:var(--gold-dk)">checklist</span> Sorular
+    </div>
+    <div class="table-wrap">
+      <table class="tbl" id="qTable">
+        <thead>
+          <tr>
+            <th style="width:64px;">#</th>
+            <th>Soru</th>
+            <th style="width:80px;text-align:center;">Puan</th>
+            <th style="width:170px;">Durum</th>
+            <th style="width:160px;text-align:right;"></th>
+          </tr>
+        </thead>
+        <tbody id="qBody">
+          <tr><td colspan="5" style="text-align:center;padding:30px;color:var(--muted);">Yükleniyor…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</main>
+
+<!-- Modal: DÖÇ Ağırlıkları -->
+<div class="modal-backdrop hidden" id="mapModal">
+  <div class="modal">
+    <div class="modal-hd">
+      <div>
+        <h3 id="modalTitle">DÖÇ Ağırlıkları</h3>
+        <div id="modalSub" style="font-size:12px;color:var(--muted);margin-top:2px;"></div>
+      </div>
+      <button class="modal-close" id="btnClose"><span class="mi">close</span></button>
+    </div>
+    <div class="modal-bd">
+      <div id="docList" class="docm-list"></div>
+    </div>
+    <div class="modal-ft">
+      <span class="save-status" id="saveStatus"></span>
+      <button class="btn btn-outline" id="btnCancel">Vazgeç</button>
+      <button class="btn" id="saveBtn"><span class="mi">save</span> Kaydet</button>
+    </div>
+  </div>
+</div>
+
+<script src="assets/ktun-shell.js"></script>
+<script src="help-widget.js" defer></script>
+<script>
+  const auth = KTUN.requireAuth();
+  if (!auth) throw new Error('redirecting');
+  KTUN.renderTopbar({ back:{ href:'my-exams.html', label:'Sınavlar' } });
+
+  const examId    = sessionStorage.getItem('selectedExamId');
+  const examTitle = sessionStorage.getItem('selectedExamTitle') || '';
+  const courseName = sessionStorage.getItem('selectedCourseName') || '';
+  if (!examId) { alert('Sınav seçilmedi.'); location.href = 'my-exams.html'; }
+
+  const esc = KTUN.htmlEscape;
+
+  let QUESTIONS = [], DOCS = [], ACTIVE_Q = null, ACTIVE_EXISTING = new Map();
+
+  function loadRawMap() { try { return JSON.parse(localStorage.getItem('questionOutcomeRaw') || '{}'); } catch { return {}; } }
+  function saveRawMap(qId, m) { try { const o = loadRawMap(); o[qId] = m; localStorage.setItem('questionOutcomeRaw', JSON.stringify(o)); } catch {} }
+  function loadLoPoints() { try { return JSON.parse(localStorage.getItem('loPoints') || '{}'); } catch { return {}; } }
+
+  async function getJson(url) {
+    const r = await KTUN.apiFetch(url);
+    if (!r.ok) throw new Error(await r.text());
+    return r.json();
+  }
+  async function postJson(url, body) {
+    const r = await KTUN.apiFetch(url, { method:'POST', body: JSON.stringify(body) });
+    if (!r.ok) throw new Error(await r.text());
+    return r.json();
+  }
+
+  function statusBadge(count) {
+    if (!count) return `<span class="map-status none"><span class="mi">cancel</span> Eşleştirilmedi</span>`;
+    return `<span class="map-status ok"><span class="mi">check_circle</span> ${count} DÖÇ atandı</span>`;
+  }
+
+  async function renderQuestions() {
+    const body = document.getElementById('qBody');
+    if (!QUESTIONS.length) {
+      body.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--muted);">Bu sınavda soru yok.</td></tr>`;
+      return;
+    }
+
+    const existingMaps = {};
+    await Promise.all(QUESTIONS.map(async q => {
+      try {
+        const rows = await getJson(`/api/questions/${q.id}/outcomes`);
+        const m = new Map();
+        for (const r of rows) if (r.outcome_id != null) m.set(Number(r.outcome_id), Number(r.weight));
+        existingMaps[q.id] = m;
+      } catch { existingMaps[q.id] = new Map(); }
+    }));
+
+    body.innerHTML = QUESTIONS.map(q => `
+      <tr>
+        <td><span class="q-no">S${esc(q.q_no)}</span></td>
+        <td><div style="font-weight:600;color:var(--navy);">${esc(q.text || '—')}</div></td>
+        <td style="text-align:center;"><span class="pts-badge">${esc(q.points)}p</span></td>
+        <td id="status-${q.id}">${statusBadge(existingMaps[q.id]?.size ?? 0)}</td>
+        <td style="text-align:right;">
+          <button class="btn btn-outline btn-sm" data-q-id="${q.id}" data-q-no="${esc(q.q_no)}">
+            <span class="mi">tune</span> Ağırlıklar
+          </button>
+        </td>
+      </tr>`).join('');
+
+    body.querySelectorAll('button[data-q-id]').forEach(btn => {
+      btn.addEventListener('click', () => openModal(parseInt(btn.dataset.qId, 10), btn.dataset.qNo));
+    });
+  }
+
+  async function openModal(qId, qNo) {
+    ACTIVE_Q = { id: qId, q_no: qNo };
+    document.getElementById('modalTitle').textContent = `Soru ${qNo} – DÖÇ Ağırlıkları`;
+    document.getElementById('modalSub').textContent = 'Ham değer girin (toplam 1.0\'a normalize edilir).';
+    const st = document.getElementById('saveStatus');
+    st.textContent = ''; st.className = 'save-status';
+
+    document.getElementById('mapModal').classList.remove('hidden');
+
+    const docList = document.getElementById('docList');
+    docList.innerHTML = `<div class="empty-state"><span class="mi">hourglass_empty</span><div>Yükleniyor…</div></div>`;
+
+    ACTIVE_EXISTING = new Map();
+    try {
+      const rows = await getJson(`/api/questions/${qId}/outcomes`);
+      for (const r of rows) if (r.outcome_id != null) ACTIVE_EXISTING.set(Number(r.outcome_id), Number(r.weight));
+    } catch {}
+
+    const rawMap = loadRawMap()[qId] || {};
+    const loPoints = loadLoPoints();
+
+    if (!DOCS.length) {
+      docList.innerHTML = `<div class="empty-state"><span class="mi">warning</span><div>Bu ders için DÖÇ tanımlanmamış.</div></div>`;
+      return;
+    }
+
+    docList.innerHTML = DOCS.map(d => {
+      const oid = Number(d.id);
+      const w   = ACTIVE_EXISTING.get(oid);
+      const raw = rawMap[oid];
+      const shown = raw != null ? raw : (w != null ? Math.round(w * 1000) / 10 : '');
+      const maxPt = loPoints[oid];
+      return `
+        <div class="doc-row">
+          <div class="doc-num">D${esc(d.sequence_number)}</div>
+          <div class="doc-info">
+            <div class="doc-title">DÖÇ ${esc(d.sequence_number)}</div>
+            <div class="doc-desc">${esc(d.description || '')}</div>
+          </div>
+          <div class="doc-input-wrap">
+            <input class="doc-input" type="number" min="0" step="0.01"
+                   ${maxPt != null ? `max="${esc(maxPt)}"` : ''}
+                   data-outcome="${oid}" data-max="${maxPt ?? ''}"
+                   placeholder="0" value="${esc(shown)}"/>
+            <span class="doc-input-hint">${maxPt != null ? `Max ${esc(maxPt)}` : 'örn: 15'}</span>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  function closeModal() {
+    document.getElementById('mapModal').classList.add('hidden');
+    ACTIVE_Q = null;
+  }
+  document.getElementById('btnClose').addEventListener('click', closeModal);
+  document.getElementById('btnCancel').addEventListener('click', closeModal);
+  document.getElementById('mapModal').addEventListener('click', (e) => {
+    if (e.target.id === 'mapModal') closeModal();
+  });
+
+  document.getElementById('saveBtn').addEventListener('click', saveMapping);
+
+  async function saveMapping() {
+    if (!ACTIVE_Q) return;
+    const inputs = document.querySelectorAll('#docList input[data-outcome]');
+    const outcomes = [];
+
+    for (const inp of inputs) {
+      const oid = Number(inp.getAttribute('data-outcome'));
+      const max = inp.getAttribute('data-max');
+      const v   = Number(inp.value || 0);
+      if (v < 0) {
+        KTUN.toast(`DÖÇ ${oid} için negatif değer giremezsin.`, 'warning');
+        return;
+      }
+      if (v > 0) {
+        if (max && v > Number(max)) {
+          KTUN.toast(`DÖÇ ${oid} için girilen değer (${v}) max puanı (${max}) aşıyor.`, 'warning');
+          return;
+        }
+        outcomes.push({ outcome_id: oid, weight: v });
+      }
+    }
+
+    if (!outcomes.length) {
+      KTUN.toast('En az bir DÖÇ\'e ağırlık atanmalı.', 'warning');
+      return;
+    }
+
+    const btn = document.getElementById('saveBtn');
+    const st  = document.getElementById('saveStatus');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="mi">hourglass_empty</span> Kaydediliyor…';
+    st.textContent = ''; st.className = 'save-status';
+
+    try {
+      await postJson(`/api/questions/${ACTIVE_Q.id}/outcomes`, { outcomes });
+
+      const rawMap = {};
+      inputs.forEach(inp => {
+        const v = Number(inp.value || 0);
+        if (v > 0) rawMap[Number(inp.getAttribute('data-outcome'))] = v;
+      });
+      saveRawMap(ACTIVE_Q.id, rawMap);
+
+      st.textContent = '✓ Kaydedildi';
+      st.className = 'save-status ok';
+      btn.innerHTML = '<span class="mi">check</span> Kaydedildi';
+
+      const statusEl = document.getElementById(`status-${ACTIVE_Q.id}`);
+      if (statusEl) statusEl.innerHTML = statusBadge(outcomes.length);
+
+      KTUN.toast('DÖÇ ağırlıkları kaydedildi.', 'success');
+
+      setTimeout(() => {
+        closeModal();
+        btn.disabled = false;
+        btn.innerHTML = '<span class="mi">save</span> Kaydet';
+      }, 800);
+    } catch (e) {
+      st.textContent = '✗ ' + e.message;
+      st.className = 'save-status err';
+      KTUN.toast('Kaydetme başarısız: ' + e.message, 'danger');
+      btn.disabled = false;
+      btn.innerHTML = '<span class="mi">save</span> Kaydet';
+    }
+  }
+
+  async function init() {
+    document.getElementById('metaSub').textContent = `${courseName} · ${examTitle}`;
+    try {
+      [QUESTIONS, DOCS] = await Promise.all([
+        getJson(`/api/exams/${examId}/questions`),
+        getJson(`/api/exams/${examId}/learning-outcomes`),
+      ]);
+    } catch (e) {
+      document.getElementById('qBody').innerHTML =
+        `<tr><td colspan="5" style="text-align:center;color:var(--red);padding:24px;">Veri alınamadı: ${esc(e.message)}</td></tr>`;
+      return;
+    }
+    await renderQuestions();
+  }
+
+  init();
+</script>
+
+</body>
+</html>

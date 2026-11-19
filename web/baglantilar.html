@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bağlantılar – MÜDEK</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+  <link rel="stylesheet" href="assets/ktun-design.css">
+  <style>
+    .page-inner { max-width:860px; margin:0 auto; padding:32px 24px 60px; display:flex; flex-direction:column; gap:24px; }
+    .prose { font-size:14.5px; line-height:1.75; color:var(--text); margin:0; }
+    .link-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:14px; }
+    .link-card { display:flex; gap:14px; align-items:flex-start; padding:18px 20px; background:var(--white); border:1px solid var(--border); border-radius:var(--r-sm); text-decoration:none; color:inherit; transition:box-shadow .18s var(--ease), border-color .18s; }
+    .link-card:hover { box-shadow:var(--shadow); border-color:var(--gold); }
+    .link-card .mi { color:var(--gold-dk); flex-shrink:0; margin-top:2px; font-size:22px; }
+    .link-card .lc-title { font-weight:700; font-size:14px; color:var(--navy); margin-bottom:3px; }
+    .link-card .lc-desc { font-size:12.5px; color:var(--muted); line-height:1.5; }
+    .link-card .lc-url { font-size:11px; color:var(--gold-dk); margin-top:6px; word-break:break-all; }
+  </style>
+</head>
+<body>
+<div id="topbarMount"></div>
+<div id="heroMount"></div>
+<div class="page-inner">
+
+  <div class="card">
+    <div class="card-title"><span class="mi" style="color:var(--gold-dk)">link</span> Faydalı Bağlantılar</div>
+    <p class="prose">Mühendislik akreditasyonu ve kalite güvencesi alanındaki ulusal ve uluslararası kaynakları aşağıda bulabilirsiniz.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="mi" style="color:var(--gold-dk)">public</span> Ulusal Kurumlar</div>
+    <div class="link-grid">
+      <a href="https://www.mudek.org.tr" target="_blank" rel="noopener" class="link-card">
+        <span class="mi">verified</span>
+        <div>
+          <div class="lc-title">MÜDEK</div>
+          <div class="lc-desc">Mühendislik Değerlendirme Kurulu resmi web sitesi. Kriterler, duyurular ve akreditasyon başvuruları.</div>
+          <div class="lc-url">mudek.org.tr</div>
+        </div>
+      </a>
+      <a href="https://www.yok.gov.tr" target="_blank" rel="noopener" class="link-card">
+        <span class="mi">account_balance</span>
+        <div>
+          <div class="lc-title">YÖK</div>
+          <div class="lc-desc">Yükseköğretim Kurulu. Türkiye yükseköğretim mevzuatı, program açma ve kalite güvence süreçleri.</div>
+          <div class="lc-url">yok.gov.tr</div>
+        </div>
+      </a>
+      <a href="https://www.yokak.gov.tr" target="_blank" rel="noopener" class="link-card">
+        <span class="mi">workspace_premium</span>
+        <div>
+          <div class="lc-title">YÖKAK</div>
+          <div class="lc-desc">Yükseköğretim Kalite Kurulu. Kurumsal akreditasyon ve program değerlendirme çalışmaları.</div>
+          <div class="lc-url">yokak.gov.tr</div>
+        </div>
+      </a>
+      <a href="https://www.ktun.edu.tr" target="_blank" rel="noopener" class="link-card">
+        <span class="mi">school</span>
+        <div>
+          <div class="lc-title">Konya Teknik Üniversitesi</div>
+          <div class="lc-desc">KTÜN resmi web sitesi. Akademik birimler, duyurular ve kurumsal bilgiler.</div>
+          <div class="lc-url">ktun.edu.tr</div>
+        </div>
+      </a>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="mi" style="color:var(--gold-dk)">language</span> Uluslararası Kuruluşlar</div>
+    <div class="link-grid">
+      <a href="https://www.enaee.eu" target="_blank" rel="noopener" class="link-card">
+        <span class="mi">star</span>
+        <div>
+          <div class="lc-title">ENAEE</div>
+          <div class="lc-desc">Avrupa Mühendislik Eğitimi Akreditasyon Ağı. EUR-ACE etiket sistemi ve üye kuruluşlar.</div>
+          <div class="lc-url">enaee.eu</div>
+        </div>
+      </a>
+      <a href="https://www.washingtonaccord.org" target="_blank" rel="noopener" class="link-card">
+        <span class="mi">handshake</span>
+        <div>
+          <div class="lc-title">Washington Accord</div>
+          <div class="lc-desc">Uluslararası mühendislik akreditasyon mutabakatı. Mezun tanınırlığı ve imzacı ülkeler.</div>
+          <div class="lc-url">washingtonaccord.org</div>
+        </div>
+      </a>
+      <a href="https://www.abet.org" target="_blank" rel="noopener" class="link-card">
+        <span class="mi">emoji_events</span>
+        <div>
+          <div class="lc-title">ABET</div>
+          <div class="lc-desc">Amerikan mühendislik akreditasyon kuruluşu. Program çıktısı temelli akreditasyon modeli.</div>
+          <div class="lc-url">abet.org</div>
+        </div>
+      </a>
+    </div>
+  </div>
+
+</div>
+<script src="assets/ktun-shell.js"></script>
+<script src="help-widget.js" defer></script>
+<script>
+  KTUN.renderPublicTopbar({ active: '' });
+  KTUN.renderHero({ eyebrow: 'MÜDEK', title: 'Bağlantılar', sub: 'Ulusal ve uluslararası akreditasyon kaynakları' });
+</script>
+</body>
+</html>

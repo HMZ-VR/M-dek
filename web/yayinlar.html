@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Yayınlar – MÜDEK</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+  <link rel="stylesheet" href="assets/ktun-design.css">
+  <style>
+    .page-inner { max-width:860px; margin:0 auto; padding:32px 24px 60px; display:flex; flex-direction:column; gap:24px; }
+    .prose { font-size:14.5px; line-height:1.75; color:var(--text); margin:0; }
+    .pub-list { display:flex; flex-direction:column; gap:12px; }
+    .pub-item { display:flex; gap:14px; align-items:flex-start; padding:16px 18px; background:var(--white); border:1px solid var(--border); border-radius:var(--r-sm); transition:box-shadow .18s var(--ease); }
+    .pub-item:hover { box-shadow:var(--shadow); }
+    .pub-icon { color:var(--gold-dk); flex-shrink:0; margin-top:2px; }
+    .pub-year { font-family:monospace; font-size:12px; font-weight:700; color:var(--navy); background:rgba(11,31,69,.07); border-radius:5px; padding:3px 8px; flex-shrink:0; align-self:flex-start; margin-top:2px; }
+    .pub-title { font-weight:700; font-size:14px; color:var(--navy); margin-bottom:3px; }
+    .pub-desc { font-size:13px; color:var(--muted); line-height:1.55; }
+    .pub-tag { display:inline-block; font-size:11px; font-weight:700; letter-spacing:.4px; padding:2px 8px; border-radius:20px; margin-top:6px; }
+    .tag-krit { background:rgba(11,31,69,.1); color:var(--navy); }
+    .tag-rehber { background:rgba(201,168,76,.18); color:var(--gold-dk); }
+    .tag-rapor { background:rgba(5,150,105,.12); color:var(--green); }
+  </style>
+</head>
+<body>
+<div id="topbarMount"></div>
+<div id="heroMount"></div>
+<div class="page-inner">
+
+  <div class="card">
+    <div class="card-title"><span class="mi" style="color:var(--gold-dk)">menu_book</span> Yayınlar Hakkında</div>
+    <p class="prose">MÜDEK, akreditasyon süreçlerine yönelik kriterleri, rehberleri ve yıllık raporları kamuoyuyla paylaşmaktadır. Bu yayınlar; üniversitelerin akreditasyon hazırlık süreçlerinde başvurabilecekleri temel kaynaklar niteliğindedir.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="mi" style="color:var(--gold-dk)">description</span> Kriterler ve Rehberler</div>
+    <div class="pub-list">
+      <div class="pub-item">
+        <span class="mi pub-icon">picture_as_pdf</span>
+        <span class="pub-year">2024</span>
+        <div>
+          <div class="pub-title">MÜDEK Akreditasyon Kriterleri</div>
+          <div class="pub-desc">Mühendislik lisans programlarının akreditasyonunda kullanılan güncel kriterler ve standartlar belgesi.</div>
+          <span class="pub-tag tag-krit">Kriterler</span>
+        </div>
+      </div>
+      <div class="pub-item">
+        <span class="mi pub-icon">picture_as_pdf</span>
+        <span class="pub-year">2024</span>
+        <div>
+          <div class="pub-title">Özdeğerlendirme Raporu Hazırlama Kılavuzu</div>
+          <div class="pub-desc">Üniversitelerin akreditasyon başvurusunda hazırlaması gereken özdeğerlendirme raporunun içeriği ve formatına ilişkin rehber.</div>
+          <span class="pub-tag tag-rehber">Rehber</span>
+        </div>
+      </div>
+      <div class="pub-item">
+        <span class="mi pub-icon">picture_as_pdf</span>
+        <span class="pub-year">2023</span>
+        <div>
+          <div class="pub-title">Program Çıktıları Değerlendirme Rehberi</div>
+          <div class="pub-desc">Program çıktılarının ölçülmesi, DÖÇ-PÇ ilişkilendirmesi ve sürekli iyileştirme döngüsüne ilişkin rehber doküman.</div>
+          <span class="pub-tag tag-rehber">Rehber</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="mi" style="color:var(--gold-dk)">analytics</span> Yıllık Raporlar</div>
+    <div class="pub-list">
+      <div class="pub-item">
+        <span class="mi pub-icon">bar_chart</span>
+        <span class="pub-year">2023</span>
+        <div>
+          <div class="pub-title">MÜDEK 2023 Faaliyet Raporu</div>
+          <div class="pub-desc">2023 yılında gerçekleştirilen akreditasyon değerlendirmeleri, istatistikler ve dernek faaliyetleri özeti.</div>
+          <span class="pub-tag tag-rapor">Faaliyet Raporu</span>
+        </div>
+      </div>
+      <div class="pub-item">
+        <span class="mi pub-icon">bar_chart</span>
+        <span class="pub-year">2022</span>
+        <div>
+          <div class="pub-title">MÜDEK 2022 Faaliyet Raporu</div>
+          <div class="pub-desc">2022 yılı akreditasyon süreçleri, EUR-ACE etiket istatistikleri ve paydaş geri bildirimleri.</div>
+          <span class="pub-tag tag-rapor">Faaliyet Raporu</span>
+        </div>
+      </div>
+    </div>
+    <p class="prose" style="margin-top:16px;font-size:13px;color:var(--muted)">Tüm yayınlara ulaşmak için <a href="https://www.mudek.org.tr" target="_blank" rel="noopener" style="color:var(--navy);font-weight:600">mudek.org.tr</a> adresini ziyaret ediniz.</p>
+  </div>
+
+</div>
+<script src="assets/ktun-shell.js"></script>
+<script src="help-widget.js" defer></script>
+<script>
+  KTUN.renderPublicTopbar({ active: '' });
+  KTUN.renderHero({ eyebrow: 'MÜDEK', title: 'Yayınlar', sub: 'Akreditasyon kriterleri, rehberler ve faaliyet raporları' });
+</script>
+</body>
+</html>

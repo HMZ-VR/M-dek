@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ders–Hoca Listesi – MÜDEK</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+  <link rel="stylesheet" href="assets/ktun-design.css">
+  <style>
+    .filter-row { display:flex; gap:10px; margin-bottom:14px; flex-wrap:wrap; }
+    .filter-row select, .filter-row input { flex:1; min-width:180px; }
+  </style>
+</head>
+<body>
+
+<div id="topbarMount"></div>
+<div id="heroMount"></div>
+
+<main class="page-body">
+  <div class="card">
+    <div class="card-title"><span class="mi" style="color:var(--gold-dk)">list_alt</span> Ders–Hoca Listesi</div>
+    <div class="filter-row">
+      <select id="termFilter"><option value="">Tüm dönemler</option></select>
+      <input id="search" placeholder="Ders kodu / adı / hoca ara…">
+    </div>
+    <table class="tbl">
+      <thead>
+        <tr>
+          <th>Ders Kodu</th>
+          <th>Ders Adı</th>
+          <th>Dönem / Şube</th>
+          <th>Öğretim Üyesi</th>
+        </tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </div>
+</main>
+
+<script src="assets/ktun-shell.js"></script>
+<script src="help-widget.js" defer></script>
+<script>
+  const auth = KTUN.requireAuth();
+  if (!auth) throw new Error('redirecting');
+  KTUN.renderTopbar({ back: { href: 'dashboard.html', label: 'Panel' } });
+  KTUN.renderHero({ eyebrow: 'Ders Yönetimi', title: 'Ders–Hoca Listesi', sub: 'Dönem bazlı ders ve öğretim üyesi eşleştirmeleri' });
+
+  const esc = KTUN.htmlEscape;
+  const rowsEl = document.getElementById('rows');
+  const termSel = document.getElementById('termFilter');
+  const search = document.getElementById('search');
+  let data = [];
+
+  function render() {
+    const term = termSel.value.trim().toLowerCase();
+    const q = search.value.trim().toLowerCase();
+    const filtered = data.filter(d => {
+      const tOk = !term || (d.term || '').toLowerCase().includes(term);
+      const qOk = !q || [d.course_code, d.course_name, d.instructor_name || ''].join(' ').toLowerCase().includes(q);
+      return tOk && qOk;
+    });
+    if (!filtered.length) {
+      rowsEl.innerHTML = `<tr><td colspan="4" class="empty-state" style="padding:32px">Kayıt bulunamadı.</td></tr>`;
+      return;
+    }
+    rowsEl.innerHTML = filtered.map(d => `
+      <tr>
+        <td><strong>${esc(d.course_code)}</strong></td>
+        <td>${esc(d.course_name)}</td>
+        <td>${esc(d.term || '–')} / ${esc(d.section || '–')}</td>
+        <td>${d.instructor_name
+          ? `<span class="mi" style="font-size:14px;vertical-align:middle;color:var(--muted);margin-right:4px">person</span>${esc(d.instructor_name)}`
+          : `<span class="badge badge-amber">Atanmamış</span>`}</td>
+      </tr>
+    `).join('');
+  }
+
+  (async function init() {
+    const res = await KTUN.apiFetch('/api/course-offerings');
+    data = res.ok ? await res.json() : [];
+    if (!Array.isArray(data)) data = [];
+    const terms = [...new Set(data.map(d => d.term).filter(Boolean))].sort();
+    termSel.innerHTML = '<option value="">Tüm dönemler</option>' + terms.map(t => `<option>${esc(t)}</option>`).join('');
+    termSel.onchange = render;
+    search.oninput = render;
+    render();
+  })();
+</script>
+</body>
+</html>

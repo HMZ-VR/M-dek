@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>İletişim – MÜDEK</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+  <link rel="stylesheet" href="assets/ktun-design.css">
+  <style>
+    .page-inner { max-width:900px; margin:0 auto; padding:32px 24px 60px; display:flex; flex-direction:column; gap:24px; }
+    .contact-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:16px; margin-bottom:4px; }
+    .contact-item { display:flex; align-items:flex-start; gap:12px; }
+    .contact-icon { width:38px; height:38px; border-radius:9px; flex-shrink:0; background:rgba(11,31,69,.07); color:var(--navy); display:flex; align-items:center; justify-content:center; }
+    .contact-label { font-size:11px; color:var(--muted); font-weight:600; margin-bottom:3px; }
+    .contact-val   { font-size:13.5px; color:var(--text); font-weight:500; }
+    .contact-val a { color:var(--navy); text-decoration:none; }
+    .contact-val a:hover { text-decoration:underline; }
+    .map-wrap { border-radius:var(--r); overflow:hidden; border:1px solid var(--border); }
+    .form-group { margin-bottom:14px; }
+    .form-group label { display:block; font-size:12px; font-weight:600; color:var(--muted); margin-bottom:5px; }
+  </style>
+</head>
+<body>
+
+<div id="topbarMount"></div>
+<div id="heroMount"></div>
+
+<div class="page-inner">
+
+  <div class="card">
+    <div class="card-title"><span class="mi" style="color:var(--gold-dk)">place</span> Adres & İletişim Bilgileri</div>
+    <div class="contact-grid">
+      <div class="contact-item">
+        <div class="contact-icon"><span class="mi">location_on</span></div>
+        <div>
+          <div class="contact-label">Adres</div>
+          <div class="contact-val">Akademi Mah. Yeni İstanbul Cad. No: 235<br>42130 Selçuklu / KONYA</div>
+        </div>
+      </div>
+      <div class="contact-item">
+        <div class="contact-icon"><span class="mi">phone</span></div>
+        <div>
+          <div class="contact-label">Telefon</div>
+          <div class="contact-val"><a href="tel:+903322223344">+90 (332) 222 33 44</a></div>
+        </div>
+      </div>
+      <div class="contact-item">
+        <div class="contact-icon"><span class="mi">mail</span></div>
+        <div>
+          <div class="contact-label">E-posta</div>
+          <div class="contact-val"><a href="mailto:mudek@ktun.edu.tr">mudek@ktun.edu.tr</a></div>
+        </div>
+      </div>
+      <div class="contact-item">
+        <div class="contact-icon"><span class="mi">schedule</span></div>
+        <div>
+          <div class="contact-label">Çalışma Saatleri</div>
+          <div class="contact-val">Pazartesi–Cuma, 08:30–17:00</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="mi" style="color:var(--gold-dk)">map</span> Harita</div>
+    <div class="map-wrap">
+      <iframe
+        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3068.457553166281!2d32.4900!3d37.8710!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x14d088b2dfc0f1b9%3A0x7c5ffb7f6cf6f1f7!2sKonya%20Teknik%20%C3%9Cniversitesi!5e0!3m2!1str!2str!4v1687100000000"
+        width="100%" height="360" style="border:0;display:block;" allowfullscreen="" loading="lazy">
+      </iframe>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="mi" style="color:var(--gold-dk)">send</span> Bize Ulaşın</div>
+    <div class="form-group"><label>Ad Soyad</label><input type="text" placeholder="Adınız ve soyadınız"/></div>
+    <div class="form-group"><label>E-posta</label><input type="email" placeholder="ornek@mail.com"/></div>
+    <div class="form-group"><label>Mesajınız</label><textarea rows="5" placeholder="Mesajınızı buraya yazın…"></textarea></div>
+    <div style="text-align:right;">
+      <button class="btn btn-sm" onclick="KTUN.toast('Mesajınız iletildi. Teşekkür ederiz!','success')">
+        <span class="mi">send</span> Gönder
+      </button>
+    </div>
+  </div>
+
+</div>
+
+<script src="assets/ktun-shell.js"></script>
+<script src="help-widget.js" defer></script>
+<script>
+  KTUN.renderPublicTopbar({ active: 'iletisim' });
+  KTUN.renderHero({ eyebrow: 'MÜDEK', title: 'İletişim', sub: 'Konya Teknik Üniversitesi MÜDEK birimi ile iletişime geçin' });
+</script>
+</body>
+</html>

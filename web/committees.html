@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Komisyon Yönetimi – MÜDEK</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+  <link rel="stylesheet" href="assets/ktun-design.css">
+  <style>
+    /* Split-panel layout — sayfa-özel */
+    .split-layout {
+      display: grid;
+      grid-template-columns: 290px 1fr;
+      height: calc(100vh - 58px);
+    }
+    .split-sidebar {
+      background: var(--white);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .split-sidebar-head {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--navy);
+    }
+    .split-sidebar-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px;
+    }
+    .split-main {
+      overflow-y: auto;
+      background: var(--cream);
+    }
+    .detail-wrap { padding: 24px; }
+
+    /* Komisyon kart (sidebar) */
+    .comm-card {
+      padding: 11px 13px;
+      border: 1px solid var(--border);
+      border-radius: var(--r-sm);
+      margin-bottom: 7px;
+      cursor: pointer;
+      transition: all var(--ease);
+      background: var(--white);
+    }
+    .comm-card:hover  { border-color: var(--gold); box-shadow: var(--shadow); }
+    .comm-card.active { border-color: var(--navy); background: rgba(11,31,69,.04); }
+    .comm-card-row { display: flex; align-items: flex-start; gap: 8px; }
+    .comm-card-name { font-weight: 700; font-size: 13px; color: var(--navy); margin-bottom: 2px; flex: 1; min-width: 0; }
+    .comm-card-desc { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 5px; }
+    .comm-card-meta { font-size: 11px; color: var(--muted); display: flex; align-items: center; justify-content: space-between; }
+    .comm-card-del {
+      width: 22px; height: 22px; border-radius: 6px;
+      border: 1px solid rgba(220,38,38,.25); background: rgba(220,38,38,.06);
+      color: var(--red); display: flex; align-items: center; justify-content: center;
+      cursor: pointer; flex-shrink: 0; font-size: 14px; transition: all var(--ease);
+    }
+    .comm-card-del:hover { background: var(--red); color: #fff; }
+
+    /* Komisyon başlık kutusu (sağ panel) */
+    .comm-hero-box {
+      background: var(--white); border: 1px solid var(--border);
+      border-radius: var(--r); padding: 18px 20px;
+      margin-bottom: 20px; box-shadow: var(--shadow);
+      display: flex; align-items: center; gap: 14px;
+    }
+    .comm-hero-icon {
+      width: 44px; height: 44px; border-radius: 11px;
+      background: rgba(11,31,69,.08); color: var(--navy);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; flex-shrink: 0;
+    }
+
+    /* Üye kartı */
+    .member-card {
+      background: var(--white); border: 1px solid var(--border);
+      border-radius: var(--r-sm); padding: 11px 15px;
+      display: flex; align-items: center; gap: 13px;
+      margin-bottom: 7px; transition: background var(--ease);
+    }
+    .member-card:hover { background: var(--bg); }
+    .member-avatar {
+      width: 36px; height: 36px; border-radius: 9px;
+      background: rgba(11,31,69,.08); border: 1px solid rgba(11,31,69,.12);
+      color: var(--navy); font-weight: 700; font-size: 14px;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .member-info { flex: 1; min-width: 0; }
+    .member-name { font-weight: 600; font-size: 13px; color: var(--navy); }
+    .member-sub  { font-size: 11px; color: var(--muted); margin-top: 1px; font-family: monospace; }
+
+    /* Dosya kartı */
+    .file-card {
+      background: var(--white); border: 1px solid var(--border);
+      border-radius: var(--r-sm); padding: 11px 15px;
+      display: flex; align-items: center; gap: 13px;
+      margin-bottom: 7px; transition: background var(--ease);
+    }
+    .file-card:hover { background: var(--bg); }
+    .file-icon-box {
+      width: 36px; height: 36px; border-radius: 9px;
+      background: rgba(220,38,38,.08); border: 1px solid rgba(220,38,38,.2);
+      color: var(--red); font-size: 18px;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .file-info { flex: 1; min-width: 0; }
+    .file-name { font-weight: 600; font-size: 13px; color: var(--navy); }
+    .file-meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+    /* Seçim listesi (modal) */
+    .pick-list { max-height: 340px; overflow-y: auto; display: flex; flex-direction: column; gap: 5px; }
+    .pick-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 12px; border: 1px solid var(--border);
+      border-radius: var(--r-sm); transition: background var(--ease);
+    }
+    .pick-item:hover { background: var(--bg); }
+    .pick-info { flex: 1; min-width: 0; }
+    .pick-name { font-weight: 600; font-size: 13px; color: var(--navy); }
+    .pick-sub  { font-size: 11px; color: var(--muted); font-family: monospace; }
+
+    /* Placeholder */
+    .ph-center {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      height: 100%; color: var(--muted); gap: 10px; padding: 40px; text-align: center;
+    }
+    .ph-center .mi { font-size: 52px; opacity: .2; }
+    .ph-center p   { font-size: 15px; font-weight: 700; color: var(--navy); }
+    .ph-center span { font-size: 13px; }
+
+    /* Küçük section header */
+    .sec-hd {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 12px; margin-top: 20px;
+    }
+    .sec-hd-title {
+      font-weight: 700; font-size: 13px; color: var(--navy);
+      display: flex; align-items: center; gap: 6px;
+    }
+    .sec-hd-title .mi { font-size: 16px; color: var(--gold-dk); }
+    .divider { height: 1px; background: var(--border); margin: 22px 0; }
+
+    @media(max-width:700px) { .split-layout { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+
+<div id="topbarMount"></div>
+
+<div class="split-layout">
+
+  <!-- Sol: Komisyon Listesi -->
+  <div class="split-sidebar">
+    <div class="split-sidebar-head">
+      <span style="display:flex;align-items:center;gap:6px"><span class="mi" style="color:var(--gold-dk);font-size:16px">groups</span>Komisyonlar</span>
+      <button class="btn btn-sm" id="newCommBtn"><span class="mi">add</span></button>
+    </div>
+    <div class="split-sidebar-body" id="committeeList">
+      <div class="empty-state"><span class="mi">hourglass_empty</span><h3>Yükleniyor…</h3></div>
+    </div>
+  </div>
+
+  <!-- Sağ: Detay Paneli -->
+  <div class="split-main" id="mainPanel">
+    <div class="ph-center">
+      <span class="mi">groups</span>
+      <p>Komisyon Seçin</p>
+      <span>Sol taraftan bir komisyon seçerek üyelerini ve raporlarını görüntüleyin.</span>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══ MODALLER ══ -->
+
+<!-- Komisyon Oluştur -->
+<div class="modal-backdrop" id="createCommModal" style="display:none">
+  <div class="modal" style="max-width:460px">
+    <div class="modal-hd">
+      <span style="display:flex;align-items:center;gap:8px"><span class="mi" style="color:var(--gold-dk)">add_circle</span>Yeni Komisyon</span>
+      <button class="modal-close" data-close="createCommModal"><span class="mi">close</span></button>
+    </div>
+    <div class="modal-bd">
+      <div class="form-row" style="grid-template-columns:1fr">
+        <div>
+          <label>Komisyon Adı</label>
+          <input type="text" id="committeeName" placeholder="Örn: Akreditasyon Komisyonu">
+        </div>
+        <div>
+          <label>Açıklama</label>
+          <textarea id="committeeDescription" rows="3" placeholder="Kısa açıklama…" style="resize:vertical"></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn" data-close="createCommModal">İptal</button>
+      <button class="btn btn-gold" id="createCommBtn"><span class="mi">check</span> Oluştur</button>
+    </div>
+  </div>
+</div>
+
+<!-- Komisyon Üyesi Oluştur -->
+<div class="modal-backdrop" id="createMemberModal" style="display:none">
+  <div class="modal" style="max-width:460px">
+    <div class="modal-hd">
+      <span style="display:flex;align-items:center;gap:8px"><span class="mi" style="color:var(--green)">person_add</span>Komisyon Üyesi Oluştur</span>
+      <button class="modal-close" data-close="createMemberModal"><span class="mi">close</span></button>
+    </div>
+    <div class="modal-bd">
+      <div class="alert alert-info" style="margin-bottom:12px">
+        <span class="mi">info</span>
+        <span>Oluşturulan kullanıcıya otomatik <strong>komisyon_uyesi</strong> rolü atanır.</span>
+      </div>
+      <div class="form-row" style="grid-template-columns:1fr">
+        <div><label>Kullanıcı Adı</label><input type="text" id="memberUsername" placeholder="kullanici_adi"></div>
+        <div><label>Şifre</label><input type="password" id="memberPassword" placeholder="••••••••"></div>
+        <div><label>Ad Soyad</label><input type="text" id="memberFullName" placeholder="Ad Soyad"></div>
+        <div><label>E-posta</label><input type="email" id="memberEmail" placeholder="ornek@edu.tr"></div>
+      </div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn" data-close="createMemberModal">İptal</button>
+      <button class="btn btn-gold" id="createMemberBtn"><span class="mi">check</span> Üye Oluştur</button>
+    </div>
+  </div>
+</div>
+
+<!-- Komisyona Üye Ekle -->
+<div class="modal-backdrop" id="addMemberModal" style="display:none">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-hd">
+      <span style="display:flex;align-items:center;gap:8px"><span class="mi" style="color:var(--navy)">person_add</span>Komisyona Üye Ekle</span>
+      <button class="modal-close" data-close="addMemberModal"><span class="mi">close</span></button>
+    </div>
+    <div class="modal-bd">
+      <div class="pick-list" id="availableMembersList">
+        <div class="empty-state"><span class="mi">hourglass_empty</span><h3>Yükleniyor…</h3></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Rapor Yükle -->
+<div class="modal-backdrop" id="reportModal" style="display:none">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-hd">
+      <span style="display:flex;align-items:center;gap:8px"><span class="mi" style="color:var(--navy)">cloud_upload</span>Rapor / Dosya Yükle</span>
+      <button class="modal-close" data-close="reportModal"><span class="mi">close</span></button>
+    </div>
+    <div class="modal-bd">
+      <div class="form-row" style="grid-template-columns:1fr">
+        <div><label>Rapor Başlığı</label><input type="text" id="reportTitle" placeholder="Örn: 2026 Yılı Toplantı Tutanağı"></div>
+        <div><label>Dosya Seçin</label><input type="file" id="reportFile"></div>
+      </div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn" data-close="reportModal">İptal</button>
+      <button class="btn btn-gold" id="uploadReportBtn"><span class="mi">cloud_upload</span> Yükle</button>
+    </div>
+  </div>
+</div>
+
+<script src="assets/ktun-shell.js"></script>
+<script src="help-widget.js" defer></script>
+<script>
+  const auth = KTUN.requireAuth({ roles: ['admin', 'bolum_baskani', 'mudek_kurul_uyesi'] });
+  if (!auth) throw new Error('redirecting');
+  KTUN.renderTopbar({ back: { href: 'dashboard.html', label: 'Panel' } });
+
+  const esc = KTUN.htmlEscape;
+  let selectedCommitteeId = null;
+
+  async function api(path, opts) {
+    const res = await KTUN.apiFetch(path, opts || {});
+    if (!res.ok) {
+      let msg = `HTTP ${res.status}`;
+      try { const j = await res.json(); msg = j.detail || j.message || msg; } catch {}
+      throw new Error(msg);
+    }
+    const ct = res.headers.get('content-type') || '';
+    return ct.includes('application/json') ? res.json() : res.text();
+  }
+
+  /* ── Modal yardımcıları ── */
+  function openModal(id)  { document.getElementById(id).style.display = 'flex'; }
+  function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+  document.querySelectorAll('.modal-backdrop').forEach(bd => {
+    bd.addEventListener('click', e => { if (e.target === bd) bd.style.display = 'none'; });
+  });
+  document.querySelectorAll('[data-close]').forEach(btn => {
+    btn.addEventListener('click', () => closeModal(btn.dataset.close));
+  });
+
+  /* ── Topbar butonları ── */
+  document.getElementById('newCommBtn').addEventListener('click', () => openModal('createCommModal'));
+
+  /* Topbar'a "Üye Oluştur" ve "Raporları İncele" linkleri ekle */
+  const topbarActions = document.querySelector('.tb-actions');
+  if (topbarActions) {
+    const extraBtns = document.createElement('div');
+    extraBtns.style.cssText = 'display:flex;gap:8px;align-items:center;';
+    extraBtns.innerHTML = `
+      <a href="my-committees.html" class="btn btn-sm btn-outline"><span class="mi">folder_open</span> Raporları İncele</a>
+      <button class="btn btn-sm" id="topCreateMemberBtn"><span class="mi">person_add</span> Üye Oluştur</button>
+    `;
+    topbarActions.prepend(extraBtns);
+    document.getElementById('topCreateMemberBtn').addEventListener('click', () => openModal('createMemberModal'));
+  }
+
+  /* ── Başlat ── */
+  loadCommittees();
+
+  /* ── Komisyonları yükle ── */
+  async function loadCommittees() {
+    const el = document.getElementById('committeeList');
+    el.innerHTML = '<div class="empty-state"><span class="mi">hourglass_empty</span><h3>Yükleniyor…</h3></div>';
+    try {
+      const data = await api('/api/committees');
+      renderCommittees(Array.isArray(data) ? data : []);
+    } catch (e) {
+      el.innerHTML = `<div class="empty-state"><span class="mi">error</span><h3>Bağlantı hatası</h3><p>${esc(e.message)}</p></div>`;
+    }
+  }
+
+  function renderCommittees(list) {
+    const el = document.getElementById('committeeList');
+    if (!list.length) {
+      el.innerHTML = '<div class="empty-state"><span class="mi">inbox</span><h3>Henüz komisyon yok</h3></div>';
+      return;
+    }
+    el.innerHTML = list.map(c => `
+      <div class="comm-card ${selectedCommitteeId === c.id ? 'active' : ''}" onclick="selectCommittee(${c.id})">
+        <div class="comm-card-row">
+          <div style="flex:1;min-width:0">
+            <div class="comm-card-name">${esc(c.name || 'İsimsiz')}</div>
+            <div class="comm-card-desc">${esc(c.description || '–')}</div>
+          </div>
+          <button class="comm-card-del" onclick="deleteCommittee(${c.id},event)" title="Sil">
+            <span class="mi">delete</span>
+          </button>
+        </div>
+        <div class="comm-card-meta">
+          <span><span class="mi" style="font-size:12px;vertical-align:middle">group</span> ${c.member_count || 0} üye</span>
+          <span>${esc(c.created_by_name || '')}</span>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  /* ── Komisyon Seç ── */
+  async function selectCommittee(id) {
+    selectedCommitteeId = id;
+    loadCommittees();
+    const panel = document.getElementById('mainPanel');
+    panel.innerHTML = '<div class="detail-wrap"><div class="empty-state"><span class="mi">hourglass_empty</span><h3>Yükleniyor…</h3></div></div>';
+    try {
+      const [members, reportsRaw, committees] = await Promise.all([
+        api(`/api/committees/${id}/members`),
+        KTUN.apiFetch(`/api/committees/${id}/reports`),
+        api('/api/committees'),
+      ]);
+      const reports   = reportsRaw.ok ? await reportsRaw.json() : [];
+      const committee = committees.find(c => c.id === id) || {};
+      renderDetail(committee, members, reports);
+    } catch (e) {
+      panel.innerHTML = `<div class="detail-wrap"><div class="empty-state"><span class="mi">error</span><h3>${esc(e.message)}</h3></div></div>`;
+    }
+  }
+
+  function renderDetail(comm, members, reports) {
+    const panel = document.getElementById('mainPanel');
+
+    const membersHtml = !members.length
+      ? '<div class="empty-state"><span class="mi">person_off</span><h3>Bu komisyonda henüz üye yok</h3></div>'
+      : members.map(m => `
+          <div class="member-card">
+            <div class="member-avatar">${esc((m.full_name || m.username || '?')[0].toUpperCase())}</div>
+            <div class="member-info">
+              <div class="member-name">${esc(m.full_name || 'İsimsiz')}</div>
+              <div class="member-sub">@${esc(m.username)}${m.email ? ' · ' + esc(m.email) : ''}</div>
+            </div>
+            <span class="badge badge-gold">${esc(KTUN.roleLabel(m.role))}</span>
+            <button class="btn btn-sm btn-outline" onclick="removeMember(${m.id})">
+              <span class="mi">person_remove</span>
+            </button>
+          </div>`).join('');
+
+    const reportsHtml = !reports.length
+      ? '<div class="empty-state"><span class="mi">folder_open</span><h3>Henüz dosya yüklenmemiş</h3></div>'
+      : reports.map(f => `
+          <div class="file-card">
+            <div class="file-icon-box"><span class="mi">picture_as_pdf</span></div>
+            <div class="file-info">
+              <div class="file-name">${esc(f.title)}</div>
+              <div class="file-meta">Yükleyen: ${esc(f.uploader_name || '–')} · ${f.created_at ? f.created_at.split('T')[0] : ''}</div>
+            </div>
+            <a href="/${f.file_path}" target="_blank" class="btn btn-sm">
+              <span class="mi">download</span> İndir
+            </a>
+          </div>`).join('');
+
+    panel.innerHTML = `
+      <div class="detail-wrap">
+        <div class="comm-hero-box">
+          <div class="comm-hero-icon"><span class="mi">groups</span></div>
+          <div>
+            <div style="font-size:17px;font-weight:700;color:var(--navy)">${esc(comm.name || 'Komisyon')}</div>
+            <div style="font-size:13px;color:var(--muted);margin-top:2px">${esc(comm.description || '–')}</div>
+          </div>
+        </div>
+
+        <div class="sec-hd">
+          <div class="sec-hd-title"><span class="mi">group</span> Komisyon Üyeleri</div>
+          <button class="btn btn-sm" onclick="openAddMemberModal()"><span class="mi">person_add</span> Üye Ekle</button>
+        </div>
+        ${membersHtml}
+
+        <div class="divider"></div>
+
+        <div class="sec-hd">
+          <div class="sec-hd-title"><span class="mi">folder</span> Raporlar & Dosyalar</div>
+          <button class="btn btn-sm" onclick="openModal('reportModal')"><span class="mi">cloud_upload</span> Rapor Yükle</button>
+        </div>
+        ${reportsHtml}
+      </div>`;
+  }
+
+  /* ── Üye modalı ── */
+  async function openAddMemberModal() {
+    openModal('addMemberModal');
+    const el = document.getElementById('availableMembersList');
+    el.innerHTML = '<div class="empty-state"><span class="mi">hourglass_empty</span><h3>Yükleniyor…</h3></div>';
+    try {
+      const members = await api('/api/committees/available-members');
+      if (!members.length) {
+        el.innerHTML = '<div class="empty-state"><span class="mi">inbox</span><h3>Eklenecek üye bulunamadı</h3></div>';
+        return;
+      }
+      el.innerHTML = members.map(m => `
+        <div class="pick-item">
+          <div class="member-avatar" style="width:32px;height:32px;font-size:12px">${esc((m.full_name || m.username || '?')[0].toUpperCase())}</div>
+          <div class="pick-info">
+            <div class="pick-name">${esc(m.full_name || m.username)}</div>
+            <div class="pick-sub">@${esc(m.username)}</div>
+          </div>
+          <button class="btn btn-sm" onclick="addMemberToCommittee(${m.id})"><span class="mi">add</span> Ekle</button>
+        </div>`).join('');
+    } catch (e) {
+      el.innerHTML = `<div class="empty-state"><span class="mi">error</span><h3>${esc(e.message)}</h3></div>`;
+    }
+  }
+
+  /* ── CRUD ── */
+  document.getElementById('createCommBtn').addEventListener('click', createCommittee);
+  async function createCommittee() {
+    const name = document.getElementById('committeeName').value.trim();
+    const description = document.getElementById('committeeDescription').value.trim();
+    if (!name) { KTUN.toast('Komisyon adı gerekli', 'warning'); return; }
+    try {
+      const data = await api('/api/committees', { method: 'POST', body: JSON.stringify({ name, description }) });
+      if (data.success) {
+        closeModal('createCommModal');
+        document.getElementById('committeeName').value = '';
+        document.getElementById('committeeDescription').value = '';
+        KTUN.toast('Komisyon oluşturuldu', 'success');
+        loadCommittees();
+      } else { KTUN.toast(data.message || 'Hata oluştu', 'danger'); }
+    } catch (e) { KTUN.toast(e.message, 'danger'); }
+  }
+
+  document.getElementById('createMemberBtn').addEventListener('click', createMember);
+  async function createMember() {
+    const username  = document.getElementById('memberUsername').value.trim();
+    const password  = document.getElementById('memberPassword').value;
+    const full_name = document.getElementById('memberFullName').value.trim();
+    const email     = document.getElementById('memberEmail').value.trim();
+    if (!username || !password || !full_name) {
+      KTUN.toast('Kullanıcı adı, şifre ve ad soyad gerekli', 'warning'); return;
+    }
+    try {
+      const data = await api('/api/committees/create-member', {
+        method: 'POST', body: JSON.stringify({ username, password, full_name, email })
+      });
+      KTUN.toast(data.message || 'İşlem tamamlandı', data.success ? 'success' : 'warning');
+      if (data.success) {
+        closeModal('createMemberModal');
+        ['memberUsername','memberPassword','memberFullName','memberEmail'].forEach(id => { document.getElementById(id).value = ''; });
+      }
+    } catch (e) { KTUN.toast(e.message, 'danger'); }
+  }
+
+  async function addMemberToCommittee(userId) {
+    try {
+      const data = await api(`/api/committees/${selectedCommitteeId}/members`, {
+        method: 'POST', body: JSON.stringify({ user_id: userId })
+      });
+      KTUN.toast(data.message || 'Üye eklendi', data.success ? 'success' : 'warning');
+      if (data.success) { closeModal('addMemberModal'); selectCommittee(selectedCommitteeId); }
+    } catch (e) { KTUN.toast(e.message, 'danger'); }
+  }
+
+  async function removeMember(userId) {
+    if (!confirm('Bu üyeyi komisyondan çıkarmak istediğinize emin misiniz?')) return;
+    try {
+      const data = await api(`/api/committees/${selectedCommitteeId}/members/${userId}`, { method: 'DELETE' });
+      if (data.success) { KTUN.toast('Üye çıkarıldı', 'success'); selectCommittee(selectedCommitteeId); }
+      else KTUN.toast(data.message || 'Hata', 'danger');
+    } catch (e) { KTUN.toast(e.message, 'danger'); }
+  }
+
+  async function deleteCommittee(id, event) {
+    event.stopPropagation();
+    if (!confirm('Bu komisyonu silmek istediğinize emin misiniz?')) return;
+    try {
+      const data = await api(`/api/committees/${id}`, { method: 'DELETE' });
+      if (data.success) {
+        selectedCommitteeId = null;
+        KTUN.toast('Komisyon silindi', 'success');
+        loadCommittees();
+        document.getElementById('mainPanel').innerHTML = `
+          <div class="ph-center">
+            <span class="mi">groups</span>
+            <p>Komisyon Seçin</p>
+            <span>Sol taraftan bir komisyon seçin.</span>
+          </div>`;
+      } else { KTUN.toast(data.message || 'Hata', 'danger'); }
+    } catch (e) { KTUN.toast(e.message, 'danger'); }
+  }
+
+  document.getElementById('uploadReportBtn').addEventListener('click', submitReport);
+  async function submitReport() {
+    const title = document.getElementById('reportTitle').value.trim();
+    const file  = document.getElementById('reportFile').files[0];
+    if (!title || !file) { KTUN.toast('Başlık ve dosya seçin!', 'warning'); return; }
+    const formData = new FormData();
+    formData.append('title', title);
+    formData.append('file', file);
+    try {
+      const res = await KTUN.apiFetch(`/api/committees/${selectedCommitteeId}/upload`, {
+        method: 'POST', body: formData
+      });
+      const data = await res.json();
+      if (res.ok) {
+        KTUN.toast('Dosya başarıyla yüklendi!', 'success');
+        closeModal('reportModal');
+        document.getElementById('reportTitle').value = '';
+        document.getElementById('reportFile').value  = '';
+        selectCommittee(selectedCommitteeId);
+      } else { KTUN.toast('Hata: ' + (data.detail || 'Yüklenemedi'), 'danger'); }
+    } catch (e) { KTUN.toast(e.message, 'danger'); }
+  }
+</script>
+</body>
+</html>

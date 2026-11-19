@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Anket Sistemi – MÜDEK</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+  <link rel="stylesheet" href="assets/ktun-design.css">
+  <style>
+    .page-inner { max-width:860px; margin:0 auto; padding:32px 24px 60px; display:flex; flex-direction:column; gap:24px; }
+    .prose { font-size:14.5px; line-height:1.75; color:var(--text); margin:0; }
+    .feature-list { display:flex; flex-direction:column; gap:10px; margin-top:4px; }
+    .feature-item { display:flex; align-items:flex-start; gap:12px; padding:12px 14px; background:var(--white); border:1px solid var(--border); border-radius:var(--r-sm); }
+    .feature-item .mi { color:var(--gold-dk); flex-shrink:0; margin-top:1px; }
+    .feature-item .ft { font-size:14px; color:var(--text); line-height:1.55; }
+    .feature-item .ft strong { color:var(--navy); }
+    .role-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:12px; }
+    .role-card { padding:16px 18px; background:var(--white); border:1px solid var(--border); border-radius:var(--r-sm); }
+    .role-card .role-lbl { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--gold-dk); margin-bottom:6px; }
+    .role-card .role-desc { font-size:13px; color:var(--muted); line-height:1.5; }
+    .cta-box { display:flex; gap:12px; align-items:center; flex-wrap:wrap; padding:20px 22px; background:var(--navy); border-radius:var(--r); }
+    .cta-box .cta-text { flex:1; color:#fff; font-size:14px; line-height:1.6; }
+    .cta-box .cta-text strong { color:var(--gold-lt); }
+  </style>
+</head>
+<body>
+<div id="topbarMount"></div>
+<div id="heroMount"></div>
+<div class="page-inner">
+
+  <div class="card">
+    <div class="card-title"><span class="mi" style="color:var(--gold-dk)">poll</span> Anket Sistemi Nedir?</div>
+    <p class="prose">MÜDEK akreditasyon sürecinde anketler; öğrenci, mezun ve paydaş görüşlerini ölçmek için kritik bir rol üstlenmektedir. Konya Teknik Üniversitesi'nin anket yönetim sistemi, program çıktılarının (PÇ) paydaş gözünden değerlendirilmesini ve sürekli iyileştirme döngüsünü desteklemektedir.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="mi" style="color:var(--gold-dk)">checklist</span> Sistem Özellikleri</div>
+    <div class="feature-list">
+      <div class="feature-item">
+        <span class="mi">quiz</span>
+        <div class="ft"><strong>Çoklu Soru Tipi:</strong> Likert ölçeği, çoktan seçmeli ve açık uçlu metin sorularını destekler.</div>
+      </div>
+      <div class="feature-item">
+        <span class="mi">link</span>
+        <div class="ft"><strong>DÖÇ–PÇ Bağlantısı:</strong> Her soru, ders öğrenme çıktılarına (DÖÇ) ve program çıktılarına (PÇ) eşleştirilebilir.</div>
+      </div>
+      <div class="feature-item">
+        <span class="mi">bar_chart</span>
+        <div class="ft"><strong>Otomatik Raporlama:</strong> Anket sonuçları MÜDEK kriterlerine göre otomatik analiz edilir ve görselleştirilir.</div>
+      </div>
+      <div class="feature-item">
+        <span class="mi">schedule</span>
+        <div class="ft"><strong>Dönemsel Yönetim:</strong> Anketler dönem bazında açılıp kapatılabilir; geçmiş sonuçlar arşivlenir.</div>
+      </div>
+      <div class="feature-item">
+        <span class="mi">lock</span>
+        <div class="ft"><strong>Anonim Yanıtlama:</strong> Öğrenci cevapları kimlik bilgisi olmaksızın iletilir; sonuçlar toplu olarak gösterilir.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="mi" style="color:var(--gold-dk)">manage_accounts</span> Kullanıcı Rolleri</div>
+    <div class="role-grid">
+      <div class="role-card">
+        <div class="role-lbl">Yönetici / Bölüm Başkanı</div>
+        <div class="role-desc">Anket oluşturma, soru ekleme, aktifleştirme/kapatma ve sonuç analizi.</div>
+      </div>
+      <div class="role-card">
+        <div class="role-lbl">Öğretim Üyesi</div>
+        <div class="role-desc">Kendi derslerine ait anket istatistiklerini ve PÇ başarı raporlarını görüntüleme.</div>
+      </div>
+      <div class="role-card">
+        <div class="role-lbl">Öğrenci</div>
+        <div class="role-desc">Aktif anketleri görüntüleme ve yanıtlama; tamamlanan anketleri izleme.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cta-box">
+    <span class="mi" style="color:var(--gold-lt);font-size:28px">login</span>
+    <div class="cta-text">Anket sistemine erişmek için <strong>sisteme giriş yapmanız</strong> gerekmektedir. Öğrenciler aktif anketleri "Anketlerim" bölümünde, yöneticiler ise "Anket Yönetimi" bölümünde bulabilir.</div>
+    <a href="login.html" class="btn btn-gold">Giriş Yap</a>
+  </div>
+
+</div>
+<script src="assets/ktun-shell.js"></script>
+<script src="help-widget.js" defer></script>
+<script>
+  KTUN.renderPublicTopbar({ active: '' });
+  KTUN.renderHero({ eyebrow: 'MÜDEK', title: 'Anket Sistemi', sub: 'Program çıktıları değerlendirme ve paydaş anket yönetimi' });
+</script>
+</body>
+</html>

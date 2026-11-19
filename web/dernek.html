@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dernek – MÜDEK</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+  <link rel="stylesheet" href="assets/ktun-design.css">
+  <style>
+    .page-inner { max-width:860px; margin:0 auto; padding:32px 24px 60px; display:flex; flex-direction:column; gap:24px; }
+    .prose { font-size:14.5px; line-height:1.75; color:var(--text); margin:0; }
+    .org-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:16px; margin-top:4px; }
+    .org-card { background:var(--white); border:1px solid var(--border); border-radius:var(--r-sm); padding:18px 20px; }
+    .org-card .role { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.6px; color:var(--gold-dk); margin-bottom:6px; }
+    .org-card .name { font-size:14px; font-weight:700; color:var(--navy); margin-bottom:2px; }
+    .org-card .affil { font-size:12px; color:var(--muted); }
+    .stat-row { display:flex; gap:16px; flex-wrap:wrap; }
+    .stat-box { flex:1; min-width:140px; background:var(--navy); color:#fff; border-radius:var(--r-sm); padding:20px 18px; text-align:center; }
+    .stat-box .num { font-size:28px; font-weight:700; font-family:'Playfair Display',serif; color:var(--gold-lt); }
+    .stat-box .lbl { font-size:12px; opacity:.8; margin-top:4px; }
+  </style>
+</head>
+<body>
+<div id="topbarMount"></div>
+<div id="heroMount"></div>
+<div class="page-inner">
+
+  <div class="card">
+    <div class="card-title"><span class="mi" style="color:var(--gold-dk)">account_balance</span> Dernek Hakkında</div>
+    <p class="prose">MÜDEK (Mühendislik Değerlendirme Kurulu), Türkiye'de mühendislik programlarının akreditasyonunu gerçekleştiren bağımsız bir dernektir. 2002 yılında kurulan dernek, 2007'den itibaren YÖK tarafından tanınan tek mühendislik akreditasyon kuruluşudur. Dernek; üniversiteler, meslek kuruluşları, sanayi temsilcileri ve kamu kurumlarının katılımıyla oluşan geniş bir paydaş topluluğuna dayanmaktadır.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="mi" style="color:var(--gold-dk)">bar_chart</span> Rakamlarla MÜDEK</div>
+    <div class="stat-row">
+      <div class="stat-box"><div class="num">70+</div><div class="lbl">Akredite Üniversite</div></div>
+      <div class="stat-box"><div class="num">300+</div><div class="lbl">Akredite Program</div></div>
+      <div class="stat-box"><div class="num">20+</div><div class="lbl">Yıllık Deneyim</div></div>
+      <div class="stat-box"><div class="num">5</div><div class="lbl">Mühendislik Alanı</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="mi" style="color:var(--gold-dk)">people</span> Yönetim Kurulu</div>
+    <div class="org-grid">
+      <div class="org-card">
+        <div class="role">Başkan</div>
+        <div class="name">Prof. Dr. —</div>
+        <div class="affil">MÜDEK Yönetim Kurulu</div>
+      </div>
+      <div class="org-card">
+        <div class="role">Başkan Yardımcısı</div>
+        <div class="name">Prof. Dr. —</div>
+        <div class="affil">MÜDEK Yönetim Kurulu</div>
+      </div>
+      <div class="org-card">
+        <div class="role">Genel Sekreter</div>
+        <div class="name">—</div>
+        <div class="affil">MÜDEK Genel Sekreterlik</div>
+      </div>
+      <div class="org-card">
+        <div class="role">Sayman</div>
+        <div class="name">—</div>
+        <div class="affil">MÜDEK Yönetim Kurulu</div>
+      </div>
+    </div>
+    <p class="prose" style="margin-top:16px;font-size:13px;color:var(--muted)">Güncel yönetim kurulu bilgileri için <a href="https://www.mudek.org.tr" target="_blank" rel="noopener" style="color:var(--navy);font-weight:600">mudek.org.tr</a> adresini ziyaret ediniz.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="mi" style="color:var(--gold-dk)">gavel</span> Tüzük ve Mevzuat</div>
+    <p class="prose">MÜDEK tüzüğü, değerlendirme kriterleri ve akreditasyon yönetmelikleri derneğin resmi web sitesinde yayımlanmaktadır. Konya Teknik Üniversitesi olarak bu mevzuata uygun biçimde akreditasyon süreçlerimizi yürütmekteyiz.</p>
+  </div>
+
+</div>
+<script src="assets/ktun-shell.js"></script>
+<script src="help-widget.js" defer></script>
+<script>
+  KTUN.renderPublicTopbar({ active: '' });
+  KTUN.renderHero({ eyebrow: 'MÜDEK', title: 'Dernek', sub: 'Mühendislik Değerlendirme Kurulu dernek yapısı ve yönetimi' });
+</script>
+</body>
+</html>

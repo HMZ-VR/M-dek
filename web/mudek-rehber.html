@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MÜDEK & DÖÇ-PÇ Rehberi</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons+Round">
+  <style>
+    :root {
+      --navy: #0b1f45;
+      --navy-2: #14306b;
+      --gold: #c9a84c;
+      --gold-soft: #f4ecd3;
+      --ink: #1f2937;
+      --muted: #64748b;
+      --line: #e5e7eb;
+      --bg: #f6f4ef;
+      --ok: #16a34a;
+      --warn: #f59e0b;
+      --bad: #dc2626;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      margin: 0;
+      line-height: 1.6;
+    }
+
+    /* Topbar */
+    .topbar {
+      position: sticky; top: 0; z-index: 50;
+      background: var(--navy);
+      border-top: 3px solid var(--gold);
+      color: #fff;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 32px;
+      box-shadow: 0 2px 10px rgba(0,0,0,.15);
+    }
+    .brand { display: flex; align-items: center; gap: 14px; }
+    .brand h1 { font-family: 'Playfair Display', serif; font-size: 20px; margin: 0; font-weight: 700; letter-spacing: .3px; }
+    .brand small { display: block; font-size: 11px; opacity: .7; letter-spacing: .5px; text-transform: uppercase; }
+    .actions { display: flex; gap: 10px; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 9px 16px; border-radius: 6px; font-weight: 600; font-size: 13px;
+      border: 1px solid rgba(255,255,255,.25); background: transparent; color: #fff;
+      cursor: pointer; text-decoration: none; transition: .2s;
+    }
+    .btn:hover { background: rgba(255,255,255,.1); }
+    .btn-gold {
+      background: var(--gold); color: var(--navy); border-color: var(--gold);
+    }
+    .btn-gold:hover { background: #d9bc64; }
+
+    /* Hero */
+    .hero {
+      background:
+        radial-gradient(circle at 1px 1px, rgba(201,168,76,.25) 1px, transparent 0) 0 0 / 18px 18px,
+        linear-gradient(135deg, var(--navy), var(--navy-2));
+      color: #fff;
+      padding: 60px 32px 50px;
+      text-align: center;
+    }
+    .hero h2 { font-family: 'Playfair Display', serif; font-size: 42px; margin: 0 0 10px; font-weight: 700; }
+    .hero h2 .accent { color: var(--gold); }
+    .hero p { max-width: 720px; margin: 0 auto; font-size: 15px; opacity: .85; }
+    .hero .tagline {
+      display: inline-block; margin-top: 18px; padding: 6px 14px;
+      border: 1px solid var(--gold); color: var(--gold); border-radius: 20px;
+      font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+    }
+
+    /* Layout */
+    .layout { max-width: 1100px; margin: 40px auto; padding: 0 24px; display: grid; grid-template-columns: 240px 1fr; gap: 32px; }
+    .toc {
+      position: sticky; top: 90px; align-self: start;
+      background: #fff; border: 1px solid var(--line); border-radius: 10px;
+      padding: 20px; font-size: 13px;
+    }
+    .toc h3 { font-family: 'Playfair Display', serif; margin: 0 0 14px; color: var(--navy); font-size: 16px; border-bottom: 2px solid var(--gold); padding-bottom: 8px; }
+    .toc ol { margin: 0; padding-left: 20px; }
+    .toc li { margin: 6px 0; }
+    .toc a { color: var(--ink); text-decoration: none; }
+    .toc a:hover { color: var(--navy); text-decoration: underline; }
+
+    .content { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 40px 48px; }
+    .content section { margin-bottom: 44px; scroll-margin-top: 90px; }
+    .content section:last-child { margin-bottom: 0; }
+    .content h3 {
+      font-family: 'Playfair Display', serif;
+      font-size: 26px; color: var(--navy); margin: 0 0 6px;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .content h3 .num {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 36px; height: 36px; border-radius: 50%;
+      background: var(--gold); color: var(--navy);
+      font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 700;
+    }
+    .content h4 { color: var(--navy); font-size: 17px; margin: 22px 0 10px; }
+    .content p { margin: 10px 0; }
+    .content ul { padding-left: 22px; }
+    .content li { margin: 6px 0; }
+    .content strong { color: var(--navy); }
+
+    .lead { font-size: 15px; color: var(--muted); margin-top: 0; margin-bottom: 18px; border-left: 3px solid var(--gold); padding-left: 14px; }
+
+    /* Boxes */
+    .box {
+      background: var(--gold-soft); border-left: 4px solid var(--gold);
+      padding: 16px 20px; border-radius: 6px; margin: 18px 0;
+    }
+    .box .label { font-weight: 700; color: var(--navy); display: block; margin-bottom: 4px; font-size: 13px; text-transform: uppercase; letter-spacing: .5px; }
+    .box-info { background: #eef4ff; border-left-color: #3b82f6; }
+    .box-info .label { color: #1e3a8a; }
+    .box-warn { background: #fff7ed; border-left-color: var(--warn); }
+    .box-warn .label { color: #92400e; }
+
+    /* Formula */
+    .formula {
+      background: var(--navy); color: #fff;
+      padding: 18px 22px; border-radius: 8px; margin: 16px 0;
+      font-family: 'Inter', monospace; font-size: 15px; text-align: center;
+      border-left: 4px solid var(--gold);
+    }
+    .formula .hl { color: var(--gold); font-weight: 700; }
+
+    /* Tables */
+    table {
+      width: 100%; border-collapse: collapse; margin: 16px 0;
+      font-size: 14px; border: 1px solid var(--line);
+    }
+    th {
+      background: var(--navy); color: #fff; text-align: left;
+      padding: 10px 12px; font-weight: 600; font-size: 13px;
+    }
+    td { padding: 10px 12px; border-top: 1px solid var(--line); }
+    tr:nth-child(even) td { background: #fafafa; }
+    .grade { display: inline-block; padding: 3px 10px; border-radius: 4px; font-weight: 700; font-size: 12px; }
+    .g-aa { background: #065f46; color: #fff; }
+    .g-ba { background: #16a34a; color: #fff; }
+    .g-bb { background: #84cc16; color: #fff; }
+    .g-cb { background: #eab308; color: #fff; }
+    .g-cc { background: #f97316; color: #fff; }
+    .g-dc { background: #dc2626; color: #fff; }
+    .g-dd, .g-ff { background: #7f1d1d; color: #fff; }
+
+    /* Example */
+    .example {
+      border: 1px solid var(--line); border-radius: 10px;
+      padding: 24px; background: #fafbff; margin: 20px 0;
+    }
+    .example h4 { margin-top: 0; display: flex; align-items: center; gap: 8px; color: var(--navy); }
+    .example h4 .material-icons-round { color: var(--gold); }
+    .step { display: flex; gap: 14px; margin: 14px 0; }
+    .step .pill {
+      flex-shrink: 0; width: 28px; height: 28px; border-radius: 50%;
+      background: var(--navy); color: #fff;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 13px;
+    }
+    .step-body { flex: 1; }
+    .step-body .calc { font-family: 'Inter', monospace; background: #fff; padding: 8px 12px; border-radius: 4px; border: 1px solid var(--line); display: inline-block; margin-top: 4px; }
+
+    /* Threshold badges */
+    .badge {
+      display: inline-block; padding: 4px 10px; border-radius: 12px;
+      font-size: 12px; font-weight: 600;
+    }
+    .badge-ok { background: #dcfce7; color: #065f46; }
+    .badge-warn { background: #fed7aa; color: #9a3412; }
+    .badge-bad { background: #fee2e2; color: #991b1b; }
+
+    footer.doc-footer {
+      text-align: center; padding: 24px; color: var(--muted); font-size: 12px;
+      border-top: 1px solid var(--line); margin-top: 40px;
+    }
+
+    /* Print */
+    @media print {
+      @page { margin: 18mm 14mm; size: A4; }
+      body { background: #fff; font-size: 11pt; }
+      .topbar, .toc, .hero .tagline { display: none; }
+      .hero {
+        background: #fff; color: var(--navy); padding: 0 0 20px; text-align: left;
+        border-bottom: 3px solid var(--gold); margin-bottom: 20px;
+      }
+      .hero h2 { font-size: 24pt; }
+      .hero h2 .accent { color: var(--gold); }
+      .hero p { opacity: 1; color: var(--ink); margin: 6px 0; }
+      .layout { display: block; margin: 0; padding: 0; max-width: none; }
+      .content { border: none; padding: 0; box-shadow: none; }
+      .content section { page-break-inside: avoid; margin-bottom: 24px; }
+      .content h3 { font-size: 16pt; }
+      .formula { background: #fff; color: var(--navy); border: 1px solid var(--navy); }
+      .formula .hl { color: var(--navy); }
+      th { background: var(--navy) !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .grade, .badge { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      footer.doc-footer { border-top: 1px solid var(--line); }
+    }
+
+    @media (max-width: 860px) {
+      .layout { grid-template-columns: 1fr; }
+      .toc { position: static; }
+      .content { padding: 24px; }
+      .hero h2 { font-size: 28px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <span class="material-icons-round" style="color:var(--gold); font-size:28px;">menu_book</span>
+    <div>
+      <h1>MÜDEK Rehberi</h1>
+      <small>Öğretim Üyeleri için Kılavuz</small>
+    </div>
+  </div>
+  <div class="actions">
+    <a href="dashboard.html" class="btn">
+      <span class="material-icons-round" style="font-size:16px;">arrow_back</span>
+      Panele Dön
+    </a>
+    <button class="btn btn-gold" onclick="window.print()">
+      <span class="material-icons-round" style="font-size:16px;">picture_as_pdf</span>
+      PDF olarak indir
+    </button>
+  </div>
+</div>
+
+<div class="hero">
+  <span class="tagline">Konya Teknik Üniversitesi — Akreditasyon</span>
+  <h2>MÜDEK & <span class="accent">DÖÇ–PÇ</span> Hesaplama Rehberi</h2>
+  <p>Bu rehber, öğretim üyelerinin sistemde tanımlı ders öğrenme çıktılarını (DÖÇ), program çıktılarını (PÇ) ve MÜDEK akreditasyon hesaplama mantığını anlamasını amaçlar. Sayıları, eşikleri ve işleyişi adım adım örneklerle açıklar.</p>
+</div>
+
+<div class="layout">
+
+  <nav class="toc">
+    <h3>İçindekiler</h3>
+    <ol>
+      <li><a href="#s1">MÜDEK Nedir?</a></li>
+      <li><a href="#s2">DÖÇ — Ders Öğrenme Çıktıları</a></li>
+      <li><a href="#s3">PÇ — Program Çıktıları</a></li>
+      <li><a href="#s4">DÖÇ–PÇ İlişki Matrisi</a></li>
+      <li><a href="#s5">Başarı Notu &amp; Ders-DÖÇ Ortalaması</a></li>
+      <li><a href="#s6">Harf Notu Eşikleri</a></li>
+      <li><a href="#s7">Kazanım (0.60) Eşiği</a></li>
+      <li><a href="#s8">Uçtan Uca Örnek</a></li>
+      <li><a href="#s9">Sistemde Akış</a></li>
+    </ol>
+  </nav>
+
+  <main class="content">
+
+    <section id="s1">
+      <h3><span class="num">1</span> MÜDEK Nedir?</h3>
+      <p class="lead">MÜDEK (Mühendislik Eğitim Programları Değerlendirme ve Akreditasyon Derneği), Türkiye'deki mühendislik lisans programlarını uluslararası standartlara göre değerlendirir ve akredite eder.</p>
+      <p>MÜDEK akreditasyonu, programın mezun ettiği öğrencinin yalnızca "dersten geçmiş" olmasını değil, programın <strong>tanımladığı yetkinlikleri (PÇ) gerçekten kazanmış</strong> olmasını ölçer. Bu yüzden her dersteki sınav sorularından başlayıp program çıktılarına kadar bir zincir kurulur:</p>
+      <div class="formula">
+        Soru → <span class="hl">DÖÇ</span> → <span class="hl">PÇ</span> → Program Akreditasyonu
+      </div>
+      <p>Sistemimiz (Mudek Yönetim Paneli) bu zincirin her halkasını otomatikleştirir: sınav notlarını yüklersiniz, sistem DÖÇ kazanımını hesaplar, DÖÇ'leri ağırlıklarına göre PÇ'lere yansıtır ve rapor üretir.</p>
+    </section>
+
+    <section id="s2">
+      <h3><span class="num">2</span> DÖÇ — Ders Öğrenme Çıktıları</h3>
+      <p class="lead">DÖÇ, bir dersi başarıyla tamamlayan öğrencinin <strong>o dersin sonunda yapabiliyor olması beklenen şeylerdir</strong>.</p>
+      <p>Her ders 4–8 arası DÖÇ ile tanımlanır. Örnek (Veri Yapıları dersi için):</p>
+      <ul>
+        <li><strong>DÖÇ-1:</strong> Temel veri yapılarını (dizi, bağlı liste, yığın, kuyruk) tanır ve uygular.</li>
+        <li><strong>DÖÇ-2:</strong> Algoritma karmaşıklığını Big-O notasyonuyla analiz eder.</li>
+        <li><strong>DÖÇ-3:</strong> Ağaç ve graf algoritmalarını gerçek problemlere uygular.</li>
+      </ul>
+      <p>Sınav oluştururken <strong>her sorunun DÖÇ'lere katkısını ağırlıklı olarak</strong> belirtirsiniz — bir soru birden fazla DÖÇ'ü aynı anda ölçebilir. Tek kural: <strong>her sorunun DÖÇ ağırlıkları toplamı 1.00</strong> olmalıdır (MÜDEK şablonu, madde 13).</p>
+
+      <h4>Soru–DÖÇ ağırlık örneği</h4>
+      <p>Örneğin S2 sorusu iki DÖÇ'e birden katkı sağlayabilir (yarı yarıya), S3 ise farklı oranlarla üç DÖÇ'e dağıtılabilir:</p>
+      <table>
+        <thead><tr><th>Soru</th><th>DÖÇ-1</th><th>DÖÇ-2</th><th>DÖÇ-3</th><th>Satır Toplamı</th></tr></thead>
+        <tbody>
+          <tr><td><strong>S1</strong></td><td>1.00</td><td>–</td><td>–</td><td>1.00</td></tr>
+          <tr><td><strong>S2</strong></td><td>0.50</td><td>0.50</td><td>–</td><td>1.00</td></tr>
+          <tr><td><strong>S3</strong></td><td>–</td><td>0.70</td><td>0.30</td><td>1.00</td></tr>
+        </tbody>
+      </table>
+      <p style="font-size:12px; color:var(--muted);">Not: Satır toplamı (her soru için) 1.00 olmak zorunda. Sütun toplamları (her DÖÇ için) serbesttir.</p>
+
+      <h4>DÖÇ kazanım formülü (tek sınav için)</h4>
+      <p>Önce her sorunun <strong>sınıf ortalamasının max puana oranı</strong> hesaplanır (0..1 arası, sadece geçen öğrenciler üzerinden). Sonra o DÖÇ'e katkı sağlayan sorular, kendi ağırlıklarıyla birleştirilir:</p>
+      <div class="formula">
+        DÖÇ<sub>k</sub><sup>sınav</sup> =
+        Σ<sub>q</sub> ( <span class="hl">w<sub>q,k</sub> × sınıf_ort_norm<sub>q</sub></span> )
+        &nbsp;÷&nbsp;
+        Σ<sub>q</sub> <span class="hl">w<sub>q,k</sub></span>
+      </div>
+      <div class="box box-info">
+        <span class="label">MÜDEK şablonu ile birebir</span>
+        Bu formül, üniversitenin referans Excel şablonundaki <code>DOC!AR</code> satır formülünün aynısıdır. Sistem sadece hesaplamayı otomatikleştirir.
+      </div>
+    </section>
+
+    <section id="s3">
+      <h3><span class="num">3</span> PÇ — Program Çıktıları</h3>
+      <p class="lead">PÇ, <strong>mezun olan her öğrencinin</strong> program düzeyinde kazanmış olması gereken yetkinliklerdir. Bir dersle değil, birçok dersin ortak etkisiyle oluşurlar.</p>
+      <p>MÜDEK'in öngördüğü 11 standart PÇ vardır. Bunlar örnek olarak:</p>
+      <ul>
+        <li><strong>PÇ-1:</strong> Matematik, fen bilimleri ve mühendislik bilgilerini uygulama becerisi.</li>
+        <li><strong>PÇ-2:</strong> Karmaşık mühendislik problemlerini tanımlama, modelleme ve çözme.</li>
+        <li><strong>PÇ-5:</strong> Mühendislik uygulamaları için gerekli modern teknik ve araçları kullanma.</li>
+        <li><strong>PÇ-9:</strong> Bireysel ve takım çalışması yapabilme.</li>
+      </ul>
+      <div class="box box-info">
+        <span class="label">Fark ne?</span>
+        <strong>DÖÇ</strong> tek bir ders için "bu dersten neyi öğrendi?" sorusunun cevabıdır. <strong>PÇ</strong> ise "mezun olana kadar programın tamamından neyi kazandı?" sorusunun cevabıdır.
+      </div>
+    </section>
+
+    <section id="s4">
+      <h3><span class="num">4</span> DÖÇ–PÇ İlişki Matrisi</h3>
+      <p class="lead">Her DÖÇ, bir veya birden fazla PÇ'ye katkı sağlar. Bu katkı düzeyi <strong>ağırlık</strong> ile ifade edilir (tipik olarak 1 = düşük, 2 = orta, 3 = yüksek).</p>
+      <p>Sistemde her ders için bu matris <em>Ders-DÖÇ Eşleştirme</em> ekranından tanımlanır. Örnek:</p>
+      <table>
+        <thead><tr><th>DÖÇ</th><th>PÇ-1</th><th>PÇ-2</th><th>PÇ-3</th><th>PÇ-5</th><th>PÇ-9</th></tr></thead>
+        <tbody>
+          <tr><td><strong>DÖÇ-1</strong></td><td>3</td><td>2</td><td>–</td><td>2</td><td>–</td></tr>
+          <tr><td><strong>DÖÇ-2</strong></td><td>2</td><td>3</td><td>–</td><td>–</td><td>–</td></tr>
+          <tr><td><strong>DÖÇ-3</strong></td><td>–</td><td>3</td><td>2</td><td>3</td><td>1</td></tr>
+        </tbody>
+      </table>
+      <p>Öğrencinin bir PÇ'ye katkısı, <strong>o PÇ ile ilişkili tüm DÖÇ kazanımlarının ağırlıklı ortalamasıdır</strong>:</p>
+      <div class="formula">
+        PÇ<sub>j</sub> Kazanımı = Σ ( <span class="hl">DÖÇ<sub>k</sub> Kazanımı × w<sub>kj</sub></span> ) ÷ Σ w<sub>kj</sub>
+      </div>
+    </section>
+
+    <section id="s5">
+      <h3><span class="num">5</span> Başarı Notu &amp; Ders-DÖÇ Ortalaması</h3>
+      <p class="lead">Bu bölüm iki ayrı hesabı açıklar: öğrenci <strong>başarı notu</strong> (geçti/kaldı ve harf notu için) ve ders düzeyindeki <strong>DÖÇ ortalaması</strong> (MÜDEK raporu için). İki hesap farklı formüller kullanır — karıştırılmamalıdır.</p>
+
+      <h4>5.1 — Başarı notu (öğrenci başına, geçti/kaldı için)</h4>
+      <div class="formula">
+        Başarı Notu = <span class="hl">0.40</span> × Vize + <span class="hl">0.60</span> × Final
+      </div>
+      <p><strong>Bütünleme kuralı:</strong> Öğrenci bütünlemeye girdiyse final yerine bütünleme notu kullanılır (`0.40 × vize + 0.60 × bütünleme`). Sistem bunu otomatik uygular.</p>
+      <div class="box box-warn">
+        <span class="label">Önemli</span>
+        Başarı notu 40'ın altında kalan öğrencinin DÖÇ ve PÇ kazanımları hesaba katılmaz. MÜDEK yalnızca <em>programı başarıyla tamamlayan</em> öğrencilerin yetkinliklerini ölçer.
+      </div>
+
+      <h4>5.2 — Ders-DÖÇ ortalaması (sınav tipleri arası)</h4>
+      <p>Bölüm 2'deki formülle her sınav için ayrı DÖÇ skorları çıkar (vize, final, bütünleme). Ders düzeyindeki DÖÇ değeri bunların <strong>düz ortalamasıdır</strong>:</p>
+      <div class="formula">
+        DÖÇ<sub>k</sub><sup>ders</sup> = AVERAGE( <span class="hl">DÖÇ<sub>k</sub><sup>vize</sup></span>, <span class="hl">DÖÇ<sub>k</sub><sup>final</sup></span>, <span class="hl">DÖÇ<sub>k</sub><sup>bütünleme</sup></span> )
+      </div>
+      <p style="font-size:12px; color:var(--muted);">Bir sınav kategorisi hiç yapılmamışsa (ör. bütünleme) ortalamadan düşer — var olanların düz ortalaması alınır.</p>
+      <div class="box box-warn">
+        <span class="label">Sık yapılan karışıklık</span>
+        40/60 ağırlığı <strong>sadece başarı notunda</strong> kullanılır. DÖÇ ve PÇ ders ortalamasına geçerken vize/final/bütünleme <strong>eşit ağırlıkta</strong> değerlendirilir (MÜDEK Excel şablonu <code>DOC!AV</code> formülüyle birebir).
+      </div>
+    </section>
+
+    <section id="s6">
+      <h3><span class="num">6</span> Harf Notu Eşikleri</h3>
+      <p class="lead">Başarı notundan harf notuna geçiş tablosu. Bu eşikler sistem genelinde sabittir.</p>
+      <table>
+        <thead><tr><th>Harf</th><th>Başarı Notu Aralığı</th><th>Durum</th></tr></thead>
+        <tbody>
+          <tr><td><span class="grade g-aa">AA</span></td><td>≥ 82</td><td>Mükemmel</td></tr>
+          <tr><td><span class="grade g-ba">BA</span></td><td>74 – 81</td><td>Pekiyi</td></tr>
+          <tr><td><span class="grade g-bb">BB</span></td><td>65 – 73</td><td>İyi</td></tr>
+          <tr><td><span class="grade g-cb">CB</span></td><td>58 – 64</td><td>Orta-Üstü</td></tr>
+          <tr><td><span class="grade g-cc">CC</span></td><td>50 – 57</td><td>Orta</td></tr>
+          <tr><td><span class="grade g-dc">DC</span></td><td>40 – 49</td><td>Koşullu Geçer</td></tr>
+          <tr><td><span class="grade g-dd">DD</span></td><td>35 – 39</td><td>Kalır</td></tr>
+          <tr><td><span class="grade g-ff">FF</span></td><td>&lt; 35</td><td>Başarısız</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="s7">
+      <h3><span class="num">7</span> Kazanım (0.60) Eşiği</h3>
+      <p class="lead">Bir DÖÇ veya PÇ'nin <strong>"kazanılmış" sayılması için ilgili kazanım oranının en az 0.60 (yani %60) olması gerekir.</strong></p>
+      <p>Bu eşik, MÜDEK'in kabul ettiği standart değerdir. Raporlarda kazanım oranları renk kodlarıyla gösterilir:</p>
+      <table>
+        <thead><tr><th>Oran</th><th>Durum</th><th>Anlam</th></tr></thead>
+        <tbody>
+          <tr><td>≥ 0.75</td><td><span class="badge badge-ok">Güçlü kazanım</span></td><td>Çıktı tam olarak elde edilmiş</td></tr>
+          <tr><td>0.60 – 0.74</td><td><span class="badge badge-ok">Kazanım sağlandı</span></td><td>MÜDEK eşiğinin üzerinde</td></tr>
+          <tr><td>0.40 – 0.59</td><td><span class="badge badge-warn">Sınırda</span></td><td>Eşiğin altında — iyileştirme planı</td></tr>
+          <tr><td>&lt; 0.40</td><td><span class="badge badge-bad">Yetersiz</span></td><td>Dersin içeriği/ölçümü gözden geçirilmeli</td></tr>
+        </tbody>
+      </table>
+      <div class="box">
+        <span class="label">Komite ne yapar?</span>
+        0.60 altında kalan çıktılar için ilgili ders komitesi <em>iyileştirme yansıması (reflection)</em> yazar: neden düşük kaldı, önümüzdeki dönem nasıl ele alınacak? Bu yansımalar MÜDEK denetiminde değerlendirmeye sunulur.
+      </div>
+    </section>
+
+    <section id="s8">
+      <h3><span class="num">8</span> Uçtan Uca Örnek</h3>
+      <p class="lead">Bir öğrencinin tek bir dersteki sınav performansından başlayıp PÇ kazanımına kadar hesaplamayı adım adım izleyelim.</p>
+
+      <div class="example">
+        <h4><span class="material-icons-round">school</span> Senaryo</h4>
+        <p><strong>Ders:</strong> Veri Yapıları — dönemde iki sınav: vize (3 soru, 100 puan) ve final (3 soru, 100 puan). Bütünleme yapılmadı. Dersi geçen 20 öğrenci var.</p>
+
+        <p><strong>Soru-DÖÇ ağırlık matrisi</strong> (her satırın toplamı 1.00):</p>
+        <table>
+          <thead><tr><th>Sınav</th><th>Soru</th><th>Max Puan</th><th>DÖÇ-1</th><th>DÖÇ-2</th><th>DÖÇ-3</th></tr></thead>
+          <tbody>
+            <tr><td rowspan="3">Vize</td><td>V-S1</td><td>30</td><td><strong>1.00</strong></td><td>–</td><td>–</td></tr>
+            <tr><td>V-S2</td><td>30</td><td>0.50</td><td><strong>0.50</strong></td><td>–</td></tr>
+            <tr><td>V-S3</td><td>40</td><td>–</td><td>0.70</td><td><strong>0.30</strong></td></tr>
+            <tr><td rowspan="3">Final</td><td>F-S1</td><td>25</td><td>–</td><td><strong>1.00</strong></td><td>–</td></tr>
+            <tr><td>F-S2</td><td>35</td><td>0.40</td><td>–</td><td><strong>0.60</strong></td></tr>
+            <tr><td>F-S3</td><td>40</td><td>–</td><td>0.50</td><td><strong>0.50</strong></td></tr>
+          </tbody>
+        </table>
+
+        <p><strong>Sınıf ortalamaları</strong> (geçen öğrenciler üzerinden):</p>
+        <table>
+          <thead><tr><th>Soru</th><th>Max</th><th>Sınıf Ort.</th><th>Normalize (ort/max)</th></tr></thead>
+          <tbody>
+            <tr><td>V-S1</td><td>30</td><td>24.0</td><td>0.80</td></tr>
+            <tr><td>V-S2</td><td>30</td><td>18.0</td><td>0.60</td></tr>
+            <tr><td>V-S3</td><td>40</td><td>30.0</td><td>0.75</td></tr>
+            <tr><td>F-S1</td><td>25</td><td>20.0</td><td>0.80</td></tr>
+            <tr><td>F-S2</td><td>35</td><td>21.0</td><td>0.60</td></tr>
+            <tr><td>F-S3</td><td>40</td><td>28.0</td><td>0.70</td></tr>
+          </tbody>
+        </table>
+
+        <div class="step">
+          <span class="pill">1</span>
+          <div class="step-body">
+            <strong>Vize için DÖÇ skorları</strong> — her DÖÇ için <code>Σ(w × norm) ÷ Σ(w)</code>:
+            <div class="calc">
+              DÖÇ-1<sup>vize</sup> = (1.00×0.80 + 0.50×0.60 + 0×0.75) ÷ (1.00 + 0.50 + 0)
+              <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= (0.80 + 0.30) ÷ 1.50 = <strong>0.7333</strong>
+              <br>DÖÇ-2<sup>vize</sup> = (0×0.80 + 0.50×0.60 + 0.70×0.75) ÷ (0.50 + 0.70)
+              <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= (0.30 + 0.525) ÷ 1.20 = <strong>0.6875</strong>
+              <br>DÖÇ-3<sup>vize</sup> = (0.30×0.75) ÷ 0.30 = <strong>0.7500</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <span class="pill">2</span>
+          <div class="step-body">
+            <strong>Final için DÖÇ skorları</strong> — aynı formül:
+            <div class="calc">
+              DÖÇ-1<sup>final</sup> = (0.40×0.60) ÷ 0.40 = <strong>0.6000</strong>
+              <br>DÖÇ-2<sup>final</sup> = (1.00×0.80 + 0.50×0.70) ÷ (1.00 + 0.50)
+              <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= (0.80 + 0.35) ÷ 1.50 = <strong>0.7667</strong>
+              <br>DÖÇ-3<sup>final</sup> = (0.60×0.60 + 0.50×0.70) ÷ (0.60 + 0.50)
+              <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= (0.36 + 0.35) ÷ 1.10 = <strong>0.6455</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <span class="pill">3</span>
+          <div class="step-body">
+            <strong>Ders-DÖÇ ortalaması</strong> — vize ve final düz ortalaması (bütünleme yok; Excel <code>DOC!AV</code>):
+            <div class="calc">
+              DÖÇ-1<sup>ders</sup> = AVG(0.7333, 0.6000) = <strong>0.6667</strong> <span class="badge badge-ok">Kazanım sağlandı</span>
+              <br>DÖÇ-2<sup>ders</sup> = AVG(0.6875, 0.7667) = <strong>0.7271</strong> <span class="badge badge-ok">Kazanım sağlandı</span>
+              <br>DÖÇ-3<sup>ders</sup> = AVG(0.7500, 0.6455) = <strong>0.6977</strong> <span class="badge badge-ok">Kazanım sağlandı</span>
+            </div>
+            <p style="font-size:12px; color:var(--muted); margin-top:8px;">Dikkat: Burada 40/60 ağırlığı <strong>kullanılmaz</strong>. O sadece öğrenci başarı notunda geçerlidir.</p>
+          </div>
+        </div>
+
+        <div class="step">
+          <span class="pill">4</span>
+          <div class="step-body">
+            <strong>PÇ hesaplanır</strong> — DÖÇ–PÇ matris ağırlıklarıyla (Bölüm 4 örneği):
+            <div class="calc">
+              PÇ-2 = (DÖÇ-1×2 + DÖÇ-2×3 + DÖÇ-3×3) ÷ (2+3+3)
+              <br>&nbsp;&nbsp;&nbsp;&nbsp;= (0.6667×2 + 0.7271×3 + 0.6977×3) ÷ 8
+              <br>&nbsp;&nbsp;&nbsp;&nbsp;= (1.333 + 2.181 + 2.093) ÷ 8 = <strong>0.7009</strong> <span class="badge badge-ok">Kazanım sağlandı</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <span class="pill">5</span>
+          <div class="step-body">
+            <strong>Programa yükselir.</strong> Bir PÇ'nin program düzeyindeki değeri, o PÇ ile ilişkili <em>tüm derslerin</em> ağırlıklı katkısıdır. Bu hesap "Değerlendirme Raporları" sayfasında otomatik üretilir.
+          </div>
+        </div>
+
+        <div class="box box-info" style="margin-top:18px;">
+          <span class="label">Özet zincir</span>
+          Soru puanları → sınıf normalize ortalamaları → sınav başına DÖÇ (ağırlıklı) → ders DÖÇ (sınav tipleri ortalaması) → PÇ (matris ağırlıklı) → program PÇ
+        </div>
+      </div>
+    </section>
+
+    <section id="s9">
+      <h3><span class="num">9</span> Sistemde Akış</h3>
+      <p class="lead">Öğretim üyesinin takip etmesi gereken pratik adımlar:</p>
+      <ol>
+        <li><strong>Ders DÖÇ'lerini tanımlayın</strong> — Dersler &gt; ilgili ders &gt; Öğrenme Çıktıları.</li>
+        <li><strong>DÖÇ–PÇ ağırlıklarını girin</strong> — Ders-DÖÇ Eşleştirme ekranı.</li>
+        <li><strong>Sınav oluşturun</strong> — Sınav Yönetimi &gt; Yeni Sınav. Her soruya puan ve ölçtüğü DÖÇ atanır.</li>
+        <li><strong>Öğrenci listesini yükleyin</strong> — Ders açılışından "Öğrenci Yükle" ile Excel roster. Sistem eksik öğrenci hesaplarını otomatik açar.</li>
+        <li><strong>Sınav sonuçlarını yükleyin</strong> — Sınav ekranından "Notları Yükle". Hesaplamalar otomatik yapılır.</li>
+        <li><strong>Raporları görüntüleyin</strong> — Değerlendirme Raporları &amp; Öğrenci Yetkinlik Karnesi.</li>
+        <li><strong>Eşik altı çıktılar için yansıma yazın</strong> — Komite ekranından <em>iyileştirme yansıması</em> alanı.</li>
+      </ol>
+      <div class="box box-info">
+        <span class="label">Tavsiye</span>
+        Dönem başında DÖÇ–PÇ matrisini bir kez doğru kurarsanız, dönem sonunda rapor üretmek birkaç tıklamaya iner. En fazla zaman kaybı matrisin eksik ya da hatalı kurulmasından kaynaklanır.
+      </div>
+    </section>
+
+    <footer class="doc-footer">
+      Konya Teknik Üniversitesi — MÜDEK Akreditasyon Yönetim Sistemi<br>
+      Rehber sürümü: v1.1 (MÜDEK Excel şablonu ile hizalandı) &nbsp;·&nbsp; Sorularınız için bölüm MÜDEK komisyonuna başvurun.
+    </footer>
+
+  </main>
+</div>
+
+</body>
+</html>

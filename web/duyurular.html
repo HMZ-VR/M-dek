@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Duyurular – MÜDEK</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+  <link rel="stylesheet" href="assets/ktun-design.css">
+  <style>
+    .page-inner { max-width:900px; margin:0 auto; padding:32px 24px 60px; display:flex; flex-direction:column; gap:24px; }
+    .ann-item { background:var(--white); border:1px solid var(--border); border-left:3px solid var(--gold); border-radius:var(--r-sm); padding:16px 18px; transition:border-color var(--ease); }
+    .ann-item:hover { border-color:var(--gold); border-left-color:var(--navy); }
+    .ann-title { font-weight:700; font-size:14.5px; color:var(--navy); margin-bottom:6px; }
+    .ann-body  { font-size:13.5px; color:var(--text); line-height:1.6; margin-bottom:8px; }
+    .ann-meta  { font-size:12px; color:var(--muted); display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+    .ann-list  { display:flex; flex-direction:column; gap:10px; }
+    .empty { text-align:center; padding:32px; color:var(--muted); display:flex; flex-direction:column; align-items:center; gap:8px; }
+    .empty .mi { font-size:40px; color:var(--border); }
+    .form-group { margin-bottom:14px; }
+    .form-group label { display:block; font-size:12px; font-weight:600; color:var(--muted); margin-bottom:5px; }
+  </style>
+</head>
+<body>
+
+<div id="topbarMount"></div>
+<div id="heroMount"></div>
+
+<div class="page-inner">
+
+  <!-- Admin: Duyuru Ekle -->
+  <div id="addFormCard" class="card" style="display:none;">
+    <div class="card-title"><span class="mi" style="color:var(--gold-dk)">add_circle</span> Yeni Duyuru Ekle</div>
+    <div class="form-group">
+      <label>Başlık</label>
+      <input type="text" id="duyuruBaslik" placeholder="Duyuru başlığı"/>
+    </div>
+    <div class="form-group">
+      <label>İçerik</label>
+      <textarea id="duyuruIcerik" rows="3" placeholder="Duyuru içeriği…"></textarea>
+    </div>
+    <div class="form-group">
+      <label>Kategori</label>
+      <select id="duyuruKategori">
+        <option value="Genel">Genel</option>
+        <option value="Etkinlik">Etkinlik</option>
+        <option value="Akreditasyon">Akreditasyon</option>
+        <option value="Belgeler">Belgeler</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Dosya / Bağlantı (opsiyonel)</label>
+      <input type="url" id="duyuruDosya" placeholder="https://…"/>
+    </div>
+    <div style="text-align:right;">
+      <button class="btn btn-sm" onclick="addDuyuru()"><span class="mi">add</span> Duyuru Ekle</button>
+    </div>
+  </div>
+
+  <!-- Liste -->
+  <div class="card">
+    <div class="card-title"><span class="mi" style="color:var(--gold-dk)">campaign</span> Duyurular</div>
+    <div class="ann-list" id="duyuruListesi"></div>
+  </div>
+
+</div>
+
+<script src="assets/ktun-shell.js"></script>
+<script src="help-widget.js" defer></script>
+<script>
+  KTUN.renderPublicTopbar({ active: 'duyurular' });
+  KTUN.renderHero({ eyebrow: 'MÜDEK', title: 'Duyurular', sub: 'Güncel haberler ve etkinlik duyuruları' });
+
+  const esc = KTUN.htmlEscape;
+  const user = JSON.parse(sessionStorage.getItem('user') || '{}');
+  const isAdmin = user.roles?.includes('admin') || user.role === 'admin';
+  if (isAdmin) document.getElementById('addFormCard').style.display = 'block';
+
+  function loadDuyurular() {
+    const duyurular = JSON.parse(localStorage.getItem('duyurular') || '[]');
+    const list = document.getElementById('duyuruListesi');
+    if (!duyurular.length) {
+      list.innerHTML = `<div class="empty"><span class="mi">inbox</span><span>Henüz duyuru eklenmemiş.</span></div>`;
+      return;
+    }
+    list.innerHTML = duyurular.map((d, idx) => `
+      <div class="ann-item">
+        <div class="ann-title">${esc(d.baslik)} <span class="badge" style="margin-left:6px;">${esc(d.kategori)}</span></div>
+        <div class="ann-body">${esc(d.icerik)}</div>
+        <div class="ann-meta">
+          <span style="display:flex;align-items:center;gap:4px;"><span class="mi" style="font-size:14px">schedule</span>${esc(d.tarih)}</span>
+          ${d.dosya ? `<a href="${esc(d.dosya)}" target="_blank" style="display:flex;align-items:center;gap:4px;color:var(--navy);text-decoration:none;font-weight:600;"><span class="mi" style="font-size:14px">attach_file</span> Dosya / Link</a>` : ''}
+          ${isAdmin ? `<button class="btn btn-danger btn-sm" onclick="deleteDuyuru(${idx})" style="margin-left:auto;"><span class="mi">delete</span></button>` : ''}
+        </div>
+      </div>`).join('');
+  }
+
+  function addDuyuru() {
+    const baslik   = document.getElementById('duyuruBaslik').value.trim();
+    const icerik   = document.getElementById('duyuruIcerik').value.trim();
+    const kategori = document.getElementById('duyuruKategori').value;
+    const dosya    = document.getElementById('duyuruDosya').value.trim();
+    if (!baslik || !icerik) { KTUN.toast('Lütfen başlık ve içeriği doldurun.', 'warning'); return; }
+    const duyurular = JSON.parse(localStorage.getItem('duyurular') || '[]');
+    duyurular.unshift({ baslik, icerik, kategori, dosya, tarih: new Date().toLocaleString('tr-TR') });
+    localStorage.setItem('duyurular', JSON.stringify(duyurular));
+    document.getElementById('duyuruBaslik').value = '';
+    document.getElementById('duyuruIcerik').value = '';
+    document.getElementById('duyuruDosya').value  = '';
+    KTUN.toast('Duyuru eklendi.', 'success');
+    loadDuyurular();
+  }
+
+  function deleteDuyuru(index) {
+    if (!confirm('Bu duyuruyu silmek istediğinize emin misiniz?')) return;
+    const duyurular = JSON.parse(localStorage.getItem('duyurular') || '[]');
+    duyurular.splice(index, 1);
+    localStorage.setItem('duyurular', JSON.stringify(duyurular));
+    loadDuyurular();
+  }
+
+  loadDuyurular();
+</script>
+</body>
+</html>

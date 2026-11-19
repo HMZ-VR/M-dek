@@ -1,0 +1,1455 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Derslerim & Sınavlarım – MÜDEK</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+  <link rel="stylesheet" href="assets/ktun-design.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    /* ── Extra button variants ─────────────── */
+    .btn-success { background:var(--green); color:#fff; }
+    .btn-success:hover { background:#047857; }
+    .btn-warning { background:var(--amber); color:#fff; }
+    .btn-warning:hover { background:#92400e; }
+    .btn-default { background:var(--cream); color:var(--text); border:1px solid var(--border); }
+    .btn-default:hover { border-color:var(--gold); }
+    .btn-xs { padding:3px 8px; font-size:11px; }
+
+    /* ── Modal size overrides ──────────────── */
+    .modal-sm { max-width:460px; }
+    .modal-md { max-width:640px; }
+    .modal-lg { max-width:920px; }
+
+    /* ── Tabs ──────────────────────────────── */
+    .tabs { display:flex; gap:4px; border-bottom:2px solid var(--border); margin-bottom:18px; }
+    .tab-btn {
+      padding:8px 16px; border:none; background:transparent;
+      color:var(--muted); font-family:inherit; font-size:13px; font-weight:600;
+      cursor:pointer; display:inline-flex; align-items:center; gap:6px;
+      border-bottom:2px solid transparent; margin-bottom:-2px;
+      border-radius:var(--r-sm) var(--r-sm) 0 0;
+    }
+    .tab-btn.active { color:var(--navy); border-bottom-color:var(--gold); }
+    .tab-pane { display:none; }
+    .tab-pane.active { display:block; }
+
+    /* ── Course grid ───────────────────────── */
+    .course-grid {
+      display:grid;
+      grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
+      gap:14px;
+    }
+    .course-card {
+      background:var(--white); border:1px solid var(--border);
+      border-radius:var(--r); overflow:hidden;
+      transition:border-color var(--ease), transform var(--ease), box-shadow var(--ease);
+    }
+    .course-card:hover { border-color:var(--gold); transform:translateY(-2px); box-shadow:var(--shadow); }
+    .course-card-top { height:4px; background:linear-gradient(90deg,var(--navy),var(--gold-dk)); }
+    .course-card-body { padding:16px; }
+    .course-code {
+      font-size:11.5px; font-weight:700; color:var(--navy);
+      background:rgba(11,31,69,.08); border:1px solid rgba(11,31,69,.15);
+      border-radius:5px; padding:2px 8px;
+      display:inline-block; margin-bottom:8px; font-family:monospace;
+    }
+    .course-name { font-weight:700; font-size:15px; color:var(--text); margin-bottom:4px; }
+    .course-meta { font-size:12px; color:var(--muted); }
+    .course-actions {
+      padding:12px 16px; border-top:1px solid var(--border);
+      display:flex; gap:6px; flex-wrap:wrap;
+    }
+
+    /* ── Exam list ─────────────────────────── */
+    .exam-list { display:flex; flex-direction:column; gap:10px; }
+    .exam-item {
+      display:flex; align-items:center; gap:14px;
+      padding:14px 18px;
+      background:var(--white); border:1px solid var(--border);
+      border-left:3px solid var(--green);
+      border-radius:var(--r);
+      transition:border-color var(--ease), background var(--ease);
+    }
+    .exam-item:hover { background:var(--cream); border-left-color:var(--navy); }
+    .exam-info { flex:1; min-width:0; }
+    .exam-title { font-weight:700; font-size:14px; margin-bottom:4px; }
+    .exam-meta { font-size:12px; color:var(--muted); }
+    .exam-date { font-size:12px; color:var(--muted); margin-top:3px; display:flex; align-items:center; gap:4px; }
+    .exam-actions { display:flex; gap:6px; flex-wrap:wrap; flex-shrink:0; }
+
+    /* ── Outcome items ─────────────────────── */
+    .outcome-item {
+      display:flex; align-items:center; gap:8px;
+      padding:8px 0; border-bottom:1px solid var(--border);
+    }
+    .outcome-item:last-child { border-bottom:none; }
+    .outcome-num {
+      width:28px; height:28px; border-radius:6px; flex-shrink:0;
+      background:rgba(11,31,69,.08); color:var(--navy);
+      display:flex; align-items:center; justify-content:center;
+      font-size:12px; font-weight:700;
+    }
+    input.pts-input {
+      flex:0 0 80px;
+      width:80px;
+      padding:6px 8px; border:1px solid var(--border); border-radius:var(--r-sm);
+      font-size:13px; text-align:center; font-family:monospace;
+    }
+    input.pts-input:focus { outline:none; border-color:var(--gold); }
+
+    /* ── Matrix table ──────────────────────── */
+    .matrix-wrap { overflow-x:auto; margin:0 -22px; padding:0 22px; }
+    .matrix-tbl { border-collapse:collapse; white-space:nowrap; font-size:12px; }
+    .matrix-tbl th {
+      padding:8px 10px; background:var(--cream);
+      border:1px solid var(--border); color:var(--navy);
+      font-weight:700; font-size:11px; text-align:center;
+    }
+    .matrix-tbl th:first-child { text-align:left; min-width:200px; }
+    .matrix-tbl td { padding:4px; border:1px solid var(--border); }
+    .matrix-tbl td:first-child { padding:8px 10px; font-size:13px; }
+    input.matrix-input {
+      flex:0 0 64px;
+      width:64px; padding:5px; text-align:center;
+      font-size:12px; font-family:monospace;
+      border:1px solid var(--border); border-radius:4px;
+    }
+    input.matrix-input.filled { background:rgba(11,31,69,.08); border-color:var(--navy); font-weight:700; }
+    input.matrix-input:focus { outline:none; border-color:var(--gold); }
+
+    /* ── Stat cards ────────────────────────── */
+    .stat-cards { display:flex; gap:12px; margin-bottom:18px; }
+    .stat-card {
+      flex:1; padding:14px; text-align:center;
+      background:var(--cream); border:1px solid var(--border); border-radius:var(--r-sm);
+    }
+    .stat-card-label { font-size:11px; color:var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:.04em; margin-bottom:6px; }
+    .stat-card-val { font-size:24px; font-weight:700; font-family:monospace; }
+
+    /* ── Results table ─────────────────────── */
+    .res-tbl { width:100%; border-collapse:collapse; font-size:12px; }
+    .res-tbl th {
+      padding:8px 10px; background:var(--cream); border-bottom:2px solid var(--gold);
+      color:var(--navy); font-size:11px; font-weight:700; white-space:nowrap; text-align:center;
+    }
+    .res-tbl td { padding:7px 10px; border-bottom:1px solid var(--border); text-align:center; }
+    .res-tbl td:first-child, .res-tbl td:nth-child(2) { text-align:left; }
+    .res-tbl tr:hover td { background:rgba(247,245,240,.6); }
+    .score-pass { color:var(--green); font-weight:700; }
+    .score-fail { color:var(--red); font-weight:700; }
+
+    /* ── Analysis table ────────────────────── */
+    .analysis-tbl { width:100%; border-collapse:collapse; font-size:13px; margin-bottom:20px; }
+    .analysis-tbl th {
+      padding:9px 12px; background:var(--cream); border-bottom:1px solid var(--border);
+      font-size:11px; font-weight:600; color:var(--muted);
+      text-transform:uppercase; letter-spacing:.04em; text-align:left;
+    }
+    .analysis-tbl th:last-child { text-align:center; }
+    .analysis-tbl td { padding:10px 12px; border-bottom:1px solid var(--border); }
+    .analysis-tbl td:last-child { text-align:center; }
+    .analysis-tbl tr:hover td { background:rgba(247,245,240,.6); }
+    .pct-badge {
+      display:inline-block; padding:3px 10px; border-radius:99px;
+      font-family:monospace; font-size:12px; font-weight:600;
+    }
+    .pct-high { background:rgba(5,150,105,.1); border:1px solid rgba(5,150,105,.25); color:var(--green); }
+    .pct-mid  { background:rgba(180,83,9,.08); border:1px solid rgba(180,83,9,.2); color:var(--amber); }
+    .pct-low  { background:rgba(184,39,44,.08); border:1px solid rgba(184,39,44,.2); color:var(--red); }
+    .pct-none { background:var(--cream); border:1px solid var(--border); color:var(--muted); }
+
+    /* ── Status text ───────────────────────── */
+    .status-txt { font-size:12px; color:var(--muted); flex:1; }
+    .status-txt.ok  { color:var(--green); }
+    .status-txt.err { color:var(--red); }
+    .status-txt.ing { color:var(--muted); }
+
+    /* ── Info boxes ────────────────────────── */
+    .info-box {
+      display:flex; align-items:flex-start; gap:10px;
+      padding:10px 13px; border-radius:var(--r-sm);
+      font-size:12.5px; margin-bottom:14px;
+    }
+    .info-box.blue   { background:rgba(30,64,175,.07); border:1px solid rgba(30,64,175,.18); color:#1e40af; }
+    .info-box.green  { background:rgba(5,150,105,.07); border:1px solid rgba(5,150,105,.18); color:#065f46; }
+    .info-box.yellow { background:rgba(180,83,9,.07); border:1px solid rgba(180,83,9,.18); color:#92400e; }
+
+    /* ── Label tags ────────────────────────── */
+    .lbl { display:flex; align-items:center; gap:6px; font-size:12px; font-weight:600; color:var(--muted); margin-bottom:5px; }
+    .lbl-tag { display:inline-block; padding:1px 7px; border-radius:4px; font-size:11px; font-weight:700; border:1px solid; }
+
+    /* ── Err/warn messages ─────────────────── */
+    .err-msg  { color:var(--red); font-size:13px; padding:8px 0; }
+    .warn-msg { color:var(--amber); font-size:13px; padding:8px 0; }
+
+    /* ── Inline empty ──────────────────────── */
+    .empty {
+      text-align:center; padding:32px 20px; color:var(--muted);
+      display:flex; align-items:center; justify-content:center; gap:10px;
+    }
+
+    /* ── Form group ────────────────────────── */
+    .form-group { margin-bottom:14px; }
+    .form-group > label { display:block; font-size:12px; font-weight:600; color:var(--muted); margin-bottom:5px; }
+
+    /* ── File input ────────────────────────── */
+    input[type="file"] {
+      width:100%; padding:8px; font-size:13px; cursor:pointer;
+      border:1px dashed var(--border); border-radius:var(--r-sm);
+      background:var(--cream);
+    }
+
+    /* ── Spin animation ────────────────────── */
+    @keyframes spin { to { transform:rotate(360deg); } }
+    .mi-spin { display:inline-block; animation:spin .8s linear infinite; }
+  </style>
+</head>
+<body>
+
+<div id="topbarMount"></div>
+<div id="heroMount"></div>
+
+<main class="page-body">
+  <div class="card">
+    <div class="card-title">
+      <span class="mi" style="color:var(--gold-dk)">menu_book</span>
+      Verdiğim Dersler
+      <span id="courseSub" style="font-size:12.5px;font-weight:400;color:var(--muted);margin-left:8px;"></span>
+    </div>
+    <div class="course-grid" id="courseGrid">
+      <div class="empty"><span class="mi mi-spin">refresh</span> Yükleniyor…</div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:20px;">
+    <div class="card-title">
+      <span class="mi" style="color:var(--gold-dk)">assignment</span>
+      Sınavlarım
+    </div>
+    <div class="exam-list" id="examList">
+      <div class="empty"><span class="mi mi-spin">refresh</span> Yükleniyor…</div>
+    </div>
+  </div>
+</main>
+
+<!-- MODAL: DÖÇ & Matris -->
+<div id="outcomeModal" class="modal-backdrop" style="display:none">
+  <div class="modal modal-lg">
+    <div class="modal-hd">
+      <div>
+        <h3 id="outcomeModalTitle">DÖÇ & Matris Yönetimi</h3>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px;" id="outcomeModalSub"></div>
+      </div>
+      <button class="modal-close" onclick="closeModal('outcomeModal')"><span class="mi">close</span></button>
+    </div>
+    <div class="modal-bd">
+      <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('tab1')">
+          <span class="mi" style="font-size:16px">checklist</span> DÖÇ Tanımla
+        </button>
+        <button class="tab-btn" onclick="switchTab('tab2')">
+          <span class="mi" style="font-size:16px">grid_on</span> DÖÇ–PÇ Matrisi
+        </button>
+      </div>
+
+      <div id="tab1" class="tab-pane active">
+        <div class="form-row" style="margin-bottom:12px;">
+          <input type="text" id="newOutcomeText" placeholder="Yeni öğrenim çıktısı (ör: Veritabanı tasarlar)"/>
+          <button class="btn btn-sm" onclick="addOutcome()">
+            <span class="mi">add</span> Ekle
+          </button>
+        </div>
+        <div id="outcomeListContainer"></div>
+        <div style="text-align:right;margin-top:12px;">
+          <button class="btn btn-success btn-sm" onclick="saveOutcomePoints()">
+            <span class="mi">save</span> Puanları Kaydet
+          </button>
+        </div>
+      </div>
+
+      <div id="tab2" class="tab-pane">
+        <div class="info-box blue" style="margin-bottom:16px;">
+          <span class="mi" style="font-size:16px;flex-shrink:0">info</span>
+          <span>Her PÇ için ilgili DÖÇ'ün katkısını gir. 0 = katkı yok, 5 = orta katkı, 10 = güçlü katkı.</span>
+        </div>
+        <div class="matrix-wrap">
+          <table class="matrix-tbl">
+            <thead><tr id="matrixHeader"><th>Program Çıktıları</th></tr></thead>
+            <tbody id="matrixBody"><tr><td colspan="10" class="empty">Yükleniyor…</td></tr></tbody>
+          </table>
+        </div>
+        <div style="text-align:right;margin-top:16px;">
+          <button class="btn btn-success btn-sm" onclick="saveMatrix()">
+            <span class="mi">save</span> Matrisi Kaydet
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Excel Yükleme -->
+<div id="uploadModal" class="modal-backdrop" style="display:none">
+  <div class="modal modal-sm">
+    <div class="modal-hd">
+      <div>
+        <h3>Sınav Notlarını Yükle</h3>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px;">Excel dosyası ile toplu not girişi</div>
+      </div>
+      <button class="modal-close" onclick="closeModal('uploadModal')"><span class="mi">close</span></button>
+    </div>
+    <div class="modal-bd">
+      <div class="info-box blue">
+        <span class="mi" style="font-size:16px;flex-shrink:0">info</span>
+        <div>
+          Excel'in ilk satırı şu formatta olmalı:<br>
+          <code style="display:block;margin-top:6px;font-size:12px;background:rgba(30,64,175,.06);padding:4px 8px;border-radius:4px;">Öğrenci No | Ad Soyad | Soru1 | Soru2 | …</code>
+          <small style="color:var(--muted);margin-top:4px;display:block;">* "Soru" bitişik yazılmalı (Soru1, Soru2…)</small>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Excel Dosyası (.xlsx)</label>
+        <input type="file" id="excelFile" accept=".xlsx,.xls"/>
+      </div>
+      <input type="hidden" id="uploadExamId"/>
+    </div>
+    <div class="modal-ft">
+      <span class="status-txt" id="uploadStatus"></span>
+      <button class="btn btn-outline btn-sm" onclick="closeModal('uploadModal')">Vazgeç</button>
+      <button class="btn btn-success btn-sm" id="uploadBtn" onclick="submitExcel()">
+        <span class="mi">cloud_upload</span> Yükle
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Öğrenci Listesi -->
+<div id="studentModal" class="modal-backdrop" style="display:none">
+  <div class="modal modal-sm">
+    <div class="modal-hd">
+      <div>
+        <h3>Öğrenci Listesi Yükle</h3>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px;">Anketler için öğrencileri kaydet</div>
+      </div>
+      <button class="modal-close" onclick="closeModal('studentModal')"><span class="mi">close</span></button>
+    </div>
+    <div class="modal-bd">
+      <div class="info-box green">
+        <span class="mi" style="font-size:16px;flex-shrink:0">info</span>
+        <div>
+          Excel formatı:<br>
+          <code style="display:block;margin-top:6px;font-size:12px;background:rgba(5,150,105,.06);padding:4px 8px;border-radius:4px;">Ogrenci No | Ad Soyad | Email (opsiyonel)</code>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Öğrenci Listesi (.xlsx)</label>
+        <input type="file" id="studentExcelFile" accept=".xlsx,.xls"/>
+      </div>
+      <input type="hidden" id="studentOfferingId"/>
+    </div>
+    <div class="modal-ft">
+      <span class="status-txt" id="studentStatus"></span>
+      <button class="btn btn-outline btn-sm" onclick="closeModal('studentModal')">Vazgeç</button>
+      <button class="btn btn-success btn-sm" id="studentBtn" onclick="submitStudentList()">
+        <span class="mi">upload</span> Yükle
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Sınav Sonuçları -->
+<div id="resultsModal" class="modal-backdrop" style="display:none">
+  <div class="modal modal-lg">
+    <div class="modal-hd">
+      <h3 id="resultsTitle">Sınav Sonuçları</h3>
+      <button class="modal-close" onclick="closeModal('resultsModal')"><span class="mi">close</span></button>
+    </div>
+    <div class="modal-bd">
+      <div class="stat-cards">
+        <div class="stat-card">
+          <div class="stat-card-label">Ortalama</div>
+          <div class="stat-card-val" id="resAvg" style="color:var(--navy)">–</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-label">En Yüksek</div>
+          <div class="stat-card-val" id="resMax" style="color:var(--green)">–</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-label">Öğrenci</div>
+          <div class="stat-card-val" id="resCount" style="color:var(--muted)">–</div>
+        </div>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="res-tbl">
+          <thead><tr id="resHeaderRow"></tr></thead>
+          <tbody id="resBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Anket Sonuçları -->
+<div id="statsModal" class="modal-backdrop" style="display:none">
+  <div class="modal modal-md">
+    <div class="modal-hd">
+      <h3 id="statsTitle">Anket Analizi</h3>
+      <button class="modal-close" onclick="closeModal('statsModal')"><span class="mi">close</span></button>
+    </div>
+    <div class="modal-bd">
+      <div class="stat-cards">
+        <div class="stat-card">
+          <div class="stat-card-label">Katılım</div>
+          <div class="stat-card-val" id="statParticipation" style="color:var(--navy)">–</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:4px;" id="statCountDetail"></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-label">Genel Ort.</div>
+          <div class="stat-card-val" id="statAverage" style="color:var(--green)">–</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:4px;">Hedef: 3.0+</div>
+        </div>
+      </div>
+      <div style="height:280px;margin-top:8px;">
+        <canvas id="surveyChart"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Değerlendirme (DDR) -->
+<div id="reflectionModal" class="modal-backdrop" style="display:none">
+  <div class="modal modal-md">
+    <div class="modal-hd">
+      <div>
+        <h3 id="reflectionTitle">Ders Değerlendirme Raporu</h3>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px;">MÜDEK PUKÖ değerlendirmesi</div>
+      </div>
+      <button class="modal-close" onclick="closeModal('reflectionModal')"><span class="mi">close</span></button>
+    </div>
+    <div class="modal-bd">
+      <div class="info-box yellow">
+        <span class="mi" style="font-size:16px;flex-shrink:0">info</span>
+        <span>Sınavınızın sonuçlarını değerlendirin ve gelecek dönem için iyileştirme planınızı yazın.</span>
+      </div>
+      <div class="form-group">
+        <label>1. Durum Analizi (Neden böyle oldu?)</label>
+        <textarea id="txtAnalysis" rows="4" placeholder="Örn: Soru 3'te PÇ-5 başarısı %40'ta kaldı çünkü öğrenciler pointer konusunda zorlandı…"></textarea>
+      </div>
+      <div class="form-group">
+        <label>2. İyileştirme Planı (Gelecek dönem ne yapılacak?)</label>
+        <textarea id="txtActionPlan" rows="4" placeholder="Örn: Gelecek dönem laboratuvar saatlerinde pointer örnekleri artırılacak…"></textarea>
+      </div>
+      <div class="form-group">
+        <label>3. MÜDEK Kurul Görüşü (Salt okunur)</label>
+        <textarea id="txtFeedback" rows="3" disabled placeholder="Henüz MÜDEK kurulu görüş bildirmemiş…"></textarea>
+      </div>
+    </div>
+    <div class="modal-ft">
+      <span class="status-txt" id="reflectionStatus"></span>
+      <button class="btn btn-outline btn-sm" onclick="closeModal('reflectionModal')">Kapat</button>
+      <button class="btn btn-success btn-sm" id="reflectionBtn" onclick="saveReflection()">
+        <span class="mi">save</span> Kaydet
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: MÜDEK Analizi -->
+<div id="analysisModal" class="modal-backdrop" style="display:none">
+  <div class="modal modal-md">
+    <div class="modal-hd">
+      <div>
+        <h3 id="analysisTitle">MÜDEK Analizi</h3>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px;">DÖÇ & PÇ başarı yüzdeleri</div>
+      </div>
+      <button class="modal-close" onclick="closeModal('analysisModal')"><span class="mi">close</span></button>
+    </div>
+    <div class="modal-bd">
+      <div id="analysisErr" class="err-msg" style="display:none;"></div>
+      <div id="analysisWarn" class="warn-msg" style="display:none;"></div>
+      <div id="analysisStudentInfo" style="display:none;background:rgba(11,31,69,.06);border:1px solid rgba(11,31,69,.15);border-radius:7px;padding:9px 13px;font-size:12px;margin-bottom:12px;align-items:center;gap:8px;">
+        <span class="mi" style="color:var(--navy);flex-shrink:0;font-size:18px">group</span>
+        <span id="analysisStudentText"></span>
+      </div>
+      <div style="font-weight:700;font-size:13px;margin-bottom:10px;color:var(--muted);display:flex;align-items:center;gap:6px;">
+        <span class="mi" style="color:var(--navy);font-size:18px">my_location</span> DÖÇ Başarı Yüzdeleri
+      </div>
+      <table class="analysis-tbl">
+        <thead><tr><th>Çıktı</th><th>Açıklama</th><th style="text-align:center;">Başarı</th></tr></thead>
+        <tbody id="analysisDocTable"></tbody>
+      </table>
+      <div style="font-weight:700;font-size:13px;margin-bottom:10px;margin-top:4px;color:var(--muted);display:flex;align-items:center;gap:6px;">
+        <span class="mi" style="color:#7c3aed;font-size:18px">pie_chart</span> Program Çıktıları
+      </div>
+      <table class="analysis-tbl">
+        <thead><tr><th>Kod</th><th>Açıklama</th><th style="text-align:center;">Başarı</th></tr></thead>
+        <tbody id="analysisPcTable"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Ders Dönem Değerlendirmesi (A5/B/C) -->
+<div id="offeringReflModal" class="modal-backdrop" style="display:none">
+  <div class="modal modal-md">
+    <div class="modal-hd">
+      <div>
+        <h3 id="offeringReflTitle">Ders Dönem Değerlendirmesi</h3>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px;">MÜDEK dönem sonu rapor alanları</div>
+      </div>
+      <button class="modal-close" onclick="closeModal('offeringReflModal')"><span class="mi">close</span></button>
+    </div>
+    <div class="modal-bd">
+      <div class="form-group">
+        <label class="lbl">
+          <span class="lbl-tag" style="background:rgba(30,64,175,.08);color:#1e40af;border-color:rgba(30,64,175,.2);">A5</span>
+          Anket Sonuçlarının Tartışılması
+        </label>
+        <textarea id="orA5" rows="5" placeholder="Öğrenci anket sonuçlarını değerlendirin. Hangi çıktılar beklentinin altında kaldı? Bunun nedenleri neler olabilir?"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="lbl">
+          <span class="lbl-tag" style="background:rgba(124,58,237,.08);color:#7c3aed;border-color:rgba(124,58,237,.2);">B</span>
+          PÇ Karşılanma İlişkileri ve Düzeyleri
+        </label>
+        <textarea id="orB" rows="5" placeholder="Program çıktılarının bu dönem ne ölçüde karşılandığını açıklayın. Hangi PÇ'ler yeterince karşılanamadı ve neden?"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="lbl">
+          <span class="lbl-tag" style="background:rgba(5,150,105,.08);color:var(--green);border-color:rgba(5,150,105,.2);">C</span>
+          Dersin İşleyişi — Genel Değerlendirme
+        </label>
+        <textarea id="orC" rows="5" placeholder="Dersin dönem içindeki işleyişini, yapılan uygulamaları ve ağırlıklarını değerlendirin. Geçen dönemden farklılıklar ve gelecek dönem önerileriniz neler?"></textarea>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-top:4px;">
+        <span id="orStatus" style="font-size:12px;color:var(--muted);"></span>
+        <button class="btn btn-sm" id="orSaveBtn" onclick="saveOfferingReflection()">
+          <span class="mi">save</span> Kaydet
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Proje / Ödev Ağırlığı -->
+<div id="projectWeightModal" class="modal-backdrop" style="display:none">
+  <div class="modal modal-sm">
+    <div class="modal-hd">
+      <div>
+        <h3>Proje / Ödev Ağırlığı</h3>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px;">Sınav toplamında projenin yüzdesini belirleyin.</div>
+      </div>
+      <button class="modal-close" onclick="closeModal('projectWeightModal')"><span class="mi">close</span></button>
+    </div>
+    <div class="modal-bd">
+      <div class="form-group">
+        <label>Proje Ağırlığı (%)</label>
+        <input type="number" id="pwPercent" min="0" max="100" step="1" placeholder="Örn. 30">
+        <div style="font-size:11px;color:var(--muted);margin-top:4px;">0 = proje değerlendirme dışı · 30 = sınavın %30'u projeden gelir.</div>
+      </div>
+      <div class="form-group">
+        <label>Projenin Maksimum Puanı</label>
+        <input type="number" id="pwMaxPoints" min="0" step="0.5" placeholder="Örn. 100">
+        <div style="font-size:11px;color:var(--muted);margin-top:4px;">Ağırlık &gt; 0 ise zorunlu.</div>
+      </div>
+      <div id="pwStatus" class="status-txt"></div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn btn-outline btn-sm" onclick="closeModal('projectWeightModal')">İptal</button>
+      <button class="btn btn-success btn-sm" id="pwSaveBtn" onclick="saveProjectWeight()">
+        <span class="mi">save</span> Kaydet
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Sınav Kanıtları (En İyi / Orta / En Kötü) -->
+<div id="examArtifactsModal" class="modal-backdrop" style="display:none">
+  <div class="modal modal-md">
+    <div class="modal-hd">
+      <div>
+        <h3 id="artifactsTitle">Sınav Kanıtları</h3>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px;">MÜDEK denetimi için en iyi / orta / en kötü sınav kağıdı veya proje belgesi yükleyin.</div>
+      </div>
+      <button class="modal-close" onclick="closeModal('examArtifactsModal')"><span class="mi">close</span></button>
+    </div>
+    <div class="modal-bd">
+      <div class="tabs">
+        <button class="tab-btn active" data-atype="best" onclick="switchArtifactTab(event,'best')"><span class="mi">military_tech</span> En İyi</button>
+        <button class="tab-btn" data-atype="average" onclick="switchArtifactTab(event,'average')"><span class="mi">horizontal_rule</span> Orta</button>
+        <button class="tab-btn" data-atype="worst" onclick="switchArtifactTab(event,'worst')"><span class="mi">trending_down</span> En Kötü</button>
+      </div>
+      <div class="form-group" style="margin-top:12px">
+        <label>Dosya Seçin</label>
+        <input type="file" id="artifactFile">
+      </div>
+      <div class="form-group">
+        <label>Açıklama (opsiyonel)</label>
+        <textarea id="artifactDesc" rows="2" placeholder="Örn. 2024 güz dönemi en yüksek not alan öğrenci kağıdı"></textarea>
+      </div>
+      <div id="artifactStatus" class="status-txt"></div>
+      <div style="margin-top:14px">
+        <div style="font-weight:700;font-size:12px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em">Yüklenmiş Kanıtlar</div>
+        <div id="artifactList" style="font-size:13px;color:var(--muted)">Yükleniyor…</div>
+      </div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn btn-outline btn-sm" onclick="closeModal('examArtifactsModal')">Kapat</button>
+      <button class="btn btn-success btn-sm" id="artifactUploadBtn" onclick="uploadArtifact()">
+        <span class="mi">cloud_upload</span> Yükle
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="assets/ktun-shell.js"></script>
+<script src="help-widget.js" defer></script>
+<script>
+  const auth = KTUN.requireAuth({ roles: ['ogretim_uyesi', 'arastirma_gorevlisi'] });
+  if (!auth) throw new Error('redirecting');
+  KTUN.renderTopbar({ back: { href: 'dashboard.html', label: 'Panel' } });
+  KTUN.renderHero({
+    eyebrow: 'Öğretim Üyesi',
+    title: 'Derslerim & Sınavlarım',
+    sub: 'DÖÇ yönetimi, sınav notları ve MÜDEK analizi'
+  });
+
+  const esc = KTUN.htmlEscape;
+  let currentCourseId = null;
+  let currentReflectionExamId = null;
+  let currentOfferingId = null;
+  let myChart = null;
+
+  function escJs(s) { return String(s || '').replace(/'/g, "\\'"); }
+
+  /* ── Modal helpers ─── */
+  function openModal(id)  { document.getElementById(id).style.display = 'flex'; }
+  function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+  document.querySelectorAll('.modal-backdrop').forEach(bd => {
+    bd.addEventListener('click', e => { if (e.target === bd) bd.style.display = 'none'; });
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape')
+      document.querySelectorAll('.modal-backdrop').forEach(bd => { bd.style.display = 'none'; });
+  });
+
+  /* ── localStorage helpers ─── */
+  function loadLoPoints() {
+    try { return JSON.parse(localStorage.getItem('loPoints') || '{}') || {}; }
+    catch(_) { return {}; }
+  }
+  function saveLoPoints(map) { localStorage.setItem('loPoints', JSON.stringify(map || {})); }
+  function removeOutcomePoint(id) { const m = loadLoPoints(); delete m[id]; saveLoPoints(m); }
+
+  /* ── API wrapper ─── */
+  async function api(url, opts = {}) {
+    const res = await KTUN.apiFetch(url, opts);
+    if (!res.ok) {
+      let msg = `HTTP ${res.status}`;
+      try { const j = await res.json(); msg = j.detail || j.message || msg; } catch {}
+      throw new Error(msg);
+    }
+    const ct = res.headers.get('content-type') || '';
+    return ct.includes('application/json') ? res.json() : res.text();
+  }
+  async function apiPost(url, body) {
+    return api(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  }
+
+  /* ── Init ─── */
+  async function loadAllData() {
+    await Promise.all([loadMyCourses(), loadMyExams()]);
+  }
+
+  /* ── Dersler ─── */
+  async function loadMyCourses() {
+    const grid = document.getElementById('courseGrid');
+    try {
+      const data = await api('/api/my-courses');
+      document.getElementById('courseSub').textContent = `${data.offerings.length} ders`;
+
+      if (!data.offerings.length) {
+        grid.innerHTML = `<div class="empty"><span class="mi">inbox</span> Atanmış dersiniz yok.</div>`;
+        return;
+      }
+
+      grid.innerHTML = data.offerings.map(c => `
+        <div class="course-card">
+          <div class="course-card-top"></div>
+          <div class="course-card-body">
+            <span class="course-code">${esc(c.course_code)}</span>
+            <div class="course-name">${esc(c.course_name)}</div>
+            <div class="course-meta">${esc(c.term)} · Şube ${esc(c.section)}</div>
+          </div>
+          <div class="course-actions">
+            <button class="btn btn-default btn-sm" onclick="openStudentModal(${c.id})">
+              <span class="mi">group</span> Öğrenci Yükle
+            </button>
+            <button class="btn btn-default btn-sm" onclick="openOutcomeModal(${c.id},'${escJs(c.course_name)}')">
+              <span class="mi">my_location</span> DÖÇ & Matris
+            </button>
+            <button class="btn btn-warning btn-sm" onclick="manageSurvey(${c.id},'${escJs(c.course_name)}')">
+              <span class="mi">poll</span> Anketi Başlat
+            </button>
+            <button class="btn btn-default btn-sm" onclick="showStats(${c.id},'${escJs(c.course_name)}')">
+              <span class="mi">bar_chart</span> Sonuçlar
+            </button>
+            <button class="btn btn-success btn-sm" onclick="openAnalysisModal(${c.course_id},'${escJs(c.course_name)}')">
+              <span class="mi">pie_chart</span> MÜDEK Raporu
+            </button>
+            <button class="btn btn-default btn-sm" onclick="openOfferingReflection(${c.id},'${escJs(c.course_name)}')">
+              <span class="mi">description</span> Ders Raporu
+            </button>
+          </div>
+        </div>`).join('');
+    } catch(e) {
+      console.error(e);
+      grid.innerHTML = `<div class="empty"><span class="mi" style="color:var(--red)">warning</span> Dersler yüklenemedi.</div>`;
+    }
+  }
+
+  /* ── Sınavlar ─── */
+  async function loadMyExams() {
+    const list = document.getElementById('examList');
+    try {
+      const exams = await api('/api/my-exams');
+      if (!exams.length) {
+        list.innerHTML = `<div class="empty"><span class="mi">assignment</span> Henüz tanımlı sınav yok.</div>`;
+        return;
+      }
+      list.innerHTML = exams.map(e => `
+        <div class="exam-item">
+          <div class="exam-info">
+            <div class="exam-title">${esc(e.course_code)} – ${esc(e.title)}</div>
+            <div class="exam-meta">${esc(e.course_name)} · ${esc(e.term)} · Şube ${esc(e.section)}</div>
+            <div class="exam-date"><span class="mi" style="font-size:14px">event</span>${e.date || '—'}</div>
+          </div>
+          <div class="exam-actions">
+            <button class="btn btn-sm" onclick="goTo('questions.html',${e.id},'${escJs(e.title)}','${escJs(e.course_name)}')">
+              <span class="mi">task_alt</span> Sorular
+            </button>
+            <button class="btn btn-outline btn-sm" onclick="goTo('doc-mapping.html',${e.id},'${escJs(e.title)}','${escJs(e.course_name)}')">
+              <span class="mi">tune</span> Soru–DÖÇ
+            </button>
+            <button class="btn btn-success btn-sm" onclick="openUploadModal(${e.id})">
+              <span class="mi">table_chart</span> Notları Yükle
+            </button>
+            <button class="btn btn-outline btn-sm" onclick="viewResults(${e.id},'${escJs(e.title)}')">
+              <span class="mi">format_list_numbered</span> Sonuçlar
+            </button>
+            <button class="btn btn-warning btn-sm" onclick="openReflection(${e.id},'${escJs(e.title)}')">
+              <span class="mi">fact_check</span> Değerlendirme
+            </button>
+            <button class="btn btn-outline btn-sm" onclick="openProjectWeightModal(${e.id})">
+              <span class="mi">tune</span> Proje Ağırlığı
+            </button>
+            <button class="btn btn-outline btn-sm" onclick="openArtifactsModal(${e.id},'${escJs(e.title)}')">
+              <span class="mi">cloud_upload</span> Kanıt Yükle
+            </button>
+          </div>
+        </div>`).join('');
+    } catch(e) {
+      console.error(e);
+      list.innerHTML = `<div class="empty"><span class="mi" style="color:var(--red)">warning</span> Sınavlar yüklenemedi.</div>`;
+    }
+  }
+
+  /* ── Yönlendirme ─── */
+  function goTo(page, examId, title, courseName) {
+    sessionStorage.setItem('selectedExamId', examId);
+    sessionStorage.setItem('selectedExamTitle', title);
+    sessionStorage.setItem('selectedCourseName', courseName);
+    location.href = page;
+  }
+
+  /* ── Notları Yükle ─── */
+  function openUploadModal(examId) {
+    document.getElementById('uploadExamId').value = examId;
+    document.getElementById('excelFile').value = '';
+    document.getElementById('uploadStatus').textContent = '';
+    document.getElementById('uploadStatus').className = 'status-txt';
+    openModal('uploadModal');
+  }
+
+  async function submitExcel() {
+    const examId = document.getElementById('uploadExamId').value;
+    const file   = document.getElementById('excelFile').files[0];
+    if (!file) { KTUN.toast('Lütfen dosya seçin.', 'warning'); return; }
+
+    const btn = document.getElementById('uploadBtn');
+    btn.disabled = true; btn.textContent = 'İşleniyor…';
+    setStatus('uploadStatus', 'ing', 'Yükleniyor…');
+
+    const fd = new FormData();
+    fd.append('file', file);
+
+    try {
+      const res  = await KTUN.apiFetch(`/api/exams/${examId}/upload-results`, { method: 'POST', body: fd });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        let msg = `✓ ${data.students_processed} öğrenci, ${data.responses_inserted} yanıt kaydedildi`;
+        if (data.new_accounts && data.new_accounts.length) {
+          msg += ` · ${data.new_accounts.length} yeni hesap açıldı`;
+          downloadCredentialsCSV(data.new_accounts, `yeni-hesaplar-sinav-${examId}.csv`);
+        }
+        setStatus('uploadStatus', 'ok', msg);
+        setTimeout(() => closeModal('uploadModal'), 2400);
+      } else {
+        setStatus('uploadStatus', 'err', data.detail || 'Yükleme başarısız.');
+      }
+    } catch(e) {
+      setStatus('uploadStatus', 'err', 'Sunucu hatası: ' + e.message);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<span class="mi">cloud_upload</span> Yükle';
+    }
+  }
+
+  /* ── Öğrenci Listesi ─── */
+  function openStudentModal(offeringId) {
+    document.getElementById('studentOfferingId').value = offeringId;
+    document.getElementById('studentExcelFile').value = '';
+    document.getElementById('studentStatus').textContent = '';
+    openModal('studentModal');
+  }
+
+  async function submitStudentList() {
+    const offeringId = document.getElementById('studentOfferingId').value;
+    const file       = document.getElementById('studentExcelFile').files[0];
+    if (!file) { KTUN.toast('Lütfen dosya seçin.', 'warning'); return; }
+
+    const btn = document.getElementById('studentBtn');
+    btn.disabled = true; btn.textContent = 'Yükleniyor…';
+    setStatus('studentStatus', 'ing', 'Yükleniyor…');
+
+    const fd = new FormData();
+    fd.append('file', file);
+
+    try {
+      const res  = await KTUN.apiFetch(`/api/offerings/${offeringId}/upload-students`, { method: 'POST', body: fd });
+      const data = await res.json();
+      if (res.ok) {
+        if (data.new_accounts && data.new_accounts.length)
+          downloadCredentialsCSV(data.new_accounts, `yeni-hesaplar-ders-${offeringId}.csv`);
+        setStatus('studentStatus', 'ok', data.message || '✓ Öğrenciler kaydedildi');
+        setTimeout(() => closeModal('studentModal'), 2400);
+      } else {
+        setStatus('studentStatus', 'err', data.detail || 'Yükleme başarısız.');
+      }
+    } catch(e) {
+      setStatus('studentStatus', 'err', 'Sunucu hatası.');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<span class="mi">upload</span> Yükle';
+    }
+  }
+
+  /* ── DÖÇ & Matris ─── */
+  function openOutcomeModal(courseId, name) {
+    currentCourseId = courseId;
+    document.getElementById('outcomeModalTitle').textContent = name;
+    document.getElementById('outcomeModalSub').textContent = 'Öğrenim çıktıları ve DÖÇ–PÇ matrisi';
+    switchTab('tab1');
+    openModal('outcomeModal');
+    loadOutcomes(courseId);
+  }
+
+  function switchTab(id) {
+    document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    const idx = id === 'tab1' ? 0 : 1;
+    document.querySelectorAll('.tab-btn')[idx].classList.add('active');
+    if (id === 'tab2') loadMatrix(currentCourseId);
+  }
+
+  async function loadOutcomes(courseId) {
+    const cont = document.getElementById('outcomeListContainer');
+    cont.innerHTML = `<div class="empty"><span class="mi mi-spin">refresh</span></div>`;
+    try {
+      const outcomes = await api(`/api/learning-outcomes/${courseId}`);
+      if (!outcomes.length) {
+        cont.innerHTML = `<div class="empty"><span class="mi">inbox</span> Henüz çıktı eklenmemiş.</div>`;
+        return;
+      }
+      const pts = loadLoPoints();
+      cont.innerHTML = outcomes.map(o => `
+        <div class="outcome-item">
+          <div class="outcome-num">${o.sequence_number}</div>
+          <input type="text" value="${esc(o.description)}" readonly style="flex:1 1 0; min-width:0;"/>
+          <input type="number" class="pts-input" data-outcome-id="${o.id}" min="1"
+            placeholder="Puan" value="${pts[o.id] || ''}"/>
+          <button class="btn btn-danger btn-xs" onclick="deleteOutcome(${o.id})">
+            <span class="mi" style="font-size:14px">delete</span>
+          </button>
+        </div>`).join('');
+    } catch(e) {
+      cont.innerHTML = `<div class="empty" style="color:var(--red)">Yüklenemedi.</div>`;
+    }
+  }
+
+  async function addOutcome() {
+    const desc = document.getElementById('newOutcomeText').value.trim();
+    if (!desc) { KTUN.toast('Lütfen açıklama yazın.', 'warning'); return; }
+    const btn = document.querySelector('#tab1 .btn');
+    btn.disabled = true; btn.textContent = '…';
+    try {
+      await apiPost(`/api/learning-outcomes`, {
+        course_id: currentCourseId,
+        sequence_number: document.querySelectorAll('.outcome-item').length + 1,
+        description: desc
+      });
+      document.getElementById('newOutcomeText').value = '';
+      await loadOutcomes(currentCourseId);
+    } catch(e) { KTUN.toast('Kayıt yapılamadı: ' + e.message, 'danger'); }
+    finally { btn.disabled = false; btn.innerHTML = '<span class="mi">add</span> Ekle'; }
+  }
+
+  async function deleteOutcome(id) {
+    if (!confirm('Bu çıktıyı silmek istediğinize emin misiniz?')) return;
+    try {
+      await api(`/api/learning-outcomes/${id}`, { method: 'DELETE' });
+      removeOutcomePoint(id);
+      loadOutcomes(currentCourseId);
+    } catch(e) { KTUN.toast('Silinemedi.', 'danger'); }
+  }
+
+  function saveOutcomePoints() {
+    const m = loadLoPoints();
+    document.querySelectorAll('#tab1 .pts-input').forEach(inp => {
+      const id  = Number(inp.getAttribute('data-outcome-id'));
+      const val = parseFloat(inp.value);
+      if (!isNaN(val) && val > 0) m[id] = val;
+      else delete m[id];
+    });
+    saveLoPoints(m);
+    KTUN.toast('DÖÇ puanları kaydedildi.', 'success');
+  }
+
+  async function loadMatrix(courseId) {
+    const tbody = document.getElementById('matrixBody');
+    const thead = document.getElementById('matrixHeader');
+    tbody.innerHTML = `<tr><td colspan="20" class="empty">Yükleniyor…</td></tr>`;
+    try {
+      const [docs, pcs] = await Promise.all([
+        api(`/api/learning-outcomes/${courseId}`),
+        api(`/api/program-outcomes`)
+      ]);
+      thead.innerHTML = '<th>Program Çıktıları</th>' +
+        docs.map(d => `<th>DÖÇ ${d.sequence_number}</th>`).join('');
+      tbody.innerHTML = pcs.map(pc =>
+        `<tr>
+          <td><strong style="color:var(--navy);">${esc(pc.code)}:</strong> ${esc(pc.title)}</td>
+          ${docs.map(d => `<td><input type="number" min="0" max="10" step="5" class="matrix-input"
+            id="val_${pc.id}_${d.id}" placeholder="0"/></td>`).join('')}
+        </tr>`
+      ).join('');
+
+      try {
+        const saved = await api(`/api/courses/${courseId}/matrix`);
+        saved.forEach(item => {
+          const inp = document.getElementById(`val_${item.program_outcome_id}_${item.outcome_id}`);
+          if (inp) { inp.value = item.value; inp.classList.add('filled'); }
+        });
+      } catch(_) {}
+    } catch(e) {
+      tbody.innerHTML = `<tr><td colspan="20" style="color:var(--red);text-align:center;">Matris yüklenemedi.</td></tr>`;
+    }
+  }
+
+  async function saveMatrix() {
+    const inputs  = document.querySelectorAll('.matrix-input');
+    const payload = [];
+    let invalid   = false;
+    inputs.forEach(inp => {
+      const val = parseInt(inp.value) || 0;
+      if (val > 10) { invalid = true; return; }
+      if (val > 0) {
+        const [, pcId, docId] = inp.id.split('_');
+        payload.push({ program_outcome_id: parseInt(pcId), outcome_id: parseInt(docId), value: val });
+      }
+    });
+    if (invalid) { KTUN.toast('Değerler 0-10 arasında olmalıdır.', 'warning'); return; }
+
+    const btn = document.querySelector('#tab2 .btn-success');
+    btn.disabled = true; btn.textContent = 'Kaydediliyor…';
+    try {
+      const res = await KTUN.apiFetch('/api/matrix/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (res.ok) { KTUN.toast('Matris kaydedildi!', 'success'); }
+      else        { KTUN.toast('Kayıt başarısız.', 'danger'); }
+    } catch(e) { KTUN.toast('Sunucu hatası.', 'danger'); }
+    finally { btn.disabled = false; btn.innerHTML = '<span class="mi">save</span> Matrisi Kaydet'; }
+  }
+
+  /* ── Sınav Sonuçları ─── */
+  async function viewResults(examId, title) {
+    document.getElementById('resultsTitle').textContent = `${title} – Sonuçlar`;
+    document.getElementById('resBody').innerHTML = `<tr><td colspan="5" class="empty">Yükleniyor…</td></tr>`;
+    document.getElementById('resHeaderRow').innerHTML = '';
+    ['resAvg','resMax','resCount'].forEach(id => document.getElementById(id).textContent = '–');
+    openModal('resultsModal');
+
+    try {
+      const data      = await api(`/api/exams/${examId}/detailed-results`);
+      const questions = (data.questions || []).sort((a,b) => a.q_no - b.q_no);
+      const students  = data.students || [];
+
+      document.getElementById('resHeaderRow').innerHTML =
+        `<th>No</th><th>Ad Soyad</th>` +
+        questions.map(q => `<th>S${q.q_no}</th>`).join('') +
+        `<th>Not</th>`;
+
+      if (!students.length) {
+        document.getElementById('resBody').innerHTML =
+          `<tr><td colspan="${questions.length + 3}" class="empty">Henüz sonuç yok.</td></tr>`;
+        return;
+      }
+
+      const totals = [];
+      document.getElementById('resBody').innerHTML = students.map(st => {
+        let total = 0;
+        const cells = questions.map(q => {
+          const e = st.scores?.[q.q_no];
+          if (e) { total += parseFloat(e.score); return `<td>${e.score}</td>`; }
+          return `<td style="color:var(--muted)">–</td>`;
+        }).join('');
+        totals.push(total);
+        return `<tr>
+          <td style="font-family:monospace;font-size:12px;">${esc(st.student_no)}</td>
+          <td>${esc(st.name || '–')}</td>
+          ${cells}
+          <td><span class="${total >= 50 ? 'score-pass' : 'score-fail'}">${total}</span></td>
+        </tr>`;
+      }).join('');
+
+      const avg = totals.reduce((a,b) => a+b, 0) / totals.length;
+      document.getElementById('resAvg').textContent   = avg.toFixed(1);
+      document.getElementById('resMax').textContent   = Math.max(...totals);
+      document.getElementById('resCount').textContent = totals.length;
+    } catch(e) {
+      document.getElementById('resBody').innerHTML =
+        `<tr><td colspan="5" style="color:var(--red);text-align:center;">Hata: ${esc(e.message)}</td></tr>`;
+    }
+  }
+
+  /* ── Anket Yönetimi ─── */
+  async function manageSurvey(offeringId, name) {
+    if (!confirm(`${name} için anketi başlatmak istiyor musunuz?`)) return;
+    try {
+      const data = await apiPost(`/api/offerings/${offeringId}/start-survey`, {});
+      KTUN.toast(data.message || 'Anket başlatıldı!', 'success');
+    } catch(e) { KTUN.toast('Hata: ' + e.message, 'danger'); }
+  }
+
+  /* ── Anket Sonuçları ─── */
+  async function showStats(offeringId, name) {
+    document.getElementById('statsTitle').textContent = `${name} – Anket Analizi`;
+    document.getElementById('statParticipation').textContent = '…';
+    document.getElementById('statAverage').textContent = '…';
+    openModal('statsModal');
+
+    try {
+      const data = await api(`/api/offerings/${offeringId}/stats`);
+      const p    = data.participation;
+      document.getElementById('statParticipation').textContent = `%${p.rate}`;
+      document.getElementById('statCountDetail').textContent   = `${p.responded} / ${p.total} öğrenci`;
+
+      const avg = data.outcomes.length
+        ? (data.outcomes.reduce((a,c) => a + c.avg_score, 0) / data.outcomes.length).toFixed(2) : '0.0';
+      document.getElementById('statAverage').textContent = avg;
+
+      const ctx = document.getElementById('surveyChart').getContext('2d');
+      if (myChart) myChart.destroy();
+      myChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: data.outcomes.map(o => `DÖÇ ${o.sequence_number}`),
+          datasets: [{
+            label: 'Başarı Puanı (5 üzerinden)',
+            data: data.outcomes.map(o => o.avg_score),
+            backgroundColor: data.outcomes.map(o => o.avg_score >= 3 ? '#059669' : '#b8272c'),
+            borderRadius: 6,
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          scales: {
+            y: { beginAtZero:true, max:5, grid:{ color:'rgba(11,31,69,.08)' }, ticks:{ color:'#6b7280' } },
+            x: { grid:{ display:false }, ticks:{ color:'#6b7280' } }
+          },
+          plugins: {
+            legend: { labels:{ color:'#6b7280' } },
+            tooltip: { callbacks: { afterLabel: (ctx) => data.outcomes[ctx.dataIndex]?.description || '' } }
+          }
+        }
+      });
+    } catch(e) { KTUN.toast('İstatistikler yüklenemedi: ' + e.message, 'danger'); }
+  }
+
+  /* ── Değerlendirme (DDR) ─── */
+  async function openReflection(examId, title) {
+    currentReflectionExamId = examId;
+    document.getElementById('reflectionTitle').textContent = `${title} – Değerlendirme`;
+    setStatus('reflectionStatus', 'ing', 'Yükleniyor…');
+    ['txtAnalysis','txtActionPlan','txtFeedback'].forEach(id => document.getElementById(id).value = '');
+    openModal('reflectionModal');
+
+    try {
+      const data = await api(`/api/exams/${examId}/reflection`);
+      if (data.exists) {
+        document.getElementById('txtAnalysis').value   = data.analysis || '';
+        document.getElementById('txtActionPlan').value = data.action_plan || '';
+        document.getElementById('txtFeedback').value   = data.feedback || '';
+        setStatus('reflectionStatus', 'ok', `Son kayıt: ${new Date(data.last_updated).toLocaleString('tr-TR')}`);
+      } else {
+        setStatus('reflectionStatus', '', 'Henüz değerlendirme yapılmamış.');
+      }
+    } catch(e) {
+      setStatus('reflectionStatus', 'err', 'Veri çekilemedi.');
+    }
+  }
+
+  async function saveReflection() {
+    const analysis   = document.getElementById('txtAnalysis').value.trim();
+    const actionPlan = document.getElementById('txtActionPlan').value.trim();
+    if (!analysis || !actionPlan) { KTUN.toast('Lütfen her iki alanı da doldurun.', 'warning'); return; }
+
+    const btn = document.getElementById('reflectionBtn');
+    btn.disabled = true; btn.textContent = 'Kaydediliyor…';
+    try {
+      const data = await apiPost(`/api/exams/${currentReflectionExamId}/reflection`,
+        { analysis, action_plan: actionPlan });
+      if (data.success) {
+        setStatus('reflectionStatus', 'ok', '✓ Kaydedildi');
+        KTUN.toast('Değerlendirme kaydedildi.', 'success');
+        setTimeout(() => closeModal('reflectionModal'), 1000);
+      } else {
+        KTUN.toast('Hata: ' + (data.detail || 'Kaydedilemedi'), 'danger');
+      }
+    } catch(e) { KTUN.toast('Sunucu hatası.', 'danger'); }
+    finally { btn.disabled = false; btn.innerHTML = '<span class="mi">save</span> Kaydet'; }
+  }
+
+  /* ── MÜDEK Analizi ─── */
+  async function openAnalysisModal(courseId, name) {
+    document.getElementById('analysisTitle').textContent = `${name} – MÜDEK Analizi`;
+    document.getElementById('analysisDocTable').innerHTML = `<tr><td colspan="3" class="empty">Yükleniyor…</td></tr>`;
+    document.getElementById('analysisPcTable').innerHTML  = `<tr><td colspan="3" class="empty">Yükleniyor…</td></tr>`;
+    document.getElementById('analysisErr').style.display  = 'none';
+    document.getElementById('analysisWarn').style.display = 'none';
+    document.getElementById('analysisStudentInfo').style.display = 'none';
+    openModal('analysisModal');
+
+    try {
+      const [los, pos, analysisRes] = await Promise.all([
+        api(`/api/learning-outcomes/${courseId}`),
+        api(`/api/program-outcomes`),
+        KTUN.apiFetch(`/api/mudek/analysis/${courseId}`)
+      ]);
+      const analysis = await analysisRes.json();
+      if (!analysisRes.ok) {
+        showAnalysisMsg('err', analysis.detail || 'Analiz alınamadı.');
+        return;
+      }
+      if (analysis.error)   showAnalysisMsg('err',  analysis.error);
+      if (analysis.warning) showAnalysisMsg('warn', analysis.warning);
+
+      const infoBox  = document.getElementById('analysisStudentInfo');
+      const infoText = document.getElementById('analysisStudentText');
+      if (typeof analysis.students_total === 'number' && analysis.students_total > 0) {
+        const total   = analysis.students_total;
+        const passing = analysis.students_passing;
+        const pct     = Math.round(passing / total * 100);
+        infoText.innerHTML = `<strong>${total}</strong> öğrenciden <strong>${passing}</strong> tanesi değerlendirmeye alındı (geçenler) — <strong>%${pct}</strong>`;
+        infoBox.style.display = 'flex';
+      }
+
+      document.getElementById('analysisDocTable').innerHTML = los.map(lo => {
+        const s   = analysis.doc_attainment?.[lo.id];
+        const pct = typeof s === 'number' ? (s * 100).toFixed(1) : null;
+        return `<tr>
+          <td><strong style="color:var(--navy)">DÖÇ ${lo.sequence_number}</strong></td>
+          <td>${esc(lo.description || '')}</td>
+          <td>${pctBadge(pct)}</td>
+        </tr>`;
+      }).join('') || `<tr><td colspan="3" class="empty">Veri yok.</td></tr>`;
+
+      document.getElementById('analysisPcTable').innerHTML = pos.map(po => {
+        const s   = analysis.pc_attainment?.[po.id];
+        const pct = typeof s === 'number' ? (s * 100).toFixed(1) : null;
+        return `<tr>
+          <td><strong style="color:#7c3aed">${esc(po.code)}</strong></td>
+          <td>${esc(po.title || '')}</td>
+          <td>${pctBadge(pct)}</td>
+        </tr>`;
+      }).join('') || `<tr><td colspan="3" class="empty">Veri yok.</td></tr>`;
+    } catch(e) {
+      showAnalysisMsg('err', 'Analiz alınırken hata: ' + e.message);
+    }
+  }
+
+  function showAnalysisMsg(type, msg) {
+    const id = type === 'err' ? 'analysisErr' : 'analysisWarn';
+    const el = document.getElementById(id);
+    el.textContent = msg;
+    el.style.display = 'block';
+  }
+
+  /* ── Ders Dönem Değerlendirmesi (A5/B/C) ─── */
+  async function openOfferingReflection(offeringId, courseName) {
+    currentOfferingId = offeringId;
+    document.getElementById('offeringReflTitle').textContent = `${courseName} — Ders Raporu`;
+    document.getElementById('orStatus').textContent = 'Yükleniyor…';
+    document.getElementById('orA5').value = '';
+    document.getElementById('orB').value  = '';
+    document.getElementById('orC').value  = '';
+    openModal('offeringReflModal');
+
+    try {
+      const data = await api(`/api/offerings/${offeringId}/reflection`);
+      if (data.exists) {
+        document.getElementById('orA5').value = data.a5_text || '';
+        document.getElementById('orB').value  = data.b_text  || '';
+        document.getElementById('orC').value  = data.c_text  || '';
+        document.getElementById('orStatus').textContent =
+          `Son kayıt: ${new Date(data.last_updated).toLocaleString('tr-TR')}`;
+      } else {
+        document.getElementById('orStatus').textContent = 'Henüz değerlendirme yapılmamış.';
+      }
+    } catch(e) {
+      document.getElementById('orStatus').textContent = 'Veri yüklenemedi: ' + e.message;
+    }
+  }
+
+  async function saveOfferingReflection() {
+    const btn     = document.getElementById('orSaveBtn');
+    const oldHtml = btn.innerHTML;
+    btn.disabled = true; btn.textContent = 'Kaydediliyor…';
+
+    try {
+      await api(`/api/offerings/${currentOfferingId}/reflection`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          a5_text: document.getElementById('orA5').value.trim() || null,
+          b_text:  document.getElementById('orB').value.trim()  || null,
+          c_text:  document.getElementById('orC').value.trim()  || null,
+        })
+      });
+      KTUN.toast('Ders raporu kaydedildi.', 'success');
+      btn.innerHTML = '<span class="mi">check</span> Kaydedildi';
+      document.getElementById('orStatus').textContent = `Son kayıt: ${new Date().toLocaleString('tr-TR')}`;
+      setTimeout(() => { btn.disabled = false; btn.innerHTML = oldHtml; }, 1500);
+    } catch(e) {
+      KTUN.toast('Kaydedilemedi: ' + e.message, 'danger');
+      btn.disabled = false; btn.innerHTML = oldHtml;
+    }
+  }
+
+  /* ── Helpers ─── */
+  function pctBadge(pct) {
+    if (pct === null) return `<span class="pct-badge pct-none">–</span>`;
+    const n = parseFloat(pct);
+    const cls = n >= 70 ? 'pct-high' : n >= 50 ? 'pct-mid' : 'pct-low';
+    return `<span class="pct-badge ${cls}">%${pct}</span>`;
+  }
+
+  function setStatus(elId, type, msg) {
+    const el = document.getElementById(elId);
+    if (!el) return;
+    el.textContent = msg;
+    el.className   = 'status-txt' + (type ? ' ' + type : '');
+  }
+
+  function downloadCredentialsCSV(accounts, filename) {
+    if (!accounts || !accounts.length) return;
+    const escCsv = v => {
+      const s = String(v == null ? '' : v);
+      return /[",\n;]/.test(s) ? '"' + s.replace(/"/g,'""') + '"' : s;
+    };
+    const header = ['Öğrenci No','Ad Soyad','Kullanıcı Adı','Varsayılan Şifre'];
+    const rows = accounts.map(a => [
+      a.student_no, a.full_name, a.student_no, a.default_password
+    ].map(escCsv).join(','));
+    const csv  = '﻿' + header.join(',') + '\n' + rows.join('\n');
+    const blob = new Blob([csv], {type:'text/csv;charset=utf-8'});
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url; a.download = filename || 'yeni-hesaplar.csv';
+    document.body.appendChild(a); a.click();
+    setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 500);
+    KTUN.toast('Yeni öğrenci hesapları CSV olarak indirildi. Varsayılan şifre = öğrenci numarası.', 'info');
+  }
+
+  /* ── Proje Ağırlığı ─── */
+  let _pwExamId = null;
+  async function openProjectWeightModal(examId) {
+    _pwExamId = examId;
+    document.getElementById('pwPercent').value = '';
+    document.getElementById('pwMaxPoints').value = '';
+    setStatus('pwStatus', '', '');
+    openModal('projectWeightModal');
+    try {
+      const res = await KTUN.apiFetch(`/api/exams/${examId}/project-config`);
+      const cfg = await res.json();
+      document.getElementById('pwPercent').value   = Math.round((parseFloat(cfg.project_weight) || 0) * 100);
+      document.getElementById('pwMaxPoints').value = parseFloat(cfg.project_max_points) || 0;
+    } catch (e) {
+      setStatus('pwStatus', 'err', 'Mevcut yapılandırma yüklenemedi: ' + e.message);
+    }
+  }
+
+  async function saveProjectWeight() {
+    const pct = parseFloat(document.getElementById('pwPercent').value);
+    const mp  = parseFloat(document.getElementById('pwMaxPoints').value);
+    if (isNaN(pct) || pct < 0 || pct > 100) {
+      setStatus('pwStatus', 'err', 'Yüzde 0 ile 100 arasında olmalı.');
+      return;
+    }
+    if (pct > 0 && (isNaN(mp) || mp <= 0)) {
+      setStatus('pwStatus', 'err', 'Proje ağırlığı > 0 ise maksimum puan > 0 olmalı.');
+      return;
+    }
+    const btn = document.getElementById('pwSaveBtn');
+    btn.disabled = true;
+    setStatus('pwStatus', 'ing', 'Kaydediliyor…');
+    try {
+      const res = await KTUN.apiFetch(`/api/exams/${_pwExamId}/project-config`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          project_weight: pct / 100,
+          project_max_points: isNaN(mp) ? 0 : mp,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || data.message || 'Kaydedilemedi');
+      setStatus('pwStatus', 'ok', data.message || 'Kaydedildi.');
+      KTUN.toast(data.message || 'Proje ağırlığı güncellendi', 'success');
+      setTimeout(() => closeModal('projectWeightModal'), 600);
+    } catch (e) {
+      setStatus('pwStatus', 'err', e.message);
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  /* ── Sınav Kanıtları (Artifacts) ─── */
+  let _artifactExamId = null;
+  let _artifactType = 'best';
+
+  function switchArtifactTab(ev, type) {
+    _artifactType = type;
+    document.querySelectorAll('#examArtifactsModal .tab-btn').forEach(b => b.classList.remove('active'));
+    if (ev && ev.currentTarget) ev.currentTarget.classList.add('active');
+    renderArtifactList();
+  }
+
+  async function openArtifactsModal(examId, title) {
+    _artifactExamId = examId;
+    _artifactType = 'best';
+    document.querySelectorAll('#examArtifactsModal .tab-btn').forEach((b, i) => {
+      b.classList.toggle('active', i === 0);
+    });
+    document.getElementById('artifactsTitle').textContent = title
+      ? `Sınav Kanıtları — ${title}` : 'Sınav Kanıtları';
+    document.getElementById('artifactFile').value = '';
+    document.getElementById('artifactDesc').value = '';
+    setStatus('artifactStatus', '', '');
+    openModal('examArtifactsModal');
+    await renderArtifactList();
+  }
+
+  async function renderArtifactList() {
+    const box = document.getElementById('artifactList');
+    box.textContent = 'Yükleniyor…';
+    try {
+      const res = await KTUN.apiFetch(`/api/exams/${_artifactExamId}/artifacts`);
+      const items = await res.json();
+      const filtered = (Array.isArray(items) ? items : []).filter(a => a.artifact_type === _artifactType);
+      if (!filtered.length) {
+        box.textContent = 'Bu kategoride henüz yüklenmiş kanıt yok.';
+        return;
+      }
+      box.innerHTML = filtered.map(a => `
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(0,0,0,.06)">
+          <div style="min-width:0;flex:1">
+            <div style="font-weight:600;color:var(--navy);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(a.original_name)}</div>
+            <div style="font-size:11px;color:var(--muted)">
+              ${a.uploaded_by_name ? esc(a.uploaded_by_name) + ' · ' : ''}
+              ${a.uploaded_at ? new Date(a.uploaded_at).toLocaleString('tr-TR') : ''}
+              ${a.file_size ? ' · ' + Math.round(a.file_size/1024) + ' KB' : ''}
+            </div>
+            ${a.description ? `<div style="font-size:11px;color:var(--muted);margin-top:2px">${esc(a.description)}</div>` : ''}
+          </div>
+          <div style="display:flex;gap:4px;flex-shrink:0">
+            <a class="btn btn-outline btn-sm" href="/api/exam-artifacts/${a.id}/download" target="_blank">
+              <span class="mi">download</span>
+            </a>
+            <button class="btn btn-outline btn-sm" style="color:var(--red)" onclick="deleteArtifact(${a.id})">
+              <span class="mi">delete</span>
+            </button>
+          </div>
+        </div>`).join('');
+    } catch (e) {
+      box.innerHTML = `<span style="color:var(--red)">${esc(e.message)}</span>`;
+    }
+  }
+
+  async function uploadArtifact() {
+    const file = document.getElementById('artifactFile').files[0];
+    if (!file) { KTUN.toast('Lütfen dosya seçin.', 'warning'); return; }
+    const desc = document.getElementById('artifactDesc').value.trim();
+    const btn  = document.getElementById('artifactUploadBtn');
+    btn.disabled = true;
+    setStatus('artifactStatus', 'ing', 'Yükleniyor…');
+
+    const fd = new FormData();
+    fd.append('file', file);
+    fd.append('artifact_type', _artifactType);
+    if (desc) fd.append('description', desc);
+
+    try {
+      const res = await KTUN.apiFetch(`/api/exams/${_artifactExamId}/artifacts`, {
+        method: 'POST',
+        body: fd,
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || data.message || 'Yüklenemedi');
+      setStatus('artifactStatus', 'ok', '✓ Yüklendi.');
+      document.getElementById('artifactFile').value = '';
+      document.getElementById('artifactDesc').value = '';
+      KTUN.toast('Kanıt yüklendi', 'success');
+      await renderArtifactList();
+    } catch (e) {
+      setStatus('artifactStatus', 'err', e.message);
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  async function deleteArtifact(id) {
+    if (!confirm('Bu kanıtı silmek istediğinize emin misiniz?')) return;
+    try {
+      const res = await KTUN.apiFetch(`/api/exam-artifacts/${id}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || data.message || 'Silinemedi');
+      KTUN.toast(data.message || 'Silindi', 'success');
+      await renderArtifactList();
+    } catch (e) {
+      KTUN.toast(e.message, 'danger');
+    }
+  }
+
+  /* ── Start ─── */
+  loadAllData();
+</script>
+</body>
+</html>

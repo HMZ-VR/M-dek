@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kullanıcı & Rol Yönetimi – MÜDEK</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+  <link rel="stylesheet" href="assets/ktun-design.css">
+</head>
+<body>
+
+<div id="topbarMount"></div>
+<div id="heroMount"></div>
+
+<main class="page-body-wide">
+  <div class="card mb-3" style="padding:18px 22px">
+    <div class="flex flex-wrap gap-2 items-center" style="margin-bottom:0">
+      <div style="flex:1; min-width:240px">
+        <input type="search" id="searchBox" placeholder="🔎 Ad, kullanıcı adı veya e-posta ara…" autocomplete="off">
+      </div>
+      <div style="min-width:200px">
+        <select id="roleFilter">
+          <option value="">Tüm roller</option>
+        </select>
+      </div>
+      <span id="countBadge" class="badge badge-gold">0 / 0</span>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <table class="tbl">
+      <thead>
+        <tr>
+          <th>Kullanıcı</th>
+          <th style="width:240px">Rol</th>
+          <th style="width:200px;text-align:right">İşlem</th>
+        </tr>
+      </thead>
+      <tbody id="userRows"><tr><td colspan="3" class="text-muted" style="padding:18px">Yükleniyor…</td></tr></tbody>
+    </table>
+  </div>
+
+  <div id="status" class="mt-3" style="font-weight:600"></div>
+</main>
+
+<script src="assets/ktun-shell.js"></script>
+<script src="help-widget.js" defer></script>
+<script>
+  const auth = KTUN.requireAuth({ roles:['admin','bolum_baskani'] });
+  if (!auth) throw new Error('redirecting');
+  const me = auth.user;
+  KTUN.renderTopbar({ back:{ href:'dashboard.html', label:'Panele Dön' } });
+  KTUN.renderHero({
+    eyebrow:'Sistem Yönetimi',
+    title:'Kullanıcı & Rol <em>Yönetimi</em>',
+    sub:'Kullanıcılara rol atayın, hesapları kaldırın. Yetki kontrolü backend tarafında da uygulanır.',
+  });
+  KTUN.renderFooter();
+
+  let ROLES = [];
+  let ALL_USERS = [];
+
+  const rows       = document.getElementById('userRows');
+  const statusEl   = document.getElementById('status');
+  const searchBox  = document.getElementById('searchBox');
+  const roleFilter = document.getElementById('roleFilter');
+  const countBadge = document.getElementById('countBadge');
+
+  function setStatus(msg, ok=false) {
+    statusEl.textContent = msg || '';
+    statusEl.style.color = msg ? (ok ? 'var(--green)' : 'var(--red)') : '';
+  }
+
+  async function api(path, opts) {
+    const res = await KTUN.apiFetch(path, opts || {});
+    if (!res.ok) {
+      let msg = `HTTP ${res.status}`;
+      try { const j = await res.json(); msg = j.detail || j.message || msg; } catch {}
+      throw new Error(msg);
+    }
+    const ct = res.headers.get('content-type') || '';
+    return ct.includes('application/json') ? res.json() : res.text();
+  }
+
+  async function loadRoles() {
+    try {
+      const roles = await api('/api/roles');
+      ROLES = (Array.isArray(roles) ? roles : []).map(r => ({ code: r.code, name: r.name || r.code }));
+    } catch {
+      ROLES = [
+        {code:'admin',               name:'Yönetici'},
+        {code:'mudek_kurul_uyesi',   name:'MÜDEK Kurul Üyesi'},
+        {code:'bolum_baskani',       name:'Bölüm Başkanı'},
+        {code:'ogretim_uyesi',       name:'Öğretim Üyesi'},
+        {code:'arastirma_gorevlisi', name:'Araştırma Görevlisi'},
+        {code:'komisyon_uyesi',      name:'Komisyon Üyesi'},
+        {code:'student',             name:'Öğrenci'},
+      ];
+    }
+    roleFilter.innerHTML = '<option value="">Tüm roller</option>' +
+      ROLES.map(r => `<option value="${r.code}">${KTUN.htmlEscape(r.name)}</option>`).join('');
+  }
+
+  async function loadUsers() {
+    setStatus('');
+    try {
+      const users = await api('/api/users');
+      ALL_USERS = Array.isArray(users) ? users : [];
+      applyFilters();
+    } catch (err) {
+      rows.innerHTML = `<tr><td colspan="3" class="text-red" style="padding:18px">Kullanıcılar yüklenemedi: ${KTUN.htmlEscape(err.message)}</td></tr>`;
+    }
+  }
+
+  function applyFilters() {
+    const q = (searchBox.value || '').toLowerCase().trim();
+    const r = roleFilter.value;
+    const filtered = ALL_USERS.filter(u => {
+      if (r && (u.role || '') !== r) return false;
+      if (!q) return true;
+      return (u.full_name || '').toLowerCase().includes(q)
+          || (u.username  || '').toLowerCase().includes(q)
+          || (u.email     || '').toLowerCase().includes(q);
+    });
+    renderUsers(filtered);
+    countBadge.textContent = `${filtered.length} / ${ALL_USERS.length}`;
+  }
+  searchBox.addEventListener('input', applyFilters);
+  roleFilter.addEventListener('change', applyFilters);
+
+  function renderUsers(users) {
+    if (!users.length) {
+      rows.innerHTML = `<tr><td colspan="3"><div class="empty-state">
+        <span class="mi">person_off</span><h3>Kullanıcı bulunamadı</h3>
+        <p>Filtreleri sıfırlayın veya yeni kullanıcı ekleyin.</p></div></td></tr>`;
+      return;
+    }
+    rows.innerHTML = users.map(u => {
+      const currentRole = u.role || 'ogretim_uyesi';
+      const isMe = String(u.id) === String(me.id);
+      if (currentRole && !ROLES.some(r => r.code === currentRole)) ROLES.push({ code: currentRole, name: currentRole });
+      const opts = ROLES.map(r => `<option value="${r.code}"${currentRole === r.code ? ' selected' : ''}>${KTUN.htmlEscape(r.name)}</option>`).join('');
+      return `
+        <tr>
+          <td>
+            <strong>${KTUN.htmlEscape(u.full_name || u.username)}</strong>
+            <div class="text-muted" style="font-size:12px">${KTUN.htmlEscape(u.username)}${u.email ? ' · ' + KTUN.htmlEscape(u.email) : ''}</div>
+          </td>
+          <td><select id="role-${u.id}">${opts}</select></td>
+          <td class="actions">
+            <button class="btn btn-sm" data-act="save" data-id="${u.id}"><span class="mi">save</span> Kaydet</button>
+            <button class="btn btn-sm btn-outline" data-act="del" data-id="${u.id}" data-uname="${KTUN.htmlEscape(u.username)}" ${isMe ? 'disabled' : ''}><span class="mi">delete</span> Sil</button>
+          </td>
+        </tr>`;
+    }).join('');
+    rows.querySelectorAll('button[data-act]').forEach(b => {
+      b.addEventListener('click', () => {
+        if (b.dataset.act === 'save') updateRole(+b.dataset.id);
+        else deleteUser(+b.dataset.id, b.dataset.uname);
+      });
+    });
+  }
+
+  async function updateRole(userId) {
+    setStatus('');
+    const newRole = document.getElementById('role-' + userId).value;
+    try {
+      const result = await api(`/api/users/${userId}/role`, {
+        method:'PUT', body: JSON.stringify({ role: newRole }),
+      });
+      setStatus(`✓ Rol güncellendi: ${result.username || ''} → ${newRole}`, true);
+    } catch (err) {
+      setStatus('✕ Güncelleme başarısız: ' + err.message);
+    }
+  }
+
+  async function deleteUser(userId, username) {
+    if (!confirm(`"${username}" kullanıcısını silmek istiyor musunuz?`)) return;
+    try {
+      await api(`/api/users/${userId}`, { method:'DELETE' });
+      KTUN.toast('Kullanıcı silindi.', 'success');
+      await loadUsers();
+    } catch (err) {
+      KTUN.toast('Silme başarısız: ' + err.message, 'danger');
+    }
+  }
+
+  (async () => {
+    await loadRoles();
+    await loadUsers();
+  })();
+</script>
+</body>
+</html>

@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Anket Sonuçları – MÜDEK</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+  <link rel="stylesheet" href="assets/ktun-design.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    /* Info banner */
+    .info-banner {
+      background:var(--white); border:1px solid var(--border); border-radius:var(--r);
+      padding:20px 24px; margin-bottom:20px; display:flex; gap:28px; flex-wrap:wrap; align-items:center;
+      box-shadow:var(--shadow);
+    }
+    .info-item { display:flex; flex-direction:column; gap:2px; }
+    .info-label { font-size:10.5px; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; }
+    .info-value { font-size:15px; font-weight:700; color:var(--navy); }
+    .participation-ring { width:72px; height:72px; position:relative; flex-shrink:0; }
+    .participation-ring canvas { width:72px!important; height:72px!important; }
+    .participation-pct { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-size:14px; font-weight:700; color:var(--navy); }
+
+    /* Tab nav */
+    .tab-nav { display:flex; gap:4px; margin-bottom:20px; background:var(--white); border:1px solid var(--border); border-radius:var(--r); padding:4px; }
+    .tab-btn {
+      padding:9px 18px; border:none; border-radius:var(--r-sm); font-size:13px; font-weight:600;
+      cursor:pointer; transition:all var(--ease); font-family:'Inter',sans-serif;
+      color:var(--muted); background:transparent; display:flex; align-items:center; gap:6px;
+    }
+    .tab-btn:hover:not(.active) { background:var(--bg); color:var(--navy); }
+    .tab-btn.active { background:var(--navy); color:#fff; }
+    .tab-btn .mi { font-size:15px; }
+    .tab-content { display:none; }
+    .tab-content.active { display:block; }
+
+    /* Chart grid */
+    .chart-grid { display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-bottom:18px; }
+    .chart-card { background:var(--white); border:1px solid var(--border); border-radius:var(--r); padding:20px; box-shadow:var(--shadow); }
+    .chart-card-title { font-size:13px; font-weight:700; color:var(--navy); margin-bottom:14px; display:flex; align-items:center; gap:7px; }
+    .chart-card-title .mi { font-size:16px; color:var(--gold-dk); }
+    .full-width { grid-column:1/-1; }
+
+    /* Score cell */
+    .score-cell { display:flex; align-items:center; gap:10px; }
+    .score-bar  { height:5px; width:70px; background:var(--border); border-radius:3px; overflow:hidden; flex-shrink:0; }
+    .score-fill { height:100%; border-radius:3px; transition:width .5s; }
+
+    /* Custom Q cards */
+    .custom-q-card {
+      background:var(--bg); border:1px solid var(--border); border-radius:var(--r-sm);
+      padding:16px; margin-bottom:12px;
+    }
+    .custom-q-hd { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px; }
+    .text-answer-list { max-height:200px; overflow-y:auto; padding:10px; background:var(--white); border-radius:var(--r-sm); margin-top:8px; border:1px solid var(--border); }
+    .text-answer-item { padding:6px 10px; border-left:3px solid var(--gold); margin-bottom:6px; font-size:12px; color:var(--muted); }
+
+    @media(max-width:768px) { .chart-grid { grid-template-columns:1fr; } .info-banner { flex-direction:column; } }
+    @media print {
+      #topbar, .tab-nav { display:none!important; }
+      .tab-content { display:block!important; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="topbarMount"></div>
+
+<main class="page-body">
+
+  <!-- Info banner -->
+  <div class="info-banner" id="infoBanner">
+    <div class="participation-ring">
+      <canvas id="participationChart"></canvas>
+      <div class="participation-pct" id="participationPct">–</div>
+    </div>
+    <div class="info-item"><div class="info-label">Ders</div><div class="info-value" id="infoCourse">–</div></div>
+    <div class="info-item"><div class="info-label">Dönem</div><div class="info-value" id="infoTerm">–</div></div>
+    <div class="info-item"><div class="info-label">Durum</div><div class="info-value" id="infoStatus">–</div></div>
+    <div class="info-item"><div class="info-label">Yanıt / Toplam</div><div class="info-value" id="infoResponses">–</div></div>
+    <div style="margin-left:auto">
+      <button class="btn btn-sm btn-outline" onclick="window.print()"><span class="mi">print</span> Yazdır</button>
+    </div>
+  </div>
+
+  <!-- Sekmeler -->
+  <div class="tab-nav">
+    <button class="tab-btn active" onclick="switchTab('doc', this)"><span class="mi">track_changes</span> DÖÇ Sonuçları</button>
+    <button class="tab-btn" onclick="switchTab('custom', this)"><span class="mi">help_outline</span> Özel Sorular</button>
+    <button class="tab-btn" onclick="switchTab('criteria', this)"><span class="mi">verified</span> Program Çıktıları</button>
+  </div>
+
+  <!-- DÖÇ -->
+  <div class="tab-content active" id="tab-doc">
+    <div class="chart-grid">
+      <div class="chart-card">
+        <div class="chart-card-title"><span class="mi">bar_chart</span> DÖÇ Ortalama Puanları</div>
+        <canvas id="docBarChart" height="280"></canvas>
+      </div>
+      <div class="chart-card">
+        <div class="chart-card-title"><span class="mi">radar</span> Radar Görünümü</div>
+        <canvas id="docRadarChart" height="280"></canvas>
+      </div>
+    </div>
+    <div class="chart-card full-width">
+      <div class="chart-card-title"><span class="mi">table_chart</span> Detaylı DÖÇ Tablosu</div>
+      <table class="tbl">
+        <thead>
+          <tr><th>#</th><th>Ders Öğrenim Çıktısı (DÖÇ)</th><th>Ortalama (1–5)</th><th>Başarı %</th><th>Yanıt</th></tr>
+        </thead>
+        <tbody id="docTableBody">
+          <tr><td colspan="5"><div class="empty-state"><span class="mi">hourglass_empty</span><h3>Yükleniyor…</h3></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Özel Sorular -->
+  <div class="tab-content" id="tab-custom">
+    <div id="customResults">
+      <div class="empty-state"><span class="mi">hourglass_empty</span><h3>Yükleniyor…</h3></div>
+    </div>
+  </div>
+
+  <!-- Program Çıktıları (PÇ) -->
+  <div class="tab-content" id="tab-criteria">
+    <div class="chart-card" style="margin-bottom:18px">
+      <div class="chart-card-title"><span class="mi">verified</span> Program Çıktıları Bazlı Başarı</div>
+      <canvas id="criteriaChart" height="120"></canvas>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-title"><span class="mi">checklist</span> PÇ Detayları</div>
+      <table class="tbl">
+        <thead>
+          <tr><th>Kod</th><th>PÇ Adı</th><th>Doğrudan Ort.</th><th>PÇ Ağırlıklı</th><th>Bileşik</th><th>Başarı %</th></tr>
+        </thead>
+        <tbody id="criteriaTableBody">
+          <tr><td colspan="6"><div class="empty-state"><span class="mi">hourglass_empty</span><h3>Yükleniyor…</h3></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</main>
+
+<script src="assets/ktun-shell.js"></script>
+<script src="help-widget.js" defer></script>
+<script>
+  const auth = KTUN.requireAuth({ roles: ['admin', 'bolum_baskani', 'mudek_kurul_uyesi', 'ogretim_uyesi'] });
+  if (!auth) throw new Error('redirecting');
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const surveyId  = urlParams.get('id');
+  if (!surveyId) {
+    alert('Anket ID belirtilmedi!');
+    location.href = 'survey-management.html';
+  }
+
+  const esc = KTUN.htmlEscape;
+
+  // Dinamik topbar (sayfa başlığı veriden gelecek, önce generic render)
+  KTUN.renderTopbar({ back: { href: 'survey-management.html', label: 'Anket Yönetimi' } });
+
+  let resultData = null;
+  let participationDonut = null, docBar = null, docRadar = null, criteriaBar = null;
+
+  async function api(path, opts) {
+    const res = await KTUN.apiFetch(path, opts || {});
+    if (!res.ok) {
+      let msg = `HTTP ${res.status}`;
+      try { const j = await res.json(); msg = j.detail || j.message || msg; } catch {}
+      throw new Error(msg);
+    }
+    const ct = res.headers.get('content-type') || '';
+    return ct.includes('application/json') ? res.json() : res.text();
+  }
+
+  /* ── Sekme ── */
+  function switchTab(name, btn) {
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(`tab-${name}`).classList.add('active');
+    btn.classList.add('active');
+  }
+
+  /* ── Veri Yükleme ── */
+  async function loadResults() {
+    try {
+      resultData = await api(`/api/surveys/${surveyId}/results`);
+      renderAll();
+    } catch (e) {
+      document.getElementById('docTableBody').innerHTML =
+        `<tr><td colspan="5"><div class="empty-state"><span class="mi">error</span><h3>${esc(e.message)}</h3></div></td></tr>`;
+    }
+  }
+
+  function renderAll() {
+    const s = resultData.survey;
+    const p = resultData.participation;
+
+    document.getElementById('infoCourse').textContent    = `${s.course_code} – ${s.course_name}`;
+    document.getElementById('infoTerm').textContent      = s.term || '—';
+    document.getElementById('infoStatus').innerHTML      = s.is_active
+      ? `<span class="badge badge-green">Aktif</span>`
+      : `<span class="badge badge-red">Kapalı</span>`;
+    document.getElementById('infoResponses').textContent = `${p.responded} / ${p.total}`;
+    document.getElementById('participationPct').textContent = `%${p.rate}`;
+
+    renderParticipationChart(p);
+    renderDocCharts(resultData.doc_results);
+    renderDocTable(resultData.doc_results);
+    renderCustomResults(resultData.custom_results);
+    loadCriteriaReport();
+  }
+
+  /* ── Katılım Grafiği ── */
+  function renderParticipationChart(p) {
+    const ctx = document.getElementById('participationChart').getContext('2d');
+    if (participationDonut) participationDonut.destroy();
+    participationDonut = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        datasets: [{
+          data: [p.responded, Math.max(0, p.total - p.responded)],
+          backgroundColor: ['#059669', '#e5e7eb'],
+          borderWidth: 0, borderRadius: 3,
+        }]
+      },
+      options: { cutout: '72%', plugins: { legend: { display: false }, tooltip: { enabled: false } }, responsive: true, maintainAspectRatio: true }
+    });
+  }
+
+  /* ── DÖÇ Grafikleri ── */
+  const GRID_COLOR = 'rgba(11,31,69,.07)';
+  const TICK_COLOR = '#6b7280';
+
+  function renderDocCharts(docs) {
+    if (!docs || !docs.length) return;
+    const labels = docs.map(d => `DÖÇ ${d.sequence_number}`);
+    const data   = docs.map(d => d.avg_score);
+    const colors = data.map(v => v >= 3.5 ? '#059669' : v >= 2.5 ? '#d97706' : '#dc2626');
+
+    const barCtx = document.getElementById('docBarChart').getContext('2d');
+    if (docBar) docBar.destroy();
+    docBar = new Chart(barCtx, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Ortalama Puan',
+          data,
+          backgroundColor: colors.map(c => c + '25'),
+          borderColor: colors,
+          borderWidth: 2, borderRadius: 7, borderSkipped: false,
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: { beginAtZero: true, max: 5, grid: { color: GRID_COLOR }, ticks: { color: TICK_COLOR } },
+          x: { grid: { display: false }, ticks: { color: TICK_COLOR } }
+        },
+        plugins: { legend: { display: false } }
+      }
+    });
+
+    const radarCtx = document.getElementById('docRadarChart').getContext('2d');
+    if (docRadar) docRadar.destroy();
+    docRadar = new Chart(radarCtx, {
+      type: 'radar',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Ortalama',
+          data,
+          backgroundColor: 'rgba(11,31,69,.12)',
+          borderColor: '#0b1f45',
+          pointBackgroundColor: '#c9a84c',
+          pointBorderColor: '#0b1f45',
+          borderWidth: 2, pointRadius: 4,
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          r: {
+            beginAtZero: true, max: 5,
+            grid: { color: GRID_COLOR }, angleLines: { color: GRID_COLOR },
+            pointLabels: { color: TICK_COLOR, font: { size: 11 } },
+            ticks: { color: TICK_COLOR, backdropColor: 'transparent', stepSize: 1 }
+          }
+        },
+        plugins: { legend: { display: false } }
+      }
+    });
+  }
+
+  function renderDocTable(docs) {
+    const tbody = document.getElementById('docTableBody');
+    if (!docs || !docs.length) {
+      tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><span class="mi">inbox</span><h3>DÖÇ verisi bulunamadı</h3></div></td></tr>';
+      return;
+    }
+    tbody.innerHTML = docs.map(d => {
+      const pct   = Math.round(d.avg_score / 5 * 100);
+      const color = pct >= 70 ? 'var(--green)' : pct >= 50 ? 'var(--amber)' : 'var(--red)';
+      return `<tr>
+        <td><strong class="badge badge-gold">DÖÇ ${d.sequence_number}</strong></td>
+        <td>${esc(d.description)}</td>
+        <td>
+          <div class="score-cell">
+            <span style="font-weight:700;color:${color};min-width:30px">${d.avg_score}</span>
+            <div class="score-bar"><div class="score-fill" style="width:${pct}%;background:${color}"></div></div>
+          </div>
+        </td>
+        <td><span style="font-weight:700;color:${color}">%${pct}</span></td>
+        <td style="color:var(--muted)">${d.response_count}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  /* ── Özel Soru Sonuçları ── */
+  function renderCustomResults(customs) {
+    const container = document.getElementById('customResults');
+    if (!customs || !customs.length) {
+      container.innerHTML = '<div class="empty-state"><span class="mi">quiz</span><h3>Bu ankete özel soru eklenmemiş</h3></div>';
+      return;
+    }
+    container.innerHTML = customs.map((q, idx) => {
+      const typeMap = { likert: ['Likert','badge-gold'], multiple_choice: ['Çoktan Seçmeli','badge-amber'], open_ended: ['Açık Uçlu','badge-green'] };
+      const [typeLabel, typeClass] = typeMap[q.q_type] || ['Bilinmeyen','badge-gold'];
+
+      let content = '';
+      if (q.q_type === 'likert') {
+        const pct   = Math.round(q.avg_score / 5 * 100);
+        const color = pct >= 70 ? 'var(--green)' : pct >= 50 ? 'var(--amber)' : 'var(--red)';
+        const dist  = q.distribution || {};
+        content = `
+          <div style="display:flex;align-items:center;gap:14px;margin-top:10px">
+            <span style="font-size:26px;font-weight:700;color:${color};font-family:'Playfair Display',serif">${q.avg_score}</span>
+            <div style="flex:1"><div class="score-bar" style="width:100%;height:7px"><div class="score-fill" style="width:${pct}%;background:${color}"></div></div></div>
+            <span style="font-weight:700;color:${color}">%${pct}</span>
+          </div>
+          <div style="display:flex;gap:6px;margin-top:10px">
+            ${[1,2,3,4,5].map(s => `
+              <div style="flex:1;text-align:center;background:rgba(11,31,69,.04);border-radius:6px;padding:6px;border:1px solid var(--border)">
+                <div style="font-size:11px;color:var(--muted)">${s}⭐</div>
+                <div style="font-weight:700;color:var(--navy)">${dist[String(s)] || 0}</div>
+              </div>`).join('')}
+          </div>`;
+      } else if (q.q_type === 'multiple_choice') {
+        const opts  = q.options ? JSON.parse(q.options) : [];
+        const dist  = q.distribution || {};
+        const total = Object.values(dist).reduce((a, b) => a + b, 0) || 1;
+        content = `<div style="margin-top:10px">${opts.map((o, i) => {
+          const count = dist[String(i)] || 0;
+          const pct   = Math.round(count / total * 100);
+          return `<div style="margin-bottom:7px">
+            <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:2px">
+              <span>${esc(o)}</span><span style="color:var(--muted)">${count} (%${pct})</span>
+            </div>
+            <div class="score-bar" style="width:100%"><div class="score-fill" style="width:${pct}%;background:var(--navy)"></div></div>
+          </div>`;
+        }).join('')}</div>`;
+      } else {
+        const answers = q.text_answers || [];
+        content = answers.length
+          ? `<div class="text-answer-list">${answers.map(a => `<div class="text-answer-item">${esc(a)}</div>`).join('')}</div>`
+          : '<p style="font-size:13px;color:var(--muted);margin-top:8px">Henüz yanıt yok.</p>';
+      }
+
+      return `<div class="custom-q-card">
+        <div class="custom-q-hd">
+          <div>
+            <span class="badge ${typeClass}">${typeLabel}</span>
+            ${q.program_outcome_code ? `<span class="badge badge-gold" style="margin-left:5px">${esc(q.program_outcome_code)}</span>` : ''}
+            <div style="font-size:13px;font-weight:600;color:var(--navy);margin-top:6px">${idx + 1}. ${esc(q.q_text)}</div>
+          </div>
+          <span style="font-size:12px;color:var(--muted);white-space:nowrap">${q.response_count} yanıt</span>
+        </div>
+        ${content}
+      </div>`;
+    }).join('');
+  }
+
+  /* ── MÜDEK Kriter Raporu ── */
+  async function loadCriteriaReport() {
+    try {
+      const data = await api('/api/mudek/survey-criteria-report');
+      renderCriteriaChart(data.criteria_report);
+      renderCriteriaTable(data.criteria_report);
+    } catch (e) {
+      document.getElementById('criteriaTableBody').innerHTML =
+        `<tr><td colspan="6"><div class="empty-state"><span class="mi">error</span><h3>${esc(e.message)}</h3></div></td></tr>`;
+    }
+  }
+
+  function renderCriteriaChart(criteria) {
+    const ctx = document.getElementById('criteriaChart').getContext('2d');
+    if (criteriaBar) criteriaBar.destroy();
+    const labels = criteria.map(c => c.code);
+    const data   = criteria.map(c => c.combined_pct || 0);
+    const bgColors = data.map(v => v >= 70 ? '#05966930' : v >= 50 ? '#d9770630' : '#dc262630');
+    const bdColors = data.map(v => v >= 70 ? '#059669'   : v >= 50 ? '#d97706'   : '#dc2626');
+    criteriaBar = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{ label: 'Başarı %', data, backgroundColor: bgColors, borderColor: bdColors, borderWidth: 2, borderRadius: 7, borderSkipped: false }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: { beginAtZero: true, max: 100, grid: { color: GRID_COLOR }, ticks: { color: TICK_COLOR, callback: v => v + '%' } },
+          x: { grid: { display: false }, ticks: { color: TICK_COLOR, font: { size: 11 } } }
+        },
+        plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => `Başarı: %${ctx.raw}` } } }
+      }
+    });
+  }
+
+  function renderCriteriaTable(criteria) {
+    const tbody = document.getElementById('criteriaTableBody');
+    if (!criteria || !criteria.length) {
+      tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><span class="mi">inbox</span><h3>Kriter verisi bulunamadı</h3></div></td></tr>';
+      return;
+    }
+    tbody.innerHTML = criteria.map(c => {
+      const pct   = c.combined_pct || 0;
+      const color = pct >= 70 ? 'var(--green)' : pct >= 50 ? 'var(--amber)' : 'var(--red)';
+      const na    = '<span style="color:var(--muted)">—</span>';
+      return `<tr>
+        <td><strong class="badge badge-gold">${esc(c.code)}</strong></td>
+        <td>${esc(c.title)}</td>
+        <td style="text-align:center">${c.custom_question_avg !== null ? c.custom_question_avg : na}</td>
+        <td style="text-align:center">${c.po_weighted_avg !== null ? c.po_weighted_avg : na}</td>
+        <td style="text-align:center;font-weight:700">${c.combined_avg !== null ? c.combined_avg : na}</td>
+        <td>
+          <div class="score-cell">
+            <span style="font-weight:700;color:${color};min-width:38px">%${pct}</span>
+            <div class="score-bar"><div class="score-fill" style="width:${pct}%;background:${color}"></div></div>
+          </div>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  loadResults();
+</script>
+</body>
+</html>

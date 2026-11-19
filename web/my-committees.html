@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Komisyonlarım — MÜDEK</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+  <link rel="stylesheet" href="assets/ktun-design.css">
+  <style>
+    .grid-2 { display:grid; grid-template-columns:340px 1fr; gap:20px; align-items:start; }
+    @media (max-width: 900px) { .grid-2 { grid-template-columns:1fr; } }
+
+    .comm-list { max-height:70vh; overflow:auto; }
+    .comm-card {
+      padding:14px 16px; border-radius:var(--r-sm); cursor:pointer;
+      border:1px solid var(--border); margin-bottom:8px; background:var(--white);
+      transition:all .15s;
+    }
+    .comm-card:hover { border-color:var(--gold); background:rgba(201,168,76,.04); }
+    .comm-card.active { border-color:var(--navy); background:rgba(11,31,69,.04); }
+    .comm-card h3 { color:var(--navy); font-size:14.5px; font-weight:600; margin:0; }
+    .comm-card small { color:var(--muted); font-size:12px; }
+
+    .report-row {
+      padding:14px 16px; border:1px solid var(--border); border-radius:var(--r-sm);
+      margin-bottom:10px; background:var(--white); cursor:pointer;
+      transition:all .15s;
+    }
+    .report-row:hover { border-color:var(--gold); background:rgba(201,168,76,.03); }
+    .report-row .top { display:flex; justify-content:space-between; align-items:start; gap:10px; }
+    .report-row h4 { font-size:14.5px; color:var(--navy); margin:0; font-weight:600; }
+    .report-row .meta { color:var(--muted); font-size:12px; margin-top:4px; display:flex; gap:14px; flex-wrap:wrap; }
+
+    .detail-pane {
+      padding:0; max-height:78vh; overflow:auto;
+    }
+    .detail-empty {
+      padding:60px 20px; text-align:center; color:var(--muted);
+    }
+    .detail-empty .mi { font-size:54px; opacity:.5; display:block; margin-bottom:10px; }
+
+    .attachment-row {
+      display:flex; justify-content:space-between; align-items:center;
+      padding:10px 14px; border:1px solid var(--border); border-radius:var(--r-sm);
+      margin-bottom:8px; background:var(--cream);
+    }
+    .attachment-row .name { font-size:13px; color:var(--navy); font-weight:500; }
+    .attachment-row .sz { color:var(--muted); font-size:11.5px; }
+
+    .field { margin-bottom:14px; }
+    .field label { display:block; font-size:12px; font-weight:600; color:var(--navy); margin-bottom:6px; text-transform:uppercase; letter-spacing:.04em; }
+    .field input, .field select, .field textarea {
+      width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:var(--r-sm);
+      font-family:inherit; font-size:13.5px; background:var(--white); color:var(--text);
+    }
+    .field textarea { min-height:120px; resize:vertical; line-height:1.5; }
+    .field input:focus, .field select:focus, .field textarea:focus { outline:none; border-color:var(--gold); }
+    .field-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+
+    .review-banner {
+      padding:12px 14px; border-radius:var(--r-sm); margin-bottom:14px;
+      border-left:4px solid var(--red); background:rgba(220,38,38,.06);
+    }
+    .review-banner.approved { border-left-color:var(--green); background:rgba(34,197,94,.06); }
+    .review-banner h5 { color:var(--navy); font-size:13px; margin:0 0 6px; font-weight:600; }
+    .review-banner p { color:var(--text); font-size:13px; margin:0; line-height:1.5; }
+  </style>
+</head>
+<body>
+
+<div id="topbarMount"></div>
+
+<main class="page-body">
+
+  <div class="section-hd" style="margin-bottom:18px;">
+    <h2><span class="mi" style="color:var(--gold-dk);vertical-align:middle">groups</span> Komisyon Panelim</h2>
+    <div class="section-hd-line"></div>
+  </div>
+
+  <div class="grid-2">
+    <!-- Sol: komite listesi -->
+    <div class="card" style="padding:14px;">
+      <div style="font-size:12px;font-weight:600;color:var(--navy);text-transform:uppercase;letter-spacing:.04em;margin-bottom:10px;">Üyesi Olduğum Komisyonlar</div>
+      <div id="commList" class="comm-list">
+        <div style="text-align:center;padding:30px;color:var(--muted);font-size:13px;">Yükleniyor…</div>
+      </div>
+    </div>
+
+    <!-- Sağ: detay -->
+    <div class="card" style="padding:18px;">
+      <div id="detailPane" class="detail-pane">
+        <div class="detail-empty">
+          <span class="mi">folder_open</span>
+          <h3 style="font-family:'Playfair Display',serif;color:var(--navy);font-size:18px;margin:0 0 6px;">Bir komisyon seçin</h3>
+          <p style="font-size:13px;">Soldan bir komisyon seçerek raporları görüntüleyebilir, yeni rapor yazabilirsiniz.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- Rapor oluştur/düzenle modali -->
+<div id="reportModal" class="modal-backdrop" style="display:none">
+  <div class="modal" style="max-width:760px;width:96%;">
+    <div class="modal-hd">
+      <h3 id="reportModalTitle" style="margin:0;font-family:'Playfair Display',serif;color:var(--navy);font-size:20px;">Yeni Rapor</h3>
+      <button class="modal-close" id="reportModalClose"><span class="mi">close</span></button>
+    </div>
+    <div class="modal-bd">
+      <div class="field">
+        <label>Başlık *</label>
+        <input type="text" id="rTitle" placeholder="Örn: Bahar 2025-2026 Komisyon Toplantı Tutanağı">
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Rapor Tipi</label>
+          <select id="rType">
+            <option value="">— Seçiniz —</option>
+            <optgroup label="MÜDEK Ölçütleri">
+              <option>MÜDEK Ölçüt 1 — Öğrenciler</option>
+              <option>MÜDEK Ölçüt 2 — Program Eğitim Amaçları</option>
+              <option>MÜDEK Ölçüt 3 — Program Çıktıları</option>
+              <option>MÜDEK Ölçüt 4 — Sürekli İyileştirme</option>
+              <option>MÜDEK Ölçüt 5 — Eğitim Planı</option>
+              <option>MÜDEK Ölçüt 6 — Öğretim Kadrosu</option>
+              <option>MÜDEK Ölçüt 7 — Altyapı</option>
+              <option>MÜDEK Ölçüt 8 — Kurum Desteği ve Parasal Kaynaklar</option>
+              <option>MÜDEK Ölçüt 9 — Organizasyon ve Karar Alma Süreçleri</option>
+              <option>MÜDEK Ölçüt 10 — Programa Özgü Ölçütler</option>
+            </optgroup>
+            <optgroup label="Standart">
+              <option>Toplantı Tutanağı</option>
+              <option>Dönem Sonu Değerlendirme</option>
+              <option>İyileştirme Eylem Planı</option>
+              <option>Diğer</option>
+            </optgroup>
+          </select>
+        </div>
+        <div class="field">
+          <label>Dönem</label>
+          <input type="text" id="rPeriod" placeholder="Örn: 2025-Güz">
+        </div>
+      </div>
+      <div class="field">
+        <label>Rapor İçeriği</label>
+        <textarea id="rContent" placeholder="Raporun gövdesini buraya yazın. Düz metin / kısa paragraflar."></textarea>
+      </div>
+    </div>
+    <div class="modal-ft" style="display:flex;justify-content:flex-end;gap:10px;">
+      <button class="btn btn-outline" id="rCancel"><span class="mi">close</span> İptal</button>
+      <button class="btn" id="rSave"><span class="mi">save</span> Kaydet (Taslak)</button>
+    </div>
+  </div>
+</div>
+
+<script src="assets/ktun-shell.js"></script>
+<script src="help-widget.js" defer></script>
+<script>
+  const auth = KTUN.requireAuth();
+  if (!auth) throw new Error('redirecting');
+  KTUN.renderTopbar({ back:{ href:'dashboard.html', label:'Panele Dön' } });
+  KTUN.renderFooter();
+
+  const esc = KTUN.htmlEscape;
+  const userId = auth.user_id || auth.id;
+  const userRole = auth.role || '';
+  const isManager = ['admin','bolum_baskani','mudek_kurul_uyesi'].includes(userRole);
+
+  let _committees = [];
+  let _selectedCid = null;
+  let _selectedCommName = '';
+  let _selectedReports = [];
+  let _selectedReport = null;     // detay modunda
+  let _editingReportId = null;    // düzenleme modunda
+
+  /* ── Komite listesi ───────────────────────────── */
+  async function loadCommittees() {
+    try {
+      const r = await KTUN.apiFetch('/api/committees');
+      _committees = await r.json();
+      renderCommList();
+    } catch (e) {
+      document.getElementById('commList').innerHTML =
+        `<div style="color:var(--red);padding:14px;text-align:center;font-size:13px;">${esc(e.message)}</div>`;
+    }
+  }
+
+  function renderCommList() {
+    const el = document.getElementById('commList');
+    if (!_committees.length) {
+      el.innerHTML = '<div style="text-align:center;padding:30px;color:var(--muted);font-size:13px;">Henüz komisyon yok.</div>';
+      return;
+    }
+    el.innerHTML = _committees.map(c => `
+      <div class="comm-card" data-cid="${c.id}">
+        <h3>${esc(c.name)}</h3>
+        <small>${c.member_count || 0} üye${c.description ? ' · ' + esc((c.description || '').substring(0, 40)) : ''}</small>
+      </div>
+    `).join('');
+    el.querySelectorAll('[data-cid]').forEach(div => {
+      div.addEventListener('click', () => selectCommittee(parseInt(div.dataset.cid, 10)));
+    });
+  }
+
+  /* ── Komite seç → raporları yükle ─────────────── */
+  async function selectCommittee(cid) {
+    _selectedCid = cid;
+    const c = _committees.find(x => x.id === cid);
+    _selectedCommName = c?.name || '';
+    _selectedReport = null;
+
+    document.querySelectorAll('.comm-card').forEach(el => el.classList.toggle('active', +el.dataset.cid === cid));
+
+    const pane = document.getElementById('detailPane');
+    pane.innerHTML = `<div style="padding:30px;text-align:center;color:var(--muted);font-size:13px;">Raporlar yükleniyor…</div>`;
+
+    try {
+      const r = await KTUN.apiFetch(`/api/committees/${cid}/reports`);
+      if (r.status === 403) {
+        pane.innerHTML = `<div class="alert alert-danger" style="margin:0;"><span class="mi">lock</span> Bu komisyonun üyesi değilsiniz.</div>`;
+        return;
+      }
+      if (!r.ok) throw new Error(await r.text());
+      _selectedReports = await r.json();
+      renderReportList();
+    } catch (e) {
+      pane.innerHTML = `<div class="alert alert-danger" style="margin:0;">${esc(e.message)}</div>`;
+    }
+  }
+
+  function statusBadge(s) {
+    const m = {
+      draft:     ['badge-amber', 'edit_note', 'Taslak'],
+      submitted: ['badge-gold',  'send',      'Gönderildi'],
+      approved:  ['badge-green', 'check_circle', 'Onaylandı'],
+      rejected:  ['badge-red',   'block',     'Reddedildi'],
+    }[s] || ['', 'help', s];
+    return `<span class="badge ${m[0]}"><span class="mi" style="font-size:14px">${m[1]}</span> ${m[2]}</span>`;
+  }
+
+  function fmtDate(s) {
+    if (!s) return '—';
+    return s.split('T')[0];
+  }
+
+  function renderReportList() {
+    const pane = document.getElementById('detailPane');
+    const reports = _selectedReports;
+    const itemsHtml = reports.length ? reports.map(r => `
+      <div class="report-row" data-rid="${r.id}">
+        <div class="top">
+          <div style="flex:1;min-width:0;">
+            <h4>${esc(r.title)}</h4>
+            <div class="meta">
+              <span>${esc(r.uploader_name)}</span>
+              <span>${esc(fmtDate(r.created_at))}</span>
+              ${r.report_type ? `<span><span class="mi" style="font-size:13px;vertical-align:middle">label</span> ${esc(r.report_type)}</span>` : ''}
+              ${r.period ? `<span><span class="mi" style="font-size:13px;vertical-align:middle">event</span> ${esc(r.period)}</span>` : ''}
+              ${r.attachment_count ? `<span><span class="mi" style="font-size:13px;vertical-align:middle">attachment</span> ${r.attachment_count} ek</span>` : ''}
+            </div>
+          </div>
+          <div>${statusBadge(r.status)}</div>
+        </div>
+      </div>
+    `).join('') : `<div style="padding:30px;text-align:center;color:var(--muted);font-size:13px;">Henüz rapor yok. İlk raporu siz yazın.</div>`;
+
+    pane.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+        <h2 style="font-family:'Playfair Display',serif;color:var(--navy);font-size:20px;margin:0;">${esc(_selectedCommName)}</h2>
+        <div style="display:flex;gap:8px;">
+          ${isManager ? `<button class="btn" id="pdfBtn" style="background:var(--gold);color:#fff;"><span class="mi">picture_as_pdf</span> Konsolide PDF</button>` : ''}
+          <button class="btn" id="newReportBtn"><span class="mi">add</span> Yeni Rapor</button>
+        </div>
+      </div>
+      <div>${itemsHtml}</div>
+    `;
+    document.getElementById('newReportBtn').addEventListener('click', () => openReportModal(null));
+    document.getElementById('pdfBtn')?.addEventListener('click', () => {
+      const url = `${API}/api/committees/${_selectedCid}/consolidated.pdf`;
+      const a = document.createElement('a');
+      a.href = url;
+      a.setAttribute('download', `komisyon_${_selectedCid}_rapor.pdf`);
+      // Token'ı header ile göndermek için fetch kullan
+      fetch(url, { headers: { Authorization: `Bearer ${sessionStorage.getItem('token')}` } })
+        .then(r => { if (!r.ok) throw new Error('PDF oluşturulamadı'); return r.blob(); })
+        .then(blob => { a.href = URL.createObjectURL(blob); a.click(); })
+        .catch(e => alert(e.message));
+    });
+    pane.querySelectorAll('[data-rid]').forEach(div => {
+      div.addEventListener('click', () => openReportDetail(parseInt(div.dataset.rid, 10)));
+    });
+  }
+
+  /* ── Rapor detay görünümü ─────────────────────── */
+  async function openReportDetail(rid) {
+    const pane = document.getElementById('detailPane');
+    pane.innerHTML = `<div style="padding:30px;text-align:center;color:var(--muted);font-size:13px;">Rapor yükleniyor…</div>`;
+    try {
+      const r = await KTUN.apiFetch(`/api/committees/${_selectedCid}/reports/${rid}`);
+      if (!r.ok) throw new Error(await r.text());
+      _selectedReport = await r.json();
+      renderReportDetail();
+    } catch (e) {
+      pane.innerHTML = `<div class="alert alert-danger" style="margin:0;">${esc(e.message)}</div>`;
+    }
+  }
+
+  function renderReportDetail() {
+    const rep = _selectedReport;
+    const pane = document.getElementById('detailPane');
+    const isOwner = rep.uploader_id === userId;
+    const editable = (isOwner || isManager) && (rep.status === 'draft' || rep.status === 'rejected');
+    const submittable = editable;
+    const deletable = editable;
+
+    let banner = '';
+    if (rep.status === 'rejected' && rep.review_note) {
+      banner = `
+        <div class="review-banner">
+          <h5><span class="mi" style="font-size:14px;vertical-align:middle">block</span> Revizyon İstendi · ${esc(rep.reviewer_name || '—')} · ${esc(fmtDate(rep.reviewed_at))}</h5>
+          <p>${esc(rep.review_note)}</p>
+        </div>`;
+    } else if (rep.status === 'approved' && rep.reviewer_name) {
+      banner = `
+        <div class="review-banner approved">
+          <h5><span class="mi" style="font-size:14px;vertical-align:middle">check_circle</span> Onaylayan · ${esc(rep.reviewer_name)} · ${esc(fmtDate(rep.reviewed_at))}</h5>
+          ${rep.review_note ? `<p>${esc(rep.review_note)}</p>` : ''}
+        </div>`;
+    }
+
+    const attHtml = (rep.attachments || []).length
+      ? rep.attachments.map(a => `
+          <div class="attachment-row">
+            <div>
+              <div class="name">${esc(a.original_name)}</div>
+              <div class="sz">${a.file_size ? (a.file_size / 1024).toFixed(0) + ' KB' : ''} · ${esc(fmtDate(a.uploaded_at))}</div>
+            </div>
+            <div style="display:flex;gap:8px;">
+              <button class="btn btn-outline btn-sm" data-att-dl="${a.id}"><span class="mi">download</span> İndir</button>
+              ${editable ? `<button class="btn btn-outline btn-sm" data-att-rm="${a.id}" style="color:var(--red);"><span class="mi">delete</span></button>` : ''}
+            </div>
+          </div>`).join('')
+      : `<div style="padding:14px;text-align:center;color:var(--muted);font-size:13px;background:var(--cream);border-radius:var(--r-sm);">Henüz ek yok.</div>`;
+
+    pane.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <button class="btn btn-outline btn-sm" id="backToList"><span class="mi">arrow_back</span> Liste</button>
+        ${statusBadge(rep.status)}
+      </div>
+      <h2 style="font-family:'Playfair Display',serif;color:var(--navy);font-size:22px;margin:14px 0 6px;">${esc(rep.title)}</h2>
+      <div style="color:var(--muted);font-size:12.5px;margin-bottom:14px;display:flex;gap:14px;flex-wrap:wrap;">
+        <span><span class="mi" style="font-size:13px;vertical-align:middle">person</span> ${esc(rep.uploader_name)}</span>
+        ${rep.report_type ? `<span><span class="mi" style="font-size:13px;vertical-align:middle">label</span> ${esc(rep.report_type)}</span>` : ''}
+        ${rep.period ? `<span><span class="mi" style="font-size:13px;vertical-align:middle">event</span> ${esc(rep.period)}</span>` : ''}
+        <span><span class="mi" style="font-size:13px;vertical-align:middle">schedule</span> ${esc(fmtDate(rep.created_at))}</span>
+      </div>
+
+      ${banner}
+
+      <div style="background:var(--cream);padding:16px;border-radius:var(--r-sm);margin-bottom:18px;white-space:pre-wrap;font-size:13.5px;line-height:1.65;color:var(--text);min-height:60px;">${esc(rep.content || '— İçerik girilmemiş —')}</div>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <strong style="color:var(--navy);font-size:14px;">Ekler</strong>
+        ${editable ? `
+          <label class="btn btn-outline btn-sm" style="cursor:pointer;margin:0;">
+            <span class="mi">attach_file</span> Ek Yükle
+            <input type="file" id="attUpload" style="display:none;">
+          </label>` : ''}
+      </div>
+      <div>${attHtml}</div>
+
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:22px;border-top:1px solid var(--border);padding-top:16px;flex-wrap:wrap;">
+        ${editable ? `<button class="btn btn-outline" id="btnEdit"><span class="mi">edit</span> Düzenle</button>` : ''}
+        ${deletable ? `<button class="btn btn-outline" id="btnDelete" style="color:var(--red);"><span class="mi">delete</span> Sil</button>` : ''}
+        ${submittable ? `<button class="btn btn-gold" id="btnSubmit"><span class="mi">send</span> Kurula Gönder</button>` : ''}
+        ${(isManager && rep.status === 'submitted') ? `
+          <button class="btn btn-outline" id="btnReject" style="color:var(--red);"><span class="mi">block</span> Revizyon İste</button>
+          <button class="btn" id="btnApprove" style="background:var(--green);border-color:var(--green);"><span class="mi">check_circle</span> Onayla</button>
+        ` : ''}
+      </div>
+    `;
+
+    document.getElementById('backToList').addEventListener('click', renderReportList);
+    if (editable) {
+      document.getElementById('btnEdit')?.addEventListener('click', () => openReportModal(rep));
+      const attInput = document.getElementById('attUpload');
+      if (attInput) attInput.addEventListener('change', uploadAttachment);
+      pane.querySelectorAll('[data-att-rm]').forEach(b =>
+        b.addEventListener('click', () => deleteAttachment(parseInt(b.dataset.attRm, 10))));
+    }
+    if (deletable) document.getElementById('btnDelete')?.addEventListener('click', deleteReport);
+    if (submittable) document.getElementById('btnSubmit')?.addEventListener('click', submitReport);
+    if (isManager && rep.status === 'submitted') {
+      document.getElementById('btnApprove')?.addEventListener('click', () => reviewReport('approve'));
+      document.getElementById('btnReject')?.addEventListener('click', () => reviewReport('reject'));
+    }
+    pane.querySelectorAll('[data-att-dl]').forEach(b =>
+      b.addEventListener('click', () => downloadAttachment(parseInt(b.dataset.attDl, 10))));
+  }
+
+  async function reviewReport(action) {
+    let note = '';
+    if (action === 'reject') {
+      note = prompt('Revizyon nedenini yazın (zorunlu):') || '';
+      if (!note.trim()) return KTUN.toast('Revizyon notu zorunludur', 'warning');
+    } else {
+      note = prompt('Onay notu (opsiyonel):') || '';
+    }
+    try {
+      const r = await KTUN.apiFetch(
+        `/api/committees/${_selectedCid}/reports/${_selectedReport.id}/review`,
+        { method: 'POST', body: JSON.stringify({ action, note: note || null }) }
+      );
+      if (!r.ok) {
+        const err = await r.json().catch(() => ({}));
+        throw new Error(err.detail || 'İşlenemedi');
+      }
+      KTUN.toast(action === 'approve' ? 'Rapor onaylandı' : 'Revizyon istendi', 'success');
+      openReportDetail(_selectedReport.id);
+    } catch (e) {
+      KTUN.toast(e.message, 'danger');
+    }
+  }
+
+  /* ── Modal: oluştur/düzenle ───────────────────── */
+  function openReportModal(rep) {
+    _editingReportId = rep ? rep.id : null;
+    document.getElementById('reportModalTitle').textContent = rep ? 'Raporu Düzenle' : 'Yeni Rapor';
+    document.getElementById('rTitle').value   = rep?.title || '';
+    document.getElementById('rType').value    = rep?.report_type || '';
+    document.getElementById('rPeriod').value  = rep?.period || '';
+    document.getElementById('rContent').value = rep?.content || '';
+    document.getElementById('reportModal').style.display = 'flex';
+  }
+
+  function closeReportModal() {
+    document.getElementById('reportModal').style.display = 'none';
+    _editingReportId = null;
+  }
+
+  async function saveReport() {
+    const title = document.getElementById('rTitle').value.trim();
+    if (!title) return KTUN.toast('Başlık zorunludur', 'warning');
+
+    const payload = {
+      title,
+      content: document.getElementById('rContent').value || null,
+      report_type: document.getElementById('rType').value || null,
+      period: document.getElementById('rPeriod').value || null,
+    };
+
+    const url = _editingReportId
+      ? `/api/committees/${_selectedCid}/reports/${_editingReportId}`
+      : `/api/committees/${_selectedCid}/reports`;
+    const method = _editingReportId ? 'PUT' : 'POST';
+
+    try {
+      const r = await KTUN.apiFetch(url, { method, body: JSON.stringify(payload) });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.detail || 'Kaydedilemedi');
+      KTUN.toast(_editingReportId ? 'Rapor güncellendi' : 'Rapor oluşturuldu', 'success');
+      closeReportModal();
+
+      const newId = _editingReportId || data.id;
+      await selectCommittee(_selectedCid);
+      if (newId) openReportDetail(newId);
+    } catch (e) {
+      KTUN.toast(e.message, 'danger');
+    }
+  }
+
+  /* ── Ekler ────────────────────────────────────── */
+  async function uploadAttachment(ev) {
+    const file = ev.target.files[0];
+    if (!file) return;
+    const fd = new FormData();
+    fd.append('file', file);
+    try {
+      const r = await KTUN.apiFetch(
+        `/api/committees/${_selectedCid}/reports/${_selectedReport.id}/attachments`,
+        { method: 'POST', body: fd }
+      );
+      if (!r.ok) {
+        const err = await r.json().catch(() => ({}));
+        throw new Error(err.detail || 'Yüklenemedi');
+      }
+      KTUN.toast('Ek eklendi', 'success');
+      openReportDetail(_selectedReport.id);
+    } catch (e) {
+      KTUN.toast(e.message, 'danger');
+    } finally {
+      ev.target.value = '';
+    }
+  }
+
+  async function deleteAttachment(aid) {
+    if (!confirm('Bu ek silinsin mi?')) return;
+    try {
+      const r = await KTUN.apiFetch(
+        `/api/committees/${_selectedCid}/reports/${_selectedReport.id}/attachments/${aid}`,
+        { method: 'DELETE' }
+      );
+      if (!r.ok) {
+        const err = await r.json().catch(() => ({}));
+        throw new Error(err.detail || 'Silinemedi');
+      }
+      KTUN.toast('Ek silindi', 'success');
+      openReportDetail(_selectedReport.id);
+    } catch (e) {
+      KTUN.toast(e.message, 'danger');
+    }
+  }
+
+  async function downloadAttachment(aid) {
+    const url = `/api/committees/${_selectedCid}/reports/${_selectedReport.id}/attachments/${aid}/download`;
+    try {
+      const r = await KTUN.apiFetch(url);
+      if (!r.ok) throw new Error('İndirilemedi');
+      const blob = await r.blob();
+      const cd = r.headers.get('content-disposition') || '';
+      let filename = 'attachment';
+      const m = cd.match(/filename\*?=(?:UTF-8'')?"?([^";]+)/i);
+      if (m) filename = decodeURIComponent(m[1].replace(/"/g, ''));
+      else {
+        const att = (_selectedReport.attachments || []).find(a => a.id === aid);
+        if (att) filename = att.original_name;
+      }
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    } catch (e) {
+      KTUN.toast(e.message, 'danger');
+    }
+  }
+
+  /* ── Submit / Delete ──────────────────────────── */
+  async function submitReport() {
+    if (!confirm('Bu rapor kurula gönderilsin mi? Gönderdikten sonra onay bekleyene kadar düzenleyemezsiniz.')) return;
+    try {
+      const r = await KTUN.apiFetch(
+        `/api/committees/${_selectedCid}/reports/${_selectedReport.id}/submit`,
+        { method: 'POST' }
+      );
+      if (!r.ok) {
+        const err = await r.json().catch(() => ({}));
+        throw new Error(err.detail || 'Gönderilemedi');
+      }
+      KTUN.toast('Rapor kurula gönderildi', 'success');
+      openReportDetail(_selectedReport.id);
+    } catch (e) {
+      KTUN.toast(e.message, 'danger');
+    }
+  }
+
+  async function deleteReport() {
+    if (!confirm('Bu rapor (ve tüm ekleri) silinsin mi? Geri alınamaz.')) return;
+    try {
+      const r = await KTUN.apiFetch(
+        `/api/committees/${_selectedCid}/reports/${_selectedReport.id}`,
+        { method: 'DELETE' }
+      );
+      if (!r.ok) {
+        const err = await r.json().catch(() => ({}));
+        throw new Error(err.detail || 'Silinemedi');
+      }
+      KTUN.toast('Rapor silindi', 'success');
+      _selectedReport = null;
+      selectCommittee(_selectedCid);
+    } catch (e) {
+      KTUN.toast(e.message, 'danger');
+    }
+  }
+
+  /* ── Init ─────────────────────────────────────── */
+  document.getElementById('reportModalClose').addEventListener('click', closeReportModal);
+  document.getElementById('rCancel').addEventListener('click', closeReportModal);
+  document.getElementById('rSave').addEventListener('click', saveReport);
+  document.getElementById('reportModal').addEventListener('click', e => {
+    if (e.target.id === 'reportModal') closeReportModal();
+  });
+
+  loadCommittees();
+</script>
+</body>
+</html>
