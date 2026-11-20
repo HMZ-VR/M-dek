@@ -2,9 +2,24 @@
 
 A web platform that helps engineering departments run the **MÜDEK** accreditation process (Turkey's engineering accreditation body, a signatory of the Washington Accord). It tracks how well students reach each **course learning outcome (DÖÇ)** and **program outcome (PÇ)**. It works from raw exam scores, surveys and committee reports, and produces the reports an accreditation review asks for.
 
-It was built for the engineering departments of Konya Technical University (KTUN). The data model follows the standard MÜDEK course-evaluation spreadsheet, so other departments can adapt it.
+The data model follows the standard MÜDEK course-evaluation spreadsheet, so other departments can adapt it.
 
-> **Note:** This is an independent student project. It is not an official product of MÜDEK or KTUN.
+## Background
+
+The Dean of the Faculty of Engineering and Natural Sciences at Konya Technical University (KTUN) gave me this project while I was an undergraduate there. The goal was a system that would help the faculty prepare for MÜDEK accreditation.
+
+Accreditation reviewers ask for evidence that each course contributes to the program outcomes, and that the department acts on the results. Departments usually collect this evidence in large, hand-maintained Excel workbooks. This system replaces those workbooks with one shared web application. Instructors enter scores once, and the system calculates outcome achievement, tracks trends across terms, and produces the reports, committee documents and evidence an accreditation review needs.
+
+### My role
+
+I designed and built the whole system on my own, working with the Dean on the requirements:
+
+- **Domain modelling:** turned the official MÜDEK course-evaluation spreadsheet, and its formulas, into a relational schema and a tested calculation engine
+- **Backend:** a FastAPI REST API with about 110 endpoints, role-based permissions, PDF and Excel generation, and a versioned migration chain
+- **Frontend:** about 40 pages, including role-specific dashboards, a student portal and reporting screens
+- **Security & operations:** authentication hardening, rate limiting, audit logging, a Docker and nginx deployment, HTTPS and backups
+
+> This project is not an official product of MÜDEK or KTUN.
 
 ---
 
@@ -140,3 +155,9 @@ See [`api/mudek_service.py`](api/mudek_service.py) for the full logic.
 ---
 
 *The user interface and some code comments are in Turkish, because the system was built for a Turkish university.*
+
+## License
+
+© 2026 HMZ-VR. All rights reserved.
+
+The source code is published here as a portfolio piece and is free to read. If you would like to reuse or adapt it, please open an issue to get in touch.
